@@ -149,24 +149,20 @@ parameter_abarbeiten() {
       shift
       ;;
     -H | --HTML)
-      meldung "${ORANGE}DEBUG - HTML stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
       case $stufe_formatierung in
       0) stufe_formatierung=1 ;;
       1|3) stufe_formatierung=$stufe_formatierung ;;
       2) stufe_formatierung=$(( $stufe_formatierung + 1 )) ;;
       *) stufe_formatierung=1 ;;
       esac
-      meldung "${ORANGE}DEBUG - HTML stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
       ;;
     -O | --ODT) 
-      meldung "${ORANGE}DEBUG - ODT stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
       case $stufe_formatierung in
       0) stufe_formatierung=2 ;;
       1) stufe_formatierung=$(( $stufe_formatierung + 2 )) ;;
       2|3) stufe_formatierung=$stufe_formatierung ;;
       *) stufe_formatierung=2 ;;
       esac
-      meldung "${ORANGE}DEBUG - ODT stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
     ;;
     
     #-p | --param) # example named parameter
@@ -346,14 +342,15 @@ case $stufe_formatierung in
     datum=$( stat --print="%x" "${datei_utf8_odt_gram}" | sed --regexp-extended 's@^([^ ]+) ([^ .]+)\..*@\1_\2@' )
     datei_sicherung=${datei_utf8_odt_gram%.*}_${datum}.odt
     
-    meldung "${ORANGE}Vorhandene${FORMAT_FREI} ${datei_utf8_odt_gram} ${ORANGE}überschreiben? Falls „nein“, dann erfolgt Sicherung als${FORMAT_FREI}"
-    meldung "→ $datei_sicherung ${ORANGE}(=umbenannt)${FORMAT_FREI}"
-    echo -en "${ORANGE}Jetzt überschreiben (ja/nein):${FORMAT_FREI} "
+    meldung  "${ORANGE}Vorhandene${FORMAT_FREI} ${datei_utf8_odt_gram} ${ORANGE}überschreiben?${FORMAT_FREI}"
+    meldung  "  ${ORANGE}Falls „nein“, dann erfolgt Sicherung als${FORMAT_FREI}"
+    meldung  "  → $datei_sicherung ${ORANGE}(wird also umbenannt)${FORMAT_FREI}"
+    echo -en "  ${ORANGE}Jetzt überschreiben (ja/NEIN):${FORMAT_FREI} "
     read janein
     if [[ -z ${janein// /} ]];then janein="nein"; fi
     case $janein in
       [jJ]|[jJ][aA])
-        echo " überschreibe …"
+        echo " überschreibe ODT …"
         pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
       ;;
       [nN]|[nN][eE][iI][nN])
