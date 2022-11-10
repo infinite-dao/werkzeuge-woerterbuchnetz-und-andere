@@ -149,18 +149,24 @@ parameter_abarbeiten() {
       shift
       ;;
     -H | --HTML)
+      meldung "${ORANGE}DEBUG - HTML stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
       case $stufe_formatierung in
-      0|*) stufe_formatierung=1 ;;
+      0) stufe_formatierung=1 ;;
       1|3) stufe_formatierung=$stufe_formatierung ;;
       2) stufe_formatierung=$(( $stufe_formatierung + 1 )) ;;
+      *) stufe_formatierung=1 ;;
       esac
+      meldung "${ORANGE}DEBUG - HTML stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
       ;;
     -O | --ODT) 
+      meldung "${ORANGE}DEBUG - ODT stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
       case $stufe_formatierung in
-      0|*) stufe_formatierung=2 ;;
+      0) stufe_formatierung=2 ;;
+      1) stufe_formatierung=$(( $stufe_formatierung + 2 )) ;;
       2|3) stufe_formatierung=$stufe_formatierung ;;
-      1) stufe_formatierung=$( $stufe_formatierung + 2 ) ;;
+      *) stufe_formatierung=2 ;;
       esac
+      meldung "${ORANGE}DEBUG - ODT stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
     ;;
     
     #-p | --param) # example named parameter
@@ -260,47 +266,62 @@ case $stufe_formatierung in
   1) meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" ;;
   esac
   cat "${json_speicher_datei}" | jq ' sort_by(.gram,.label)[] |  if .gram == null or .gram == ""
-  then "<tr><td>\(.label)</td><td></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "n."
-  then "<tr><td>\(.label), das</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "f."
-  then "<tr><td>\(.label), die</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "f. n."
-  then "<tr><td>\(.label), die o. das</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
+  then "<tr><td>\(.label)</td><td><!-- keine Grammatik angegeben --></td><td><!-- ohne Sprachkunst-Begriff --></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *n[.]? *$"))
+  then "<tr><td>\(.label), das</td><td>\(.gram)</td><td>Nennwort, sächlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *n[.]?\\? *$"))
+  then "<tr><td>\(.label), das?</td><td>\(.gram)</td><td>Nennwort, ?sächlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *n[.]? *m[.]? *$"))
+  then "<tr><td>\(.label), das o. der</td><td>\(.gram)</td><td>Nennwort, sächlich o. männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif (.gram|test("^ *f[.]? *$"))
+  then "<tr><td>\(.label), die</td><td>\(.gram)</td><td>Nennwort, weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *f[.]?\\? *$"))
+  then "<tr><td>\(.label), die?</td><td>\(.gram)</td><td>Nennwort, ?weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *f[.]? *n[.]? *$"))
+  then "<tr><td>\(.label), die o. das</td><td>\(.gram)</td><td>Nennwort, weiblich o. sächlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *f[.]? *m[.]? *$"))
+  then "<tr><td>\(.label), die o. der</td><td>\(.gram)</td><td>Nennwort, weiblich o. männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif .gram == "f. subst."
-  then "<tr><td>\(.label), die</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "m."
-  then "<tr><td>\(.label), der</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "m. f."
-  then "<tr><td>\(.label), der o. die</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "f. m."
-  then "<tr><td>\(.label), die o. der</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "m. n."
-  then "<tr><td>\(.label), der o. das</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "n. m."
-  then "<tr><td>\(.label), das o. der</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "m.?"
-  then "<tr><td>\(.label), der?</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "f.?"
-  then "<tr><td>\(.label), die?</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  elif .gram == "n.?"
-  then "<tr><td>\(.label), das?</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
-  else "<tr><td>\(.label)</td><td>\(.gram)</td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></td><td><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></td></tr>"
+  then "<tr><td>\(.label), die</td><td>\(.gram)</td><td>Nennwort, weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif (.gram|test("^ *m[.]? *$"))
+  then "<tr><td>\(.label), der</td><td>\(.gram)</td><td>Nennwort, männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *m[.]? *f[.]? *$"))
+  then "<tr><td>\(.label), der o. die</td><td>\(.gram)</td><td>Nennwort, männlich o. weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *m[.]? *n[.]? *$"))
+  then "<tr><td>\(.label), der o. das</td><td>\(.gram)</td><td>Nennwort, männlich o. sächlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *m[.]?\\? *$"))
+  then "<tr><td>\(.label), der?</td><td>\(.gram)</td><td>Nennwort, ?männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif (.gram|test("^ *adj. +und +adv. *$|^ *adj. +u. +adv. *$"))
+  then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Eigenschaftswort, Beiwort und Zuwort, Umstandswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif .gram == "adj."
+  then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif .gram == "adv."
+  then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Zuwort, Umstandswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif .gram == "part."
+  then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Mittelwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif .gram == "verb."
+  then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Zeitwort, Tätigkeitswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  else "<tr><td>\(.label)</td><td>\(.gram)</td><td>?</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   end
   ' | sed -r 's@"@@g; 
   s@“([^“”]+)”@"\1"@g; 
 s@&#x00e4;@ä@g;
 s@&#x00f6;@ö@g;
 s@&#x00fc;@ü@g;
-s@<td>([^ ])([^ ]+)(, [d][eia][res][^<>]*)</td>@<td>\U\1\L\2\3</td>@g;
-1 i\<table><tr><th>Wort</th><th>Grammatik</th><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
-$ a\</table>
+s@<td>([^ ])([^ ]+)(, [d][eia][res][^<>]*)</td>@<td>\U\1\L\2\3</td>@g; # ersten Buchstaben Groß bei Nennwörtern
+1 i\<!DOCTYPE html>\n<html lang="de" xml:lang="de" xmlns="http://www.w3.org/1999/xhtml">\n<head>\n<title></title>\n</head>\n<body><table><tr><th>Wort</th><th>Grammatik</th><th>Sprachkunst/<br/>Sprachlehre (s. a. <i style="font-variant:small-caps;">Schottel 1663</i>)</th><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
+$ a\</table>\n</body>\n</html>
 ' | uniq > "${datei_utf8_html_zwischenablage_gram}"
   case $stufe_verausgaben in 
   0)  ;; 
   1) meldung "${GRUEN}Weiterverarbeitung → JSON → HTML${FORMAT_FREI} (tidy: ${datei_utf8_html_gram_tidy})" ;;
   esac
-  tidy -quiet -output "${datei_utf8_html_gram_tidy}"  -language 'deu' "${datei_utf8_html_zwischenablage_gram}" || this_exit_code=$?
+  tidy -quiet -output "${datei_utf8_html_gram_tidy}"  "${datei_utf8_html_zwischenablage_gram}" || this_exit_code=$?
 
   case $stufe_verausgaben in 
   0)  ;; 
