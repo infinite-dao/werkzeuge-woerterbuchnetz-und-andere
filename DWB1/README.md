@@ -2,6 +2,8 @@
 
 https://woerterbuchnetz.de/DWB/
 
+## `DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh`
+
 Im folgenden Programm wird `https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/*vera*/0/json` abgefragt und verschiedene Dateien erzeugt in denen reinweg die gefundenen Wörter stehen oder eine ausführliche Wortlisten-Tabelle:
 - Textdatei nur aus Wörtern
 - Textdatei aus Wörtern mit Grammatik-Angabe
