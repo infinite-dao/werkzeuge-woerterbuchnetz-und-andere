@@ -4,7 +4,7 @@ https://woerterbuchnetz.de/DWB/
 
 ## `DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh`
 
-Im folgenden Programm wird `https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/*vera*/0/json` abgefragt und verschiedene Dateien erzeugt, in denen reinweg die gefundenen Wörter stehen, oder eine ausführliche Wortlisten-Tabelle:
+Im folgenden Programm wird „…vera…“ über `https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/*vera*/0/json` abgefragt, und verschiedene Dateien erzeugt, in denen reinweg die gefundenen Wörter stehen, oder eine ausführliche Wortlisten-Tabelle:
 - Textdatei nur aus Wörtern
 - Textdatei aus Wörtern mit Grammatik-Angabe
 - hinzufügbar (ODT): Offenes Dokument Textvormat als Wortlisten-Tabelle 
@@ -21,3 +21,9 @@ Im folgenden Programm wird `https://api.woerterbuchnetz.de/dictionaries/DWB/lemm
 ./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh  --HTML  --lemmaabfrage "*vera*"
 ./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh  --HTML --ODT --lemmaabfrage "*vera*"
 ```
+Es ergeben sich bei `--lemmaabfrage "*vera*"` also Wortlisten in denen _vera_ mittendrinn steht, Beispiele:
+
+- aller*vera*chtest; allun*verä*ndert; form*verä*nderung; freude*vera*rmt; … *vera*bschossung; … wort*verä*nderung; … zeit*verä*nderung;
+
+Will man nur Wortanfänge abfragen, dann `--lemmaabfrage "vera*"` verwenden.
+
