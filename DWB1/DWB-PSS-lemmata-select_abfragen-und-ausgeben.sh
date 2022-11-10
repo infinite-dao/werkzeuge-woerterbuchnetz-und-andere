@@ -39,6 +39,7 @@ Verwendbare Wahlmöglichkeiten:
 
 -H, --HTML             HTML Datei erzeugen
 -O, --ODT              ODT Datei (für LibreOffice) erzeugen
+-b, --behalte_Dateien  Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
 -s, --stillschweigend  Kaum Meldungen ausgaben
     --debug            Print script debug infos (commands executed)
     --farb-frei        Meldungen ohne Farben ausgeben
