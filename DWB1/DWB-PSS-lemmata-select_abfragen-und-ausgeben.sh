@@ -22,7 +22,7 @@ case $(date '+%m') in
 esac
 
 nutzung() {
-  cat <<MEHRZEILIG
+  cat <<NUTZUNG
 Nutzung: 
   ./$(basename "${BASH_SOURCE[0]}") [-h] [-s] [-H] [-O] -l "*fahren*"
 
@@ -44,7 +44,7 @@ Verwendbare Wahlmöglichkeiten:
     --debug            Print script debug infos (commands executed)
     --farb-frei        Meldungen ohne Farben ausgeben
 (technische Abhängigkeiten: jq, pandoc, sed)
-MEHRZEILIG
+NUTZUNG
   exit
 }
 
@@ -57,22 +57,27 @@ aufraeumen() {
     0)  ;; 
     1) meldung "${ORANGE}Entferne unwichtige Dateien …${FORMAT_FREI}" ;;
     esac
-    if [[ -e "${json_speicher_datei:-}" ]];then rm "${json_speicher_datei}"; fi
-    if [[ -e "${datei_utf8_text_zwischenablage:-}" ]];then rm "${datei_utf8_text_zwischenablage}"; fi
-    if [[ -e "${datei_utf8_text_zwischenablage_gram:-}" ]];then rm "${datei_utf8_text_zwischenablage_gram}"; fi
-    if [[ -e "${datei_utf8_html_zwischenablage_gram:-}" ]];then rm "${datei_utf8_html_zwischenablage_gram}"; fi
+    if [[ -e "${json_speicher_datei:-}" ]];then                 rm -- "${json_speicher_datei}"; fi
+    if [[ -e "${datei_utf8_text_zwischenablage:-}" ]];then      rm -- "${datei_utf8_text_zwischenablage}"; fi
+    if [[ -e "${datei_utf8_text_zwischenablage_gram:-}" ]];then rm -- "${datei_utf8_text_zwischenablage_gram}"; fi
+    if [[ -e "${datei_utf8_html_zwischenablage_gram:-}" ]];then rm -- "${datei_utf8_html_zwischenablage_gram}"; fi
     case $stufe_formatierung in 2)  
-      if [[ -e "${datei_utf8_html_gram_tidy:-}" ]];then rm "${datei_utf8_html_gram_tidy}"; fi
+      if [[ -e "${datei_utf8_html_gram_tidy:-}" ]];then         rm -- "${datei_utf8_html_gram_tidy}"; fi
     ;;
     esac
     case $stufe_formatierung in 1)  
-      if [[ -e "${datei_utf8_odt_gram:-}" ]];then rm "${datei_utf8_odt_gram}"; fi
+      if [[ -e "${datei_utf8_odt_gram:-}" ]];then               rm -- "${datei_utf8_odt_gram}"; fi
     ;;
     esac
   fi
   case ${stufe_verausgaben:-0} in 
   0)  ;; 
-  1) meldung "${ORANGE}Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ; ls -l ${json_speicher_datei%.*}* ;;
+  1) 
+    if [[ $( find . -maxdepth 1 -iname "${json_speicher_datei%.*}*" ) ]];then
+    meldung "${ORANGE}Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ; 
+    ls -l ${json_speicher_datei%.*}*  
+    fi
+    ;;
   esac
 }
 
@@ -229,7 +234,7 @@ esac
 
 if [[ -e "${json_speicher_datei}" ]];then
   cat "${json_speicher_datei}" | jq '.[] | .label | tostring' > "${datei_utf8_text_zwischenablage}" \
-  && echo -ne "${titel_text}\n\n" > "${datei_utf8_reiner_text}" \
+  && printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text}" \
   && pandoc -f html -t plain "${datei_utf8_text_zwischenablage}" >> "${datei_utf8_reiner_text}" \
   && sed --regexp-extended --in-place 's@"([^"]+)"@\1;@g' "${datei_utf8_reiner_text}"
 else
@@ -249,7 +254,8 @@ cat "${json_speicher_datei}" | jq ' sort_by(.gram,.label)[] |  if .gram == null 
   ' | sed -r 's@"@@g; ' | uniq > "${datei_utf8_text_zwischenablage_gram}"
 if [[ -e "${datei_utf8_text_zwischenablage_gram}" ]];then 
   # (3.1.) Sonderzeichen, Umlaute dekodieren in lesbare Zeichen als UTF8
-  pandoc -f html -t plain "${datei_utf8_text_zwischenablage_gram}" > "${datei_utf8_reiner_text_gram}"
+  printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text_gram}" \
+  && pandoc -f html -t plain "${datei_utf8_text_zwischenablage_gram}" >> "${datei_utf8_reiner_text_gram}"
 else
   meldung_abbruch "${ORANGE}Textdatei '${datei_utf8_reiner_text_gram}' fehlt oder konnte nicht erstellt werden (Abbruch)${FORMAT_FREI}"
 fi
@@ -274,7 +280,7 @@ case $stufe_formatierung in
   then "<tr><td>\(.label), die</td><td>\(.gram)</td><td>Nennwort, weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[.]?\\? *$"))
   then "<tr><td>\(.label), die?</td><td>\(.gram)</td><td>Nennwort, ?weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
-  elif (.gram|test("^ *f[.]? *n[.]? *$"))
+  elif (.gram|test("^ *f[.]? *n[.]? *$|^ *f[.]? *n[.]? *n[.]? *$"))
   then "<tr><td>\(.label), die o. das</td><td>\(.gram)</td><td>Nennwort, weiblich o. sächlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[.]? *m[.]? *$"))
   then "<tr><td>\(.label), die o. der</td><td>\(.gram)</td><td>Nennwort, weiblich o. männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
@@ -290,7 +296,7 @@ case $stufe_formatierung in
   elif (.gram|test("^ *m[.]?\\? *$"))
   then "<tr><td>\(.label), der?</td><td>\(.gram)</td><td>Nennwort, ?männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif (.gram|test("^ *adj. +und +adv. *$|^ *adj. +u. +adv. *$"))
+  elif (.gram|test("^ *adj. +und +adv. *$|^ *adj. +u. +adv. *$|^ *adj. adv. *$"))
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Eigenschaftswort, Beiwort und Zuwort, Umstandswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif .gram == "adj."
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
@@ -300,7 +306,10 @@ case $stufe_formatierung in
   elif .gram == "part."
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Mittelwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif .gram == "verb."
+  elif (.gram|test("^ *part. +adj. *$"))
+  then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Mittelwort und Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif (.gram|test("^ *v. *$|^ *vb. *$|^ *verb. *$"))
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Zeitwort, Tätigkeitswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   else "<tr><td>\(.label)</td><td>\(.gram)</td><td>?</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   end
