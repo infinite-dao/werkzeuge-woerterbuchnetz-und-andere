@@ -269,14 +269,14 @@ case $stufe_formatierung in
   esac
   cat "${json_speicher_datei}" | jq ' sort_by(.gram,.label)[] |  if .gram == null or .gram == ""
   then "<tr><td>\(.label)</td><td><!-- keine Grammatik angegeben --></td><td><!-- ohne Sprachkunst-Begriff --></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
-  elif (.gram|test("^ *n[.]? *$"))
+  elif (.gram|test("^ *n[.]?[;]? *$"))
   then "<tr><td>\(.label), das</td><td>\(.gram)</td><td>Nennwort, sächlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *n[.]?\\? *$"))
   then "<tr><td>\(.label), das?</td><td>\(.gram)</td><td>Nennwort, ?sächlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *n[.]? *m[.]? *$"))
   then "<tr><td>\(.label), das o. der</td><td>\(.gram)</td><td>Nennwort, sächlich o. männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif (.gram|test("^ *f[.]? *$"))
+  elif (.gram|test("^ *f[.]?[;]? *$"))
   then "<tr><td>\(.label), die</td><td>\(.gram)</td><td>Nennwort, weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[.]?\\? *$"))
   then "<tr><td>\(.label), die?</td><td>\(.gram)</td><td>Nennwort, ?weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
@@ -288,7 +288,7 @@ case $stufe_formatierung in
   elif (.gram|test("^ *f. +subst. *$"))
   then "<tr><td>\(.label), die</td><td>\(.gram)</td><td>Nennwort, weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif (.gram|test("^ *m[.]? *$"))
+  elif (.gram|test("^ *m[.]?[;]? *$"))
   then "<tr><td>\(.label), der</td><td>\(.gram)</td><td>Nennwort, männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *m[.]? *f[.]? *$"))
   then "<tr><td>\(.label), der o. die</td><td>\(.gram)</td><td>Nennwort, männlich o. weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
@@ -308,7 +308,10 @@ case $stufe_formatierung in
   elif  (.gram|test("^ *part[.]?[;]? *$"))
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Mittelwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif (.gram|test("^ *part[iz]?.[ -]+adj. *$"))
+  elif  (.gram|test("^ *interj[.]?[;]? *$|^ *interjection[;]? *$"))
+  then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Zwischenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif (.gram|test("^ *part[iz]*.[ -]+adj. *$"))
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Mittelwort und Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *v. +u. +subst. +n. *$"))
