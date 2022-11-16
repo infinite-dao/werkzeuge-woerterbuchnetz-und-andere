@@ -31,11 +31,12 @@ DWB abfragen und daraus Listen-Textdokumente erstellen. Im Normalfall werden erz
 - Textdatei reine Wortliste (ohne Zusätzliches)
 - Textdatei mit Grammatik-Einträgen
 Zusätzlich kann man eine HTML oder ODT Datei erstellen lassen (benötigt Programm pandoc).
+(Technische Abhängigkeiten: jq, pandoc, sed)
 
 Verwendbare Wahlmöglichkeiten:
--h, --hilfe          Hilfetext dieses Programms ausgeben.
+-h, --Hilfe          Hilfetext dieses Programms ausgeben.
 
--l, --lemmaabfrage   Die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
+-l, --Lemmaabfrage   Die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
 
 -H, --HTML             HTML Datei erzeugen
 -O, --ODT              ODT Datei (für LibreOffice) erzeugen
@@ -43,7 +44,6 @@ Verwendbare Wahlmöglichkeiten:
 -s, --stillschweigend  Kaum Meldungen ausgaben
     --debug            Print script debug infos (commands executed)
     --farb-frei        Meldungen ohne Farben ausgeben
-(technische Abhängigkeiten: jq, pandoc, sed)
 NUTZUNG
   exit
 }
@@ -52,33 +52,36 @@ NUTZUNG
 aufraeumen() {
   trap - SIGINT SIGTERM ERR EXIT
   # aufzuräumendes für dieses Programm
-  if [[ ${stufe_dateienbehalten:-0} -eq 0 ]];then
+  
+  if [[ ${stufe_aufraeumen_aufhalten:-0} -eq 0 ]];then
+    if [[ ${stufe_dateienbehalten:-0} -eq 0 ]];then
+      case ${stufe_verausgaben:-0} in 
+      0)  ;; 
+      1) meldung "${ORANGE}Entferne unwichtige Dateien …${FORMAT_FREI}" ;;
+      esac
+      if [[ -e "${json_speicher_datei:-}" ]];then                 rm -- "${json_speicher_datei}"; fi
+      if [[ -e "${datei_utf8_text_zwischenablage:-}" ]];then      rm -- "${datei_utf8_text_zwischenablage}"; fi
+      if [[ -e "${datei_utf8_text_zwischenablage_gram:-}" ]];then rm -- "${datei_utf8_text_zwischenablage_gram}"; fi
+      if [[ -e "${datei_utf8_html_zwischenablage_gram:-}" ]];then rm -- "${datei_utf8_html_zwischenablage_gram}"; fi
+      case $stufe_formatierung in 2)  
+        if [[ -e "${datei_utf8_html_gram_tidy:-}" ]];then         rm -- "${datei_utf8_html_gram_tidy}"; fi
+      ;;
+      esac
+      case $stufe_formatierung in 1)  
+        if [[ -e "${datei_utf8_odt_gram:-}" ]];then               rm -- "${datei_utf8_odt_gram}"; fi
+      ;;
+      esac
+    fi
     case ${stufe_verausgaben:-0} in 
     0)  ;; 
-    1) meldung "${ORANGE}Entferne unwichtige Dateien …${FORMAT_FREI}" ;;
-    esac
-    if [[ -e "${json_speicher_datei:-}" ]];then                 rm -- "${json_speicher_datei}"; fi
-    if [[ -e "${datei_utf8_text_zwischenablage:-}" ]];then      rm -- "${datei_utf8_text_zwischenablage}"; fi
-    if [[ -e "${datei_utf8_text_zwischenablage_gram:-}" ]];then rm -- "${datei_utf8_text_zwischenablage_gram}"; fi
-    if [[ -e "${datei_utf8_html_zwischenablage_gram:-}" ]];then rm -- "${datei_utf8_html_zwischenablage_gram}"; fi
-    case $stufe_formatierung in 2)  
-      if [[ -e "${datei_utf8_html_gram_tidy:-}" ]];then         rm -- "${datei_utf8_html_gram_tidy}"; fi
-    ;;
-    esac
-    case $stufe_formatierung in 1)  
-      if [[ -e "${datei_utf8_odt_gram:-}" ]];then               rm -- "${datei_utf8_odt_gram}"; fi
-    ;;
+    1) 
+      if [[ $( find . -maxdepth 1 -iname "${json_speicher_datei%.*}*" ) ]];then
+      meldung "${ORANGE}Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ; 
+      ls -l ${json_speicher_datei%.*}*  
+      fi
+      ;;
     esac
   fi
-  case ${stufe_verausgaben:-0} in 
-  0)  ;; 
-  1) 
-    if [[ $( find . -maxdepth 1 -iname "${json_speicher_datei%.*}*" ) ]];then
-    meldung "${ORANGE}Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ; 
-    ls -l ${json_speicher_datei%.*}*  
-    fi
-    ;;
-  esac
 }
 
 farben_bereitstellen() {
@@ -125,6 +128,7 @@ parameter_abarbeiten() {
   # default values of variables set from params
   stufe_verausgaben=1
   stufe_formatierung=0
+  stufe_aufraeumen_aufhalten=0
   stufe_dateienbehalten=0
   # Grundlage: rein Text, und mit Grammatik
   # zusätzlich
@@ -141,19 +145,19 @@ parameter_abarbeiten() {
   # To be able to pass two flags as -ab, instead of -a -b, some additional code would be needed.
   while :; do
     case "${1-}" in
-    -h | --hilfe) nutzung ;;
+    -h | --[Hh]ilfe) stufe_aufraeumen_aufhalten=1; nutzung ;;
     --debug) set -x ;;
     -b | --behalte_Dateien) stufe_dateienbehalten=1 ;;
     -s | --stillschweigend) stufe_verausgaben=0 ;;
     --farb-frei) FARB_FREI=1 ;;
-    -l | --lemmaabfrage)  # Parameter
+    -l | --[lL]emmaabfrage)  # Parameter
       lemmaabfrage="${2-}" 
       lemma_text=$(echo "$lemmaabfrage" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…{2,}$@@')
       json_speicher_datei=$(json_speicher_datei $lemma_text)
       titel_text="Wörter-Abfrage „$lemma_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"
       shift
       ;;
-    -H | --HTML)
+    -H | --[Hh][Tt][Mm][Ll])
       case $stufe_formatierung in
       0) stufe_formatierung=1 ;;
       1|3) stufe_formatierung=$stufe_formatierung ;;
@@ -161,7 +165,7 @@ parameter_abarbeiten() {
       *) stufe_formatierung=1 ;;
       esac
       ;;
-    -O | --ODT) 
+    -O | --[Oo][Dd][Tt]) 
       case $stufe_formatierung in
       0) stufe_formatierung=2 ;;
       1) stufe_formatierung=$(( $stufe_formatierung + 2 )) ;;
