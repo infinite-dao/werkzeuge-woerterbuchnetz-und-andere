@@ -290,9 +290,9 @@ case $stufe_formatierung in
 
   elif (.gram|test("^ *m[.]?[;]? *$"))
   then "<tr><td>\(.label), der</td><td>\(.gram)</td><td>Nennwort, männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
-  elif (.gram|test("^ *m[.]? *f[.]? *$"))
+  elif (.gram|test("^ *m[.]?[,]? *f[.]? *$"))
   then "<tr><td>\(.label), der o. die</td><td>\(.gram)</td><td>Nennwort, männlich o. weiblich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
-  elif (.gram|test("^ *m[.]? *n[.]? *$"))
+  elif (.gram|test("^ *m[.]?[,]? *n[.]? *$"))
   then "<tr><td>\(.label), der o. das</td><td>\(.gram)</td><td>Nennwort, männlich o. sächlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *m[.]?\\? *$"))
   then "<tr><td>\(.label), der?</td><td>\(.gram)</td><td>Nennwort, ?männlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
