@@ -309,31 +309,34 @@ case $stufe_formatierung in
   elif  (.gram|test("^ *adv[.]?[;]? *$"))
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Zuwort, Umstandswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif  (.gram|test("^ *part[.]?[;]? *$"))
+  elif  (.gram|test("^ *part[icz]*[.]?[;]? *$"))
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Mittelwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif  (.gram|test("^ *interj[.]?[;]? *$|^ *interjection[;]? *$"))
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Zwischenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif (.gram|test("^ *part[iz]*.[ -]+adj. *$"))
+  elif (.gram|test("^ *part[icz]*.[ -]+adj. *$"))
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Mittelwort und Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif (.gram|test("^ *praet.[;]? *$"))
+  then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Vergangenheit</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *v. +u. +subst. +n. *$"))
   then "<tr><td>\(.label); \(.label), das</td><td>\(.gram)</td><td>Zeitwort, Tätigkeitswort und Nennwort sächlich</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   
-  elif (.gram|test("^ *v. *$|^ *vb. *$|^ *verb. *$"))
+  elif (.gram|test("^ *v.[;]? *$|^ *vb.[;]? *$|^ *verb.[;]? *$"))
   then "<tr><td>\(.label)</td><td>\(.gram)</td><td>Zeitwort, Tätigkeitswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   else "<tr><td>\(.label)</td><td>\(.gram)</td><td>?</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   end
-  ' | sed -r 's@"@@g; 
-  s@“([^“”]+)”@"\1"@g; 
+  ' | sed -r "s@\"@@g; 
+  s@“([^“”]+)”@\"\1\"@g; 
 s@&#x00e4;@ä@g;
 s@&#x00f6;@ö@g;
 s@&#x00fc;@ü@g;
 s@<td>([^ ])([^ ]+)(, [d][eia][res][^<>]*)</td>@<td>\U\1\L\2\3</td>@g; # ersten Buchstaben Groß bei Nennwörtern
-1 i\<!DOCTYPE html>\n<html lang="de" xml:lang="de" xmlns="http://www.w3.org/1999/xhtml">\n<head>\n<title></title>\n</head>\n<body><p><i style="font-variant:small-caps;">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table><tr><th>Wort</th><th>Grammatik</th><th>Sprachkunst/<br/>Sprachlehre (s. a. <i style="font-variant:small-caps;">Schottel 1663</i>)</th><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
+1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>Liste unbearbeitet (es können auch Wörter enthalten sein, die nicht mit ${lemma_text} zu tun haben).</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table><tr><th>Wort</th><th>Grammatik</th><th>Sprachkunst/<br/>Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel 1663</i>)</th><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
 $ a\</table>\n</body>\n</html>
-' | uniq > "${datei_utf8_html_zwischenablage_gram}"
+" | uniq > "${datei_utf8_html_zwischenablage_gram}"
   case $stufe_verausgaben in 
   0)  ;; 
   1) meldung "${GRUEN}Weiterverarbeitung → JSON → HTML${FORMAT_FREI} (tidy: ${datei_utf8_html_gram_tidy})" ;;
