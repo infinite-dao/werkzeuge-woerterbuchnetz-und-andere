@@ -29,3 +29,21 @@ Es ergeben sich bei `--Lemmaabfrage "*wohl"` also Wortlisten in denen _wohl_ mit
 
 Will man nur Wortanfänge abfragen, dann `--Lemmaabfrage "wohl*"` verwenden.
 
+## `DWB-PSS_volltext_abfragen-und-ausgeben.sh`
+
+Dieses Programm befragt die Volltextsuche ab (inmitten des Wörterbuches) über eine Programm-Schnitt-Stelle (PSS, enl. API), und es werden verschiedene Dateien erzeugt, in denen reinweg die nur gefundenen Wörter stehen, oder eine ausführliche Wortlisten-Tabelle:
+
+- Textdatei nur aus Wörtern
+- Textdatei aus Wörtern mit Grammatik-Angabe
+- hinzufügbar (ODT): Offenes Dokument Textvormat als Wortlisten-Tabelle 
+- hinzufügbar (HTML): Netzseite als Wortlisten-Tabelle
+
+Das Ergebnis kann sehr umfangreich sein.
+
+Eingabebeispiel
+```bash
+./DWB-PSS_volltext_abfragen-und-ausgeben.sh  --Hilfe
+
+# das lateinische stupere (für staunen) abfragen lassen:
+./DWB-PSS_volltext_abfragen-und-ausgeben.sh  --HTML --ODT --Volltextabfrage "stupere" 
+```
