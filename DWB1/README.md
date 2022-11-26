@@ -4,11 +4,13 @@ https://woerterbuchnetz.de/DWB/
 
 ## `DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh`
 
-Im folgenden Programm wird „…wohl…“ über `https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/*wohl*/0/json` abgefragt, und verschiedene Dateien erzeugt, in denen reinweg die gefundenen Wörter stehen, oder eine ausführliche Wortlisten-Tabelle:
+Dieses Programm fragt Lemmata (Hauptwörter-Einträge) ab über eine Programm-Schnitt-Stelle (PSS, enl. API), und es werden verschiedene Dateien erzeugt, in denen reinweg die nur gefundenen Wörter stehen, oder eine ausführliche Wortlisten-Tabelle:
 - Textdatei nur aus Wörtern
 - Textdatei aus Wörtern mit Grammatik-Angabe
 - hinzufügbar (ODT): Offenes Dokument Textvormat als Wortlisten-Tabelle 
 - hinzufügbar (HTML): Netzseite als Wortlisten-Tabelle
+
+Im Beispiel wird „…wohl…“ über `https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/*wohl*/0/json` abgefragt und ausgewertet:
 
 ```bash
 ./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh --Hilfe  # Hilfe anzeigen lassen mit allen Wahlmöglichkeiten (Optionen)
