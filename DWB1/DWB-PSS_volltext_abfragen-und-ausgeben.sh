@@ -98,18 +98,20 @@ aufraeumen() {
     if [[ ${stufe_dateienbehalten:-0} -eq 0 ]];then
       case ${stufe_verausgaben:-0} in 
       0)  ;; 
-      1) meldung "${ORANGE}Entferne unwichtige Dateien …${FORMAT_FREI}" ;;
+      1) meldung "${ORANGE}Aufräumen: Entferne unwichtige Dateien …${FORMAT_FREI}" ;;
       esac
       if [[ -e "${json_speicher_datei-}" ]];then                             rm -- "${json_speicher_datei}"; fi
       if [[ -e "${datei_utf8_text_zwischenablage-}" ]];then                  rm -- "${datei_utf8_text_zwischenablage}"; fi
       if [[ -e "${datei_utf8_text_zwischenablage_gram-}" ]];then             rm -- "${datei_utf8_text_zwischenablage_gram}"; fi
       if [[ -e "${datei_utf8_html_zwischenablage_gram-}" ]];then             rm -- "${datei_utf8_html_zwischenablage_gram}"; fi
       case $stufe_formatierung in 2)  
-        if [[ -e "${datei_utf8_html_gram_tidy:-}" ]];then         rm -- "${datei_utf8_html_gram_tidy}"; fi
+        if [[ -e "${datei_utf8_html_gram_tidy-}" ]];then         rm -- "${datei_utf8_html_gram_tidy}"; fi
+        if [[ -e "${datei_utf8_html_gram_tidy_log-}" ]];then     rm -- "${datei_utf8_html_gram_tidy_log}"; fi
       ;;
       esac
       case $stufe_formatierung in 1)  
-        if [[ -e "${datei_utf8_odt_gram:-}" ]];then               rm -- "${datei_utf8_odt_gram}"; fi
+        if [[ -e "${datei_utf8_odt_gram-}" ]];then               rm -- "${datei_utf8_odt_gram}"; fi
+        if [[ -e "${datei_utf8_html_gram_tidy_log-}" ]];then     rm -- "${datei_utf8_html_gram_tidy_log}"; fi
       ;;
       esac
       if [[ -e "${json_speicher_all_query_datei-}" ]];then                   rm -- "${json_speicher_all_query_datei}"; fi
@@ -125,7 +127,7 @@ aufraeumen() {
     0)  ;; 
     1) 
       if [[ $( find . -maxdepth 1 -iname "${json_speicher_datei%.*}*" ) ]];then
-      meldung "${ORANGE}Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ; 
+      meldung "${ORANGE}Aufräumen: Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ; 
       ls -l ${json_speicher_datei%.*}*  
       fi
       ;;
@@ -174,6 +176,7 @@ dateivariablen_filter_bereitstellen() {
     datei_diese_wbnetzkwiclink="${datei_utf8_html_zwischenablage_gram}.wbnetzkwiclink.txt"
     
   datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html"
+  datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html.log"
   datei_utf8_odt_gram="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram.odt"
   json_speicher_all_query_datei="${diese_json_speicher_datei%.*}.allquery.json"
   # Zwischenablage für JSON Verarbeitung
@@ -297,17 +300,17 @@ case $stufe_verausgaben in
     --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
     --output-document="${json_speicher_datei}" \
     && wget \
-    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=$volltextabfrage" \
+    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
     --output-document="${json_speicher_all_query_datei}"
  ;; 
  1) 
   meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage)" 
-  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=$volltextabfrage)" 
+  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=})" 
   wget --show-progress \
     --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
     --output-document="${json_speicher_datei}" \
     && wget --show-progress \
-    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=$volltextabfrage" \
+    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
     --output-document="${json_speicher_all_query_datei}"
     
  ;; 
@@ -321,11 +324,11 @@ esac
 
 if [[ -e "${json_speicher_datei}" ]];then
   # cat ./test/stupere.json | jq ' .result_count '
-  n_suchergebnisse=$( cat "${json_speicher_datei}" | jq ' .result_count ' ) && abbruch_code_nummer=$?
   # cat "${json_speicher_datei}" | jq ' .result_set[] | .lemma | tostring '
+  n_suchergebnisse=$( cat "${json_speicher_datei}" | jq ' .result_count ' ) && abbruch_code_nummer=$?
   case $abbruch_code_nummer in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
     msg "${ORANGE}Irgendwas lief schief mit cat … jq. Abbruch Code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${FORMAT_FREI}" ;;
-  esac  
+  esac
   if [[ ${n_suchergebnisse-0} -eq 0 ]];then
     meldung_abbruch "${ORANGE}Datei '${json_speicher_datei}' enthält $n_suchergebnisse Suchergebnisse (Abbruch)${FORMAT_FREI}"
   fi
@@ -363,6 +366,7 @@ case $volltext_text in
 *…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang <i>${volltext_text}</i> gemein haben)." ;;
 *) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Abfrage <i>${volltext_text}</i> zu tun haben)." ;;
 esac
+html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-de/tree/main/DWB1#dwb-pss_volltext_abfragen-und-ausgebensh\"><code>DWB-PSS_volltext_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
 
 # kombiniere json_speicher_all_query_datei und json_speicher_datei für wbnetzkwiclink mit richtiger Fund-Textstelle
 # jq flatten JSON
@@ -427,9 +431,9 @@ case $stufe_formatierung in
   elif (.gram|test("^ *f., +m., +n. *$"))
   then "<tr><td>\(.lemma), die o. das o. der</td><td>\(.gram)</td><td>Nennwort, weiblich o. männlich o. sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif (.gram|test("^ *f.[,]? +nomen actionis *$"))
+  elif (.gram|test("^ *f[_.,;]* +nomen +actionis *$"))
   then "<tr><td>\(.lemma), die</td><td>\(.gram)</td><td>Nennwort einer Handlung, weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *f.[,]? +nomen agentis *$"))
+  elif (.gram|test("^ *f[_.,;]* +nomen +agentis *$"))
   then "<tr><td>\(.lemma), die</td><td>\(.gram)</td><td>Nennwort-Machende, weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f. +subst. *$"))
   then "<tr><td>\(.lemma), die</td><td>\(.gram)</td><td>Nennwort, weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
@@ -441,22 +445,24 @@ case $stufe_formatierung in
   then "<tr><td>\(.lemma), der</td><td>\(.gram)</td><td>Nennwort, männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
   then "<tr><td>\(.lemma), der o. die</td><td>\(.gram)</td><td>Nennwort, männlich o. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
+  then "<tr><td>\(.lemma), der u. die</td><td>\(.gram)</td><td>Nennwort, männlich u. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
   then "<tr><td>\(.lemma), der o. das</td><td>\(.gram)</td><td>Nennwort, männlich o. sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *m[.]?\\? *$"))
+  elif (.gram|test("^ *m[_.,;]*\\? *$"))
   then "<tr><td>\(.lemma), der?</td><td>\(.gram)</td><td>Nennwort, ?männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m., +f., +n. *$"))
   then "<tr><td>\(.lemma), der o. die o. das</td><td>\(.gram)</td><td>Nennwort, männlich o. weiblich o. sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m., +n., +f. *$"))
   then "<tr><td>\(.lemma), der o. das o. die</td><td>\(.gram)</td><td>Nennwort, männlich o. sächlich o. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *m.[,]? +nomen actionis *$"))
+  elif (.gram|test("^ *m[_.,;]* +nomen +actionis *$"))
   then "<tr><td>\(.lemma), der</td><td>\(.gram)</td><td>Nennwort einer Handlung, männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *m.[,]? +nomen agentis *$"))
+  elif (.gram|test("^ *m[_.,;]* +nomen +agentis *$"))
   then "<tr><td>\(.lemma), der</td><td>\(.gram)</td><td>Nennwort-Machender, männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   
   elif (.gram|test("^ *n[_.,;]* *$"))
   then "<tr><td>\(.lemma), das</td><td>\(.gram)</td><td>Nennwort, sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *n[.]?\\? *$"))
+  elif (.gram|test("^ *n[_.,;]*\\? *$"))
   then "<tr><td>\(.lemma), das?</td><td>\(.gram)</td><td>Nennwort, ?sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
   then "<tr><td>\(.lemma), das o. der</td><td>\(.gram)</td><td>Nennwort, sächlich o. männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
@@ -464,7 +470,7 @@ case $stufe_formatierung in
   then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. männlich o. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n., +f., +m. *$"))
   then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. weiblich o. männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *n., +f.[;]? *$"))
+  elif (.gram|test("^ *n., +f.[_.,;]* *$"))
   then "<tr><td>\(.lemma), das o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   
   elif  (.gram|test("^ *part[icz]*[.]?[;]? *$"))
@@ -473,7 +479,7 @@ case $stufe_formatierung in
   elif (.gram|test("^ *part[icz]*.[ -]+adj. *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Mittelwort und Eigenschaftswort, Beiwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif  (.gram|test("^ *präp[.]?[;]? *$|^ *praep[.]?[;]? *$"))
+  elif  (.gram|test("^ *pr&#x00e4;p[_.,;]* *$|^ *praep[_.,;]* *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Vorwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   
   elif (.gram|test("^ *praet.[;]? *$"))
@@ -485,7 +491,10 @@ case $stufe_formatierung in
   elif (.gram|test("^ *v. +u. +subst. +n. *$"))
   then "<tr><td>\(.lemma); \(.lemma), das</td><td>\(.gram)</td><td>Zeitwort, Tätigkeitswort und Nennwort sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   
-  elif (.gram|test("^ *v.[;]? *$|^ *vb.[;]? *$|^ *verb.[;]? *$"))
+  elif (.gram|test("^ *schwaches +verbum *$|^ *sw[_.,;]* +vb[_.,;]* *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Zeitwort, Tätigkeitswort schwach</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+
+  elif (.gram|test("^ *v[_.,;]* *$|^ *vb[_.,;]* *$|^ *verb[_.,;]* *$|^ *verbum[_.,;]* *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Zeitwort, Tätigkeitswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   else "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>?</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   
@@ -503,19 +512,24 @@ s@woerterbuchnetz.de//\?@woerterbuchnetz.de/?@g;
 
   # s@<td>([^ ])([^ ]+)(, [d][eia][res][^<>]*)</td>@<td>\U\1\L\2\E\3</td>@g; # ersten Buchstaben Groß bei Nennwörtern
 s@<td>([^ ])([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>\U\1\L\2\E\3\4@g; # ersten Buchstaben Groß bei Nennwörtern
-1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik<br/>(<i>Grimm</i>)</th><th>Sprachkunst, Sprachlehre<br/>(s. a. <i style=\"font-variant:small-caps;\">Schottel 1663</i>)</th><th>Fundstelle (gekürzt)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr>
-$ a\</table>\n</body>\n</html>
+1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.).</p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik<br/>(<i>Grimm</i>)</th><th>Sprachkunst, Sprachlehre<br/>(s. a. <i style=\"font-variant:small-caps;\">Schottel 1663</i>)</th><th>Fundstelle (gekürzt)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr>
+$ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
+" | sed --regexp-extended '
+  s@<th>@<th style="border-top:2px solid gray;border-bottom:2px solid gray;">@g;
+  ' \
+  > "${datei_utf8_html_zwischenablage_gram}"
 
-s@<th>@<th style=\"border-top:2px solid gray;border-bottom:2px solid gray;\">@g
-" | uniq > "${datei_utf8_html_zwischenablage_gram}"
 
   case $stufe_verausgaben in 
   0)  ;; 
-  1) meldung "${GRUEN}Weiterverarbeitung → HTML (wbnetzkwiclink: $n_suchergebnisse Fundstellen)${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" ;;
+  1) meldung "${GRUEN}Weiterverarbeitung → HTML (wbnetzkwiclink: ${ORANGE}$n_suchergebnisse Fundstellen${GRUEN} abfragen)${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" ;;
   esac
 
   i_textverknuepfung=1;
-  n_textverknuepfung=$( grep --count '<wbnetzkwiclink>[^<>]*</wbnetzkwiclink>' "${datei_utf8_html_zwischenablage_gram}" )
+  n_textverknuepfung=$( grep --count '<wbnetzkwiclink>[^<>]*</wbnetzkwiclink>' "${datei_utf8_html_zwischenablage_gram}" ) && abbruch_code_nummer=$?
+  case $abbruch_code_nummer in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+    msg "${ORANGE}Irgendwas lief schief mit grep. Abbruch Code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${FORMAT_FREI}" ;;
+  esac
   
   echo "" > "${datei_diese_wbnetzkwiclink}"
   
@@ -523,10 +537,15 @@ s@<th>@<th style=\"border-top:2px solid gray;border-bottom:2px solid gray;\">@g
     datei_diese_fundstelle="${datei_utf8_html_zwischenablage_gram}.fundstelle_text.$i_textverknuepfung.txt"
     case $i_textverknuepfung in 1) echo '' > "${datei_diese_fundstelle}" ;; esac
 
-    if [[ $(( $i_textverknuepfung % 100 )) -eq 0 ]];then printf '. %04d\n' $i_textverknuepfung; else printf '.'; fi
+    # Punkte pro 100 Bearbeitungsschritte ausgeben
+    if [[ $(( $i_textverknuepfung % 100 )) -eq 0 ]];then 
+    printf '. %04d\n' $i_textverknuepfung; 
+    else 
+      if [[ ${i_textverknuepfung-0} -eq ${n_textverknuepfung--1} ]];then printf '.\n'; else printf '.'; fi
+    fi
     
     wbnetzkwiclink=$( echo $wbnetzkwiclink_text | sed --regexp-extended 's@<wbnetzkwiclink>([^<>]+)</wbnetzkwiclink>@\1@' )
-    printf "$wbnetzkwiclink\n" >> "${datei_diese_wbnetzkwiclink}"
+    printf "%s\n" "$wbnetzkwiclink" >> "${datei_diese_wbnetzkwiclink}"
     wbnetzkwiclink_escaped=$(echo $wbnetzkwiclink_text | sed 's@/@\\/@g; ' )
     # https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/A07187/textid/697253/wordid/2
     textid=$( echo "${wbnetzkwiclink}" | sed --regexp-extended 's@.+/textid/([[:digit:]]+)/.+@\1@;' )
@@ -569,7 +588,7 @@ s@<th>@<th style=\"border-top:2px solid gray;border-bottom:2px solid gray;\">@g
       end 
       ' | sed --regexp-extended 's@</i><i>@@g'
     )
-    echo "»${fundstelle_text}«" > "${datei_diese_fundstelle}"
+    echo "»${fundstelle_text}«" | sed --regexp-extended 's@»([ ;.:]+)@»…\1@g; ' > "${datei_diese_fundstelle}"
     # sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
     sed --in-place "/${wbnetzkwiclink_escaped}/r ${datei_diese_fundstelle}" "${datei_utf8_html_zwischenablage_gram}"
     sed --in-place "/${wbnetzkwiclink_escaped}/d" "${datei_utf8_html_zwischenablage_gram}"
@@ -583,14 +602,14 @@ s@<th>@<th style=\"border-top:2px solid gray;border-bottom:2px solid gray;\">@g
   if [[ -e "Abkürzungen-GRIMM-Tabelle-DWB2.html"  ]];then 
   sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
 
-  sed --in-place 's@<table *id="Wortliste-Tabelle">@<p>Siehe auch das <a href="#sec-GRIMM_Abkuerzungen">Abkürzungsverzeichnis</a>.</p>\n&@' "${datei_utf8_html_zwischenablage_gram}"
+  sed --in-place 's@<!-- *hierher Abkürzungsverzeichnis einfügen *-->@<p>Siehe auch das <a href="#sec-GRIMM_Abkuerzungen">Abkürzungsverzeichnis</a>.</p>\n@' "${datei_utf8_html_zwischenablage_gram}"
   fi
   
   case $stufe_verausgaben in 
   0)  ;; 
   1) meldung "${GRUEN}Weiterverarbeitung → JSON → HTML${FORMAT_FREI} (tidy: ${datei_utf8_html_gram_tidy})" ;;
   esac
-  tidy -quiet -output "${datei_utf8_html_gram_tidy}"  "${datei_utf8_html_zwischenablage_gram}" || this_exit_code=$?
+  tidy -quiet -output "${datei_utf8_html_gram_tidy}"  "${datei_utf8_html_zwischenablage_gram}" 2> "${datei_utf8_html_gram_tidy_log}" || this_exit_code=$?
 
   case $stufe_verausgaben in 
   0)  ;; 
@@ -619,7 +638,7 @@ case $stufe_formatierung in
     datum=$( stat --print="%x" "${datei_utf8_odt_gram}" | sed --regexp-extended 's@^([^ ]+) ([^ .]+)\..*@\1_\2@' )
     datei_sicherung=${datei_utf8_odt_gram%.*}_${datum}.odt
     
-    meldung  "${ORANGE}Vorhandene${FORMAT_FREI} ${datei_utf8_odt_gram} ${ORANGE}überschreiben?${FORMAT_FREI}"
+    meldung  "${ORANGE}Überschreibe vorhandene Textverarbeitungsdatei${FORMAT_FREI} ${datei_utf8_odt_gram} ${ORANGE}?${FORMAT_FREI}"
     meldung  "  ${ORANGE}Falls „nein“, dann erfolgt Sicherung als${FORMAT_FREI}"
     meldung  "  → $datei_sicherung ${ORANGE}(wird also umbenannt)${FORMAT_FREI}"
     echo -en "  ${ORANGE}Jetzt überschreiben (ja/NEIN):${FORMAT_FREI} "
@@ -627,7 +646,7 @@ case $stufe_formatierung in
     if [[ -z ${janein// /} ]];then janein="nein"; fi
     case $janein in
       [jJ]|[jJ][aA])
-        echo " überschreibe ODT …"
+        printf " (überschreibe ODT)\n"
         pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}" # siehe ~/.pandoc/reference.odt
       ;;
       [nN]|[nN][eE][iI][nN])
