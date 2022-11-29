@@ -177,7 +177,7 @@ dateivariablen_filter_bereitstellen() {
     
   datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html"
   datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html.log"
-  datei_utf8_odt_gram="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram.odt"
+  datei_utf8_odt_gram="${diese_json_speicher_datei%.*}_Wortliste+gram.odt"
   json_speicher_all_query_datei="${diese_json_speicher_datei%.*}.allquery.json"
   # Zwischenablage für JSON Verarbeitung
   json_speicher_allquery_datei_zwischenablage="${diese_json_speicher_datei%.*}.allquery.Zwischenablage.json"
@@ -333,10 +333,75 @@ if [[ -e "${json_speicher_datei}" ]];then
     meldung_abbruch "${ORANGE}Datei '${json_speicher_datei}' enthält $n_suchergebnisse Suchergebnisse (Abbruch)${FORMAT_FREI}"
   fi
   
-  cat "${json_speicher_datei}" | jq ' .result_set[] | .lemma | tostring ' > "${datei_utf8_text_zwischenablage}" \
+  cat "${json_speicher_datei}" | jq -r ' 
+  def woerterbehalten: ["DWB1", "DWB2"]; 
+  def Anfangsgrosz:
+    INDEX(woerterbehalten[]; .) as $wort_behalten
+    | [splits("^ *") | select(length>0)]
+    | map(if $wort_behalten[.] then . else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) end)
+    | join("");
+    
+  .result_set | sort_by(.gram,.lemma )
+  | map({gram: (.gram), Wort: (.lemma|Anfangsgrosz), wort: (.lemma)}) 
+  | .[] | if .gram == null or .gram == ""
+  then "\(.wort);"
+  elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
+  then "\(.Wort), die;"
+    elif (.gram|test("^ *f[_.,;]*\\? *$"))
+    then "\(.Wort), ?die;"
+    elif (.gram|test("^ *f[_.,;]* +m[_.,;]* *$"))
+    then "\(.Wort), die o. der;"
+    elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$"))
+    then "\(.Wort), die o. das;"
+    elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
+    then "\(.Wort), die o. das;"
+    elif (.gram|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
+    then "\(.Wort), die o. das o. der;"
+    elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
+    then "\(.Wort), die o. der o. das;"
+    elif (.gram|test("^ *f[_.,;]* +nomen +actionis *$"))
+    then "\(.Wort), die;"
+    elif (.gram|test("^ *f[_.,;]* +nomen +agentis *$"))
+    then "\(.Wort), die;"
+  elif (.gram|test("^ *m[_.,;]* *$"))
+    then "\(.Wort), der;"
+    elif (.gram|test("^ *m[_.,;]*\\? *$"))
+    then "\(.Wort), ?der;"
+    elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
+    then "\(.Wort), der o. die;"
+    elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
+    then "\(.Wort), der u. die;"
+    elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
+    then "\(.Wort), der o. das;"
+    elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
+    then "\(.Wort), der o. die o. das;"
+    elif (.gram|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
+    then "\(.Wort), der o. das o. die;"
+    elif (.gram|test("^ *m[_.,;]* +nomen +actionis *$"))
+    then "\(.Wort), der;"
+    elif (.gram|test("^ *m[_.,;]* +nomen +agentis *$"))
+    then "\(.Wort), der;"
+  elif (.gram|test("^ *n[_.,;]* *$"))
+    then "\(.Wort), das;"
+    elif (.gram|test("^ *n[_.,;]*\\? *$"))
+    then "\(.Wort), ?das;"
+    elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
+    then "\(.Wort), das o. der;"
+    elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
+    then "\(.Wort), das o. die;"
+    elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
+    then "\(.Wort), das o. der o. die;"
+    elif (.gram|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
+    then "\(.Wort), das o. die o. der;"
+    elif (.gram|test("^ *n[_.,;]* +nomen +actionis *$"))
+    then "\(.Wort), das;"
+    elif (.gram|test("^ *n[_.,;]* +nomen +agentis *$"))
+    then "\(.Wort), das;"
+  else "\(.wort);"
+  end
+  ' > "${datei_utf8_text_zwischenablage}" \
   && printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text}" \
-  && pandoc -f html -t plain "${datei_utf8_text_zwischenablage}" >> "${datei_utf8_reiner_text}" \
-  && sed --regexp-extended --in-place 's@"([^"]+)"@\1;@g' "${datei_utf8_reiner_text}"
+  && pandoc -f html -t plain "${datei_utf8_text_zwischenablage}" >> "${datei_utf8_reiner_text}" 
 else
   meldung_abbruch "${ORANGE}Datei '${json_speicher_datei}' fehlt oder konnte nicht erstellt werden (Abbruch)${FORMAT_FREI}"
 fi
@@ -346,11 +411,77 @@ case $stufe_verausgaben in
  0)  ;; 
  1) meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text_gram})" ;;
 esac
-cat "${json_speicher_datei}" | jq ' .result_set | sort_by(.gram,.lemma )[] |  if .gram == null or .gram == ""
-  then "\(.lemma);"
-  else "\(.lemma) (\(.gram));"
-  end
+
+cat "${json_speicher_datei}" | jq ' def woerterbehalten: ["DWB1", "DWB2"];
+def Anfangsgrosz:
+  INDEX(woerterbehalten[]; .) as $wort_behalten
+  | [splits("^ *") | select(length>0)]
+  | map(if $wort_behalten[.] then . else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) end)
+  | join("");
+  
+.result_set | sort_by(.gram,.lemma ) 
+| map({gram: (.gram), Wort: (.lemma|Anfangsgrosz), wort: (.lemma)}) 
+| .[] | if .gram == null or .gram == ""
+then "\(.wort);"
+elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
+then "\(.Wort), die (\(.gram));"
+  elif (.gram|test("^ *f[_.,;]*\\? *$"))
+  then "\(.Wort), ?die (\(.gram));"
+  elif (.gram|test("^ *f[_.,;]* +m[_.,;]* *$"))
+  then "\(.Wort), die o. der (\(.gram));"
+  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$"))
+  then "\(.Wort), die o. das (\(.gram));"
+  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
+  then "\(.Wort), die o. das (\(.gram));"
+  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
+  then "\(.Wort), die o. das o. der (\(.gram));"
+  elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
+  then "\(.Wort), die o. der o. das (\(.gram));"
+  elif (.gram|test("^ *f[_.,;]* +nomen +actionis *$"))
+  then "\(.Wort), die (\(.gram));"
+  elif (.gram|test("^ *f[_.,;]* +nomen +agentis *$"))
+  then "\(.Wort), die (\(.gram));"
+
+elif (.gram|test("^ *m[_.,;]* *$"))
+  then "\(.Wort), der (\(.gram));"
+  elif (.gram|test("^ *m[_.,;]*\\? *$"))
+  then "\(.Wort), ?der (\(.gram));"
+  elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
+  then "\(.Wort), der o. die (\(.gram));"
+  elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
+  then "\(.Wort), der u. die (\(.gram));"
+  elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
+  then "\(.Wort), der o. das (\(.gram));"
+  elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
+  then "\(.Wort), der o. die o. das (\(.gram));"
+  elif (.gram|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
+  then "\(.Wort), der o. das o. die (\(.gram));"
+  elif (.gram|test("^ *m[_.,;]* +nomen +actionis *$"))
+  then "\(.Wort), der (\(.gram));"
+  elif (.gram|test("^ *m[_.,;]* +nomen +agentis *$"))
+  then "\(.Wort), der (\(.gram));"
+
+elif (.gram|test("^ *n[_.,;]* *$"))
+  then "\(.Wort), das (\(.gram));"
+  elif (.gram|test("^ *n[_.,;]*\\? *$"))
+  then "\(.Wort), ?das (\(.gram));"
+  elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
+  then "\(.Wort), das o. der (\(.gram));"
+  elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
+  then "\(.Wort), das o. die (\(.gram));"
+  elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
+  then "\(.Wort), das o. der o. die (\(.gram));"
+  elif (.gram|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
+  then "\(.Wort), das o. die o. der (\(.gram));"
+  elif (.gram|test("^ *n[_.,;]* +nomen +actionis *$"))
+  then "\(.Wort), das (\(.gram));"
+  elif (.gram|test("^ *n[_.,;]* +nomen +agentis *$"))
+  then "\(.Wort), das (\(.gram));"
+
+else "\(.wort) (\(.gram));"
+end
   ' | sed -r 's@"@@g; ' | uniq > "${datei_utf8_text_zwischenablage_gram}"
+  
 if [[ -e "${datei_utf8_text_zwischenablage_gram}" ]];then 
   # (3.1.) Sonderzeichen, Umlaute dekodieren in lesbare Zeichen als UTF8
   printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text_gram}" \
@@ -358,7 +489,6 @@ if [[ -e "${datei_utf8_text_zwischenablage_gram}" ]];then
 else
   meldung_abbruch "${ORANGE}Textdatei '${datei_utf8_reiner_text_gram}' fehlt oder konnte nicht erstellt werden (Abbruch)${FORMAT_FREI}"
 fi
-
 
 case $volltext_text in 
 …*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Abfrage <i>${volltext_text}</i> zu tun haben)." ;;
@@ -418,17 +548,19 @@ case $stufe_formatierung in
   elif  (.gram|test("^ *adv[.]?[;]? *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Zuwort, Umstandswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif (.gram|test("^ *f[.]?[;]? *$|^ *fem[.]?[;]? *$"))
+  elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
   then "<tr><td>\(.lemma), die</td><td>\(.gram)</td><td>Nennwort, weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *f[.]?\\? *$"))
+  elif (.gram|test("^ *f[_.,;]*\\? *$"))
   then "<tr><td>\(.lemma), die?</td><td>\(.gram)</td><td>Nennwort, ?weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +m[_.,;]* *$"))
   then "<tr><td>\(.lemma), die o. der</td><td>\(.gram)</td><td>Nennwort, weiblich o. männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[.]? *n[.]? *n[.]? *$"))
+  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$"))
   then "<tr><td>\(.lemma), die o. das</td><td>\(.gram)</td><td>Nennwort, weiblich o. sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *f., +n., +m. *$"))
+  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
+  then "<tr><td>\(.lemma), die o. das</td><td>\(.gram)</td><td>Nennwort, weiblich o. sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
   then "<tr><td>\(.lemma), die o. das o. der</td><td>\(.gram)</td><td>Nennwort, weiblich o. sächlich o. männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *f., +m., +n. *$"))
+  elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
   then "<tr><td>\(.lemma), die o. das o. der</td><td>\(.gram)</td><td>Nennwort, weiblich o. männlich o. sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *f[_.,;]* +nomen +actionis *$"))
@@ -443,35 +575,39 @@ case $stufe_formatierung in
 
   elif (.gram|test("^ *m[_.,;]* *$"))
   then "<tr><td>\(.lemma), der</td><td>\(.gram)</td><td>Nennwort, männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *m[_.,;]*\\? *$"))
+  then "<tr><td>\(.lemma), der?</td><td>\(.gram)</td><td>Nennwort, ?männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
   then "<tr><td>\(.lemma), der o. die</td><td>\(.gram)</td><td>Nennwort, männlich o. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
   then "<tr><td>\(.lemma), der u. die</td><td>\(.gram)</td><td>Nennwort, männlich u. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
   then "<tr><td>\(.lemma), der o. das</td><td>\(.gram)</td><td>Nennwort, männlich o. sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *m[_.,;]*\\? *$"))
-  then "<tr><td>\(.lemma), der?</td><td>\(.gram)</td><td>Nennwort, ?männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *m., +f., +n. *$"))
+  elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
   then "<tr><td>\(.lemma), der o. die o. das</td><td>\(.gram)</td><td>Nennwort, männlich o. weiblich o. sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *m., +n., +f. *$"))
+  elif (.gram|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
   then "<tr><td>\(.lemma), der o. das o. die</td><td>\(.gram)</td><td>Nennwort, männlich o. sächlich o. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +nomen +actionis *$"))
   then "<tr><td>\(.lemma), der</td><td>\(.gram)</td><td>Nennwort einer Handlung, männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +nomen +agentis *$"))
   then "<tr><td>\(.lemma), der</td><td>\(.gram)</td><td>Nennwort-Machender, männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   
-  elif (.gram|test("^ *n[_.,;]* *$"))
+elif (.gram|test("^ *n[_.,;]* *$"))
   then "<tr><td>\(.lemma), das</td><td>\(.gram)</td><td>Nennwort, sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]*\\? *$"))
   then "<tr><td>\(.lemma), das?</td><td>\(.gram)</td><td>Nennwort, ?sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
   then "<tr><td>\(.lemma), das o. der</td><td>\(.gram)</td><td>Nennwort, sächlich o. männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *n., +m., +f. *$"))
-  then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. männlich o. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *n., +f., +m. *$"))
-  then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. weiblich o. männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *n., +f.[_.,;]* *$"))
+  elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
   then "<tr><td>\(.lemma), das o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
+  then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. männlich o. weiblich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
+  then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. weiblich o. männlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *n[_.,;]* +nomen +actionis *$"))
+  then "<tr><td>\(.lemma), das</td><td>\(.gram)</td><td>Nennwort einer Handlung, sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *n[_.,;]* +nomen +agentis *$"))
+  then "<tr><td>\(.lemma), das</td><td>\(.gram)</td><td>Nennwort-Machendes, sächlich</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   
   elif  (.gram|test("^ *part[icz]*[.]?[;]? *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Mittelwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
@@ -512,7 +648,7 @@ s@woerterbuchnetz.de//\?@woerterbuchnetz.de/?@g;
 
   # s@<td>([^ ])([^ ]+)(, [d][eia][res][^<>]*)</td>@<td>\U\1\L\2\E\3</td>@g; # ersten Buchstaben Groß bei Nennwörtern
 s@<td>([^ ])([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>\U\1\L\2\E\3\4@g; # ersten Buchstaben Groß bei Nennwörtern
-1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.).</p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik<br/>(<i>Grimm</i>)</th><th>Sprachkunst, Sprachlehre<br/>(s. a. <i style=\"font-variant:small-caps;\">Schottel 1663</i>)</th><th>Fundstelle (gekürzt)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr>
+1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.). Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörtern (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik<br/>(<i>Grimm</i>)</th><th>Sprachkunst, Sprachlehre<br/>(s. a. <i style=\"font-variant:small-caps;\">Schottel 1663</i>)</th><th>Fundstelle (gekürzt)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr>
 $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
   s@<th>@<th style="border-top:2px solid gray;border-bottom:2px solid gray;">@g;
@@ -546,7 +682,7 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
     
     wbnetzkwiclink=$( echo $wbnetzkwiclink_text | sed --regexp-extended 's@<wbnetzkwiclink>([^<>]+)</wbnetzkwiclink>@\1@' )
     printf "%s\n" "$wbnetzkwiclink" >> "${datei_diese_wbnetzkwiclink}"
-    wbnetzkwiclink_escaped=$(echo $wbnetzkwiclink_text | sed 's@/@\\/@g; ' )
+    wbnetzkwiclink_regex_suchadresse=$(echo $wbnetzkwiclink_text | sed 's@/@\\/@g; ' )
     # https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/A07187/textid/697253/wordid/2
     textid=$( echo "${wbnetzkwiclink}" | sed --regexp-extended 's@.+/textid/([[:digit:]]+)/.+@\1@;' )
     
@@ -590,8 +726,8 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
     )
     echo "»${fundstelle_text}«" | sed --regexp-extended 's@»([ ;.:]+)@»…\1@g; ' > "${datei_diese_fundstelle}"
     # sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
-    sed --in-place "/${wbnetzkwiclink_escaped}/r ${datei_diese_fundstelle}" "${datei_utf8_html_zwischenablage_gram}"
-    sed --in-place "/${wbnetzkwiclink_escaped}/d" "${datei_utf8_html_zwischenablage_gram}"
+    sed --in-place "/${wbnetzkwiclink_regex_suchadresse}/r ${datei_diese_fundstelle}" "${datei_utf8_html_zwischenablage_gram}"
+    sed --in-place "/${wbnetzkwiclink_regex_suchadresse}/d" "${datei_utf8_html_zwischenablage_gram}"
     
     rm -- "${datei_diese_fundstelle}"
     
@@ -641,9 +777,9 @@ case $stufe_formatierung in
     meldung  "${ORANGE}Überschreibe vorhandene Textverarbeitungsdatei${FORMAT_FREI} ${datei_utf8_odt_gram} ${ORANGE}?${FORMAT_FREI}"
     meldung  "  ${ORANGE}Falls „nein“, dann erfolgt Sicherung als${FORMAT_FREI}"
     meldung  "  → $datei_sicherung ${ORANGE}(wird also umbenannt)${FORMAT_FREI}"
-    echo -en "  ${ORANGE}Jetzt überschreiben (ja/NEIN):${FORMAT_FREI} "
+    echo -en "  ${ORANGE}Jetzt überschreiben (JA/nein):${FORMAT_FREI} "
     read janein
-    if [[ -z ${janein// /} ]];then janein="nein"; fi
+    if [[ -z ${janein// /} ]];then janein="ja"; fi
     case $janein in
       [jJ]|[jJ][aA])
         printf " (überschreibe ODT)\n"
