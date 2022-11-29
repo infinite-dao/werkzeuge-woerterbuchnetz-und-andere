@@ -344,9 +344,11 @@ if [[ -e "${json_speicher_datei}" ]];then
     | map(if $wort_behalten[.] then . else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) end)
     | join("");
 
-  .result_set | sort_by(.gram,.lemma )
+  .result_set
   | map({gram: (.gram), Wort: (.lemma|Anfangsgrosz), wort: (.lemma)})
-  | .[] | if .gram == null or .gram == ""
+  | unique_by(.wort)  | sort_by(.gram, .wort) 
+  | .[] 
+  | if .gram == null or .gram == ""
   then "\(.wort);"
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
   then "\(.Wort), die;"
@@ -365,6 +367,8 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif (.gram|test("^ *f[_.,;]* +nomen +actionis *$"))
     then "\(.Wort), die;"
     elif (.gram|test("^ *f[_.,;]* +nomen +agentis *$"))
+    then "\(.Wort), die;"
+    elif (.gram|test("^ *f. +subst. *$"))
     then "\(.Wort), die;"
   elif (.gram|test("^ *m[_.,;]* *$"))
     then "\(.Wort), der;"
@@ -422,67 +426,71 @@ def Anfangsgrosz:
   | map(if $wort_behalten[.] then . else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) end)
   | join("");
 
-.result_set | sort_by(.gram,.lemma )
-| map({gram: (.gram), Wort: (.lemma|Anfangsgrosz), wort: (.lemma)})
-| .[] | if .gram == null or .gram == ""
-then "\(.wort);"
-elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
-then "\(.Wort), die (\(.gram));"
-  elif (.gram|test("^ *f[_.,;]*\\? *$"))
-  then "\(.Wort), ?die (\(.gram));"
-  elif (.gram|test("^ *f[_.,;]* +m[_.,;]* *$"))
-  then "\(.Wort), die o. der (\(.gram));"
-  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$"))
-  then "\(.Wort), die o. das (\(.gram));"
-  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
-  then "\(.Wort), die o. das (\(.gram));"
-  elif (.gram|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
-  then "\(.Wort), die o. das o. der (\(.gram));"
-  elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
-  then "\(.Wort), die o. der o. das (\(.gram));"
-  elif (.gram|test("^ *f[_.,;]* +nomen +actionis *$"))
+  .result_set
+  | map({gram: (.gram), Wort: (.lemma|Anfangsgrosz), wort: (.lemma)})
+  | unique_by(.wort)  | sort_by(.gram, .wort) 
+  | .[] 
+  | if .gram == null or .gram == ""
+  then "\(.wort);"
+  elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
   then "\(.Wort), die (\(.gram));"
-  elif (.gram|test("^ *f[_.,;]* +nomen +agentis *$"))
-  then "\(.Wort), die (\(.gram));"
+    elif (.gram|test("^ *f[_.,;]*\\? *$"))
+    then "\(.Wort), ?die (\(.gram));"
+    elif (.gram|test("^ *f[_.,;]* +m[_.,;]* *$"))
+    then "\(.Wort), die o. der (\(.gram));"
+    elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$"))
+    then "\(.Wort), die o. das (\(.gram));"
+    elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
+    then "\(.Wort), die o. das (\(.gram));"
+    elif (.gram|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
+    then "\(.Wort), die o. das o. der (\(.gram));"
+    elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
+    then "\(.Wort), die o. der o. das (\(.gram));"
+    elif (.gram|test("^ *f[_.,;]* +nomen +actionis *$"))
+    then "\(.Wort), die (\(.gram));"
+    elif (.gram|test("^ *f[_.,;]* +nomen +agentis *$"))
+    then "\(.Wort), die (\(.gram));"
+    elif (.gram|test("^ *f. +subst. *$"))
+    then "\(.Wort), die (\(.gram));"
+    
+  elif (.gram|test("^ *m[_.,;]* *$"))
+    then "\(.Wort), der (\(.gram));"
+    elif (.gram|test("^ *m[_.,;]*\\? *$"))
+    then "\(.Wort), ?der (\(.gram));"
+    elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
+    then "\(.Wort), der o. die (\(.gram));"
+    elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
+    then "\(.Wort), der u. die (\(.gram));"
+    elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
+    then "\(.Wort), der o. das (\(.gram));"
+    elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
+    then "\(.Wort), der o. die o. das (\(.gram));"
+    elif (.gram|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
+    then "\(.Wort), der o. das o. die (\(.gram));"
+    elif (.gram|test("^ *m[_.,;]* +nomen +actionis *$"))
+    then "\(.Wort), der (\(.gram));"
+    elif (.gram|test("^ *m[_.,;]* +nomen +agentis *$"))
+    then "\(.Wort), der (\(.gram));"
 
-elif (.gram|test("^ *m[_.,;]* *$"))
-  then "\(.Wort), der (\(.gram));"
-  elif (.gram|test("^ *m[_.,;]*\\? *$"))
-  then "\(.Wort), ?der (\(.gram));"
-  elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
-  then "\(.Wort), der o. die (\(.gram));"
-  elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
-  then "\(.Wort), der u. die (\(.gram));"
-  elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
-  then "\(.Wort), der o. das (\(.gram));"
-  elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
-  then "\(.Wort), der o. die o. das (\(.gram));"
-  elif (.gram|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
-  then "\(.Wort), der o. das o. die (\(.gram));"
-  elif (.gram|test("^ *m[_.,;]* +nomen +actionis *$"))
-  then "\(.Wort), der (\(.gram));"
-  elif (.gram|test("^ *m[_.,;]* +nomen +agentis *$"))
-  then "\(.Wort), der (\(.gram));"
+  elif (.gram|test("^ *n[_.,;]* *$"))
+    then "\(.Wort), das (\(.gram));"
+    elif (.gram|test("^ *n[_.,;]*\\? *$"))
+    then "\(.Wort), ?das (\(.gram));"
+    elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
+    then "\(.Wort), das o. der (\(.gram));"
+    elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
+    then "\(.Wort), das o. die (\(.gram));"
+    elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
+    then "\(.Wort), das o. der o. die (\(.gram));"
+    elif (.gram|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
+    then "\(.Wort), das o. die o. der (\(.gram));"
+    elif (.gram|test("^ *n[_.,;]* +nomen +actionis *$"))
+    then "\(.Wort), das (\(.gram));"
+    elif (.gram|test("^ *n[_.,;]* +nomen +agentis *$"))
+    then "\(.Wort), das (\(.gram));"
 
-elif (.gram|test("^ *n[_.,;]* *$"))
-  then "\(.Wort), das (\(.gram));"
-  elif (.gram|test("^ *n[_.,;]*\\? *$"))
-  then "\(.Wort), ?das (\(.gram));"
-  elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
-  then "\(.Wort), das o. der (\(.gram));"
-  elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
-  then "\(.Wort), das o. die (\(.gram));"
-  elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
-  then "\(.Wort), das o. der o. die (\(.gram));"
-  elif (.gram|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
-  then "\(.Wort), das o. die o. der (\(.gram));"
-  elif (.gram|test("^ *n[_.,;]* +nomen +actionis *$"))
-  then "\(.Wort), das (\(.gram));"
-  elif (.gram|test("^ *n[_.,;]* +nomen +agentis *$"))
-  then "\(.Wort), das (\(.gram));"
-
-else "\(.wort) (\(.gram));"
-end
+  else "\(.wort) (\(.gram));"
+  end
   ' | sed -r 's@"@@g; ' | uniq > "${datei_utf8_text_zwischenablage_gram}"
 
 if [[ -e "${datei_utf8_text_zwischenablage_gram}" ]];then
@@ -676,6 +684,7 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
     datei_diese_fundstelle="${datei_utf8_html_zwischenablage_gram}.fundstelle_text.$i_textverknuepfung.txt"
     case $i_textverknuepfung in 1) echo '' > "${datei_diese_fundstelle}" ;; esac
 
+    # echo $wbnetzkwiclink_text
     # Punkte pro 100 Bearbeitungsschritte ausgeben
     if [[ $(( $i_textverknuepfung % 100 )) -eq 0 ]];then
     printf '. %04d\n' $i_textverknuepfung;
@@ -690,7 +699,7 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
     textid=$( echo "${wbnetzkwiclink}" | sed --regexp-extended 's@.+/textid/([[:digit:]]+)/.+@\1@;' )
 
     fundstelle_text=$(
-      wget --quiet --no-check-certificate -O - "$wbnetzkwiclink"  | jq  --arg textid ${textid-0} --join-output ' .[]
+      wget --wait 1s --random-wait --quiet --no-check-certificate -O - "$wbnetzkwiclink"  | jq  --arg textid ${textid-0} --join-output ' .[]
       | if (.textid|tonumber) == ($textid|tonumber)
       then "<b class=\"gefunden-hervorheben\" id=\"textid-\($textid)\">\(.word)</b>"
       elif .typeset == "italics"
