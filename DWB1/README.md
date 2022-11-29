@@ -14,11 +14,11 @@ Im Beispiel wird „…wohl…“ über `https://api.woerterbuchnetz.de/dictiona
 
 ```bash
 ./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh --Hilfe  # Hilfe anzeigen lassen mit allen Wahlmöglichkeiten (Optionen)
-./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh  --ODT  --lemmaabfrage "*wohl*"
+./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh  --ODT  --Lemmaabfrage "*wohl*"
   # Folgende Dateien sind erstellt worden:
   # -rw-r--r-- 1 andreas users  5444 10. Nov 00:54 …wohl…lemmata-select-DWB-20221110-utf8_nur-Wörter+gram.txt
   # -rw-r--r-- 1 andreas users  4099 10. Nov 00:54 …wohl…lemmata-select-DWB-20221110-utf8_nur-Wörter.txt
-  # -rw-r--r-- 1 andreas users 15742 10. Nov 00:54 …wohl…lemmata-select-DWB-20221110-utf8_Wortliste+gram.odt
+  # -rw-r--r-- 1 andreas users 15742 10. Nov 00:54 …wohl…lemmata-select-DWB-20221110_Wortliste+gram.odt
 
 ./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh  --HTML       --Lemmaabfrage "*wohl*"
 ./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh  --HTML --ODT --Lemmaabfrage "*wohl*"
