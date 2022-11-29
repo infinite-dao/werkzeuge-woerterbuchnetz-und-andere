@@ -270,9 +270,11 @@ if [[ -e "${json_speicher_datei}" ]];then
     | map(if $wort_behalten[.] then . else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) end)
     | join("");
 
-  . | sort_by(.gram,.label )
+  .
   | map({gram: (.gram), Wort: (.label|Anfangsgrosz), wort: (.label)})
-  | .[] | if .gram == null or .gram == ""
+  | unique_by(.wort) | sort_by(.gram,.wort ) 
+  | .[] 
+  | if .gram == null or .gram == ""
   then "\(.wort);"
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
   then "\(.Wort), die;"
@@ -291,6 +293,8 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif (.gram|test("^ *f[_.,;]* +nomen +actionis *$"))
     then "\(.Wort), die;"
     elif (.gram|test("^ *f[_.,;]* +nomen +agentis *$"))
+    then "\(.Wort), die;"
+    elif (.gram|test("^ *f. +subst. *$"))
     then "\(.Wort), die;"
   elif (.gram|test("^ *m[_.,;]* *$"))
     then "\(.Wort), der;"
@@ -348,9 +352,10 @@ def Anfangsgrosz:
   | map(if $wort_behalten[.] then . else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) end)
   | join("");
 
-. | sort_by(.gram,.label )
-| map({gram: (.gram), Wort: (.label|Anfangsgrosz), wort: (.label)})
-| .[] | if .gram == null or .gram == ""
+. | map({gram: (.gram), Wort: (.label|Anfangsgrosz), wort: (.label)})
+| unique_by(.wort) | sort_by(.gram,.wort ) 
+| .[] 
+| if .gram == null or .gram == ""
 then "\(.wort);"
 elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
 then "\(.Wort), die (\(.gram));"
