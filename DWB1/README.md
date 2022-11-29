@@ -23,7 +23,7 @@ Im Beispiel wird „…wohl…“ über `https://api.woerterbuchnetz.de/dictiona
 ./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh  --HTML       --Lemmaabfrage "*wohl*"
 ./DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh  --HTML --ODT --Lemmaabfrage "*wohl*"
 ```
-Es ergeben sich bei `--Lemmaabfrage "*wohl"` also Wortlisten in denen _wohl_ mittendrinn steht, Beispiele:
+Es ergeben sich bei `--Lemmaabfrage "*wohl*"` also Wortlisten in denen _wohl_ mittendrinn steht, Beispiele:
 
 - hoch*wohl*ehrwürdig; … Grade*wohl*, das; … Volks*wohl*leben, das; *wohl*beschaffen; … *wohl*lauten;
 
