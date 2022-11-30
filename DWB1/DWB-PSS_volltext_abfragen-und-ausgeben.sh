@@ -171,7 +171,7 @@ json_speicher_datei() {
       $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
       $(date '+%Y%m%d'));
   else
-    diese_json_speicher_datei=$(printf "%s…DWB1_Abfrage-Volltext_„%s“_+_Stichwort_„%s“.json" \
+    diese_json_speicher_datei=$(printf "%s…DWB1_Abfrage-Volltext_+_Stichwort-„%s“_„%s“.json" \
       $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
       $(echo $stichwortabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
       $(date '+%Y%m%d'));
