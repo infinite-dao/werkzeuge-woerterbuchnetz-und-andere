@@ -46,4 +46,8 @@ Eingabebeispiel
 
 # das lateinische stupere (für staunen) abfragen lassen:
 ./DWB-PSS_volltext_abfragen-und-ausgeben.sh  --HTML --ODT --Volltextabfrage "stupere" 
+
+# Volltextsuche „…lösen…“, aber nur Stichwörter auf Endung „…ung“
+./DWB-PSS_volltext_abfragen-und-ausgeben.sh  --HTML --ODT --Volltextabfrage "*lösen*" --Stichwortabfrage "*ung"
+
 ```
