@@ -28,7 +28,7 @@ abhaenigkeiten_pruefen() {
 nutzung() {
   cat <<NUTZUNG
 Nutzung:
-  ./$(basename "${BASH_SOURCE[0]}") [-h] [-s] [-H] [-O] -V "stupere"
+  ./$(basename "${BASH_SOURCE[0]}") [-h] [-s] [-H] [-O] [-S "…"] -V "stupere"
 
 Ein Wort aus der Programm-Schnitt-Stelle (PSS, engl. API) des Grimm-Wörterbuchs
 DWB abfragen und daraus Listen-Textdokumente erstellen. Im Normalfall werden erzeugt:
@@ -37,16 +37,18 @@ DWB abfragen und daraus Listen-Textdokumente erstellen. Im Normalfall werden erz
 Zusätzlich kann man eine HTML oder ODT Datei erstellen lassen (benötigt Programm pandoc).
 
 Verwendbare Wahlmöglichkeiten:
--h,    --Hilfe          Hilfetext dieses Programms ausgeben.
+-h,    --Hilfe             Hilfetext dieses Programms ausgeben.
 
--v,-V  --Volltextabfrage   Die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
+-v,-V  --Volltextabfrage   Pflichtfeld für die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
+-S     --Stichwortabfrage  zusätzliche Einschränkung der möglichen Stichworte, es werden nicht alle abgefragt, sondern
+                           die hier angegebene Sucheinschränkung (z.B. --Volltextabfrage "*lösen*" --Stichwortabfrage "*lösen*")
 
--H,    --HTML             HTML Datei erzeugen
--O,    --ODT              ODT Datei (für LibreOffice) erzeugen
--b,    --behalte_Dateien  Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
--s,    --stillschweigend  Kaum Meldungen ausgeben
-       --debug            Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
-       --farb-frei        Meldungen ohne Farben ausgeben
+-H,    --HTML              HTML Datei erzeugen
+-O,    --ODT               ODT Datei (für LibreOffice) erzeugen
+-b,    --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
+-s,    --stillschweigend   Kaum Meldungen ausgeben
+       --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
+       --farb-frei         Meldungen ohne Farben ausgeben
 
 Technische Abhängigkeiten:
 - jq
@@ -98,7 +100,7 @@ aufraeumen() {
     if [[ ${stufe_dateienbehalten:-0} -eq 0 ]];then
       case ${stufe_verausgaben:-0} in
       0)  ;;
-      1) meldung "${ORANGE}Aufräumen: Entferne unwichtige Dateien …${FORMAT_FREI}" ;;
+      1) meldung "${ORANGE}Abschluß: lösche unwichtige Dateien …${FORMAT_FREI}" ;;
       esac
       if [[ -e "${json_speicher_datei-}" ]];then                             rm -- "${json_speicher_datei}"; fi
       if [[ -e "${datei_utf8_text_zwischenablage-}" ]];then                  rm -- "${datei_utf8_text_zwischenablage}"; fi
@@ -130,7 +132,7 @@ aufraeumen() {
     0)  ;;
     1)
       if [[ $( find . -maxdepth 1 -iname "${json_speicher_datei%.*}*" ) ]];then
-      meldung "${ORANGE}Aufräumen: Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ;
+      meldung "${ORANGE}Abschluß: Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ;
       ls -l ${json_speicher_datei%.*}*
       fi
       ;;
@@ -158,11 +160,22 @@ meldung_abbruch() {
 }
 
 # json_speicher_datei volltext_text
+# json_speicher_datei volltext_text stichwort_text
 json_speicher_datei() {
   local volltextabfrage=${1-unbekannt}
-  local diese_json_speicher_datei=$(printf "%s…DWB1-Volltext-Abfrage-%s.json" \
-    $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
-    $(date '+%Y%m%d'))
+  local stichwortabfrage=${2-}
+  local diese_json_speicher_datei=''
+  
+  if [[ -z "${stichwortabfrage-}" ]]; then
+    diese_json_speicher_datei=$(printf "%s…DWB1_Abfrage-Volltext_„%s“.json" \
+      $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
+      $(date '+%Y%m%d'));
+  else
+    diese_json_speicher_datei=$(printf "%s…DWB1_Abfrage-Volltext_„%s“_+_Stichwort_„%s“.json" \
+      $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
+      $(echo $stichwortabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
+      $(date '+%Y%m%d'));
+  fi
   printf "${diese_json_speicher_datei}"
 }
 
@@ -209,15 +222,19 @@ parameter_abarbeiten() {
   stufe_formatierung=0
   stufe_aufraeumen_aufhalten=0
   stufe_dateienbehalten=0
+  stufe_stichwortabfrage=0
   # Grundlage: rein Text, und mit Grammatik
   # zusätzlich
   # 2^0: 1-1 = 0 rein Text, und mit Grammatik
   # 2^1: 2-1 = 1 nur mit HTML
   #      3-1 = 2 nur mit ODT
   # 2^2: 4-1 = 3 mit HTML, mit ODT
-  n_suchergebnisse=0
+  n_suchergebnisse_volltext=0
+  n_suchergebnisse_volltext_mit_stichwort=0
   volltextabfrage=''
   volltext_text=''
+  stichwortabfrage=''
+  stichwort_text=''
   json_speicher_datei=$(json_speicher_datei unbekannt)
   titel_text="Volltextsuche „??“ aus Grimm-Wörterbuch ($datum_heute_lang)"
   # param=''
@@ -233,8 +250,13 @@ parameter_abarbeiten() {
     -[Vv] | --[Vv]olltextabfrage)  # Parameter
       volltextabfrage="${2-}"
       volltext_text=$(echo "$volltextabfrage" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…{2,}$@@')
-      json_speicher_datei=$(json_speicher_datei $volltext_text)
-      titel_text="Volltextsuche „$volltext_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"
+      shift
+      ;;
+    -S | --[Ss]tichwortabfrage)  # Parameter
+      stichwortabfrage="${2-}"
+      stichwort_text=$(echo "$stichwortabfrage" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…{2,}$@@')
+      stufe_stichwortabfrage=1
+
       shift
       ;;
     -H | --[Hh][Tt][Mm][Ll])
@@ -269,11 +291,18 @@ parameter_abarbeiten() {
   # check required params and arguments
   # [[ -z "${param-}" ]] && meldung_abbruch "Missing required parameter: param"
   # [[ ${#argumente[@]} -eq 0 ]] && meldung "${ROT}Fehlendes Lemma, das abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
-  [[ -z "${volltextabfrage-}" ]] && meldung "${ROT}Fehlendes Lemma, das abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
+  [[ -z "${volltextabfrage-}" ]] && meldung "${ROT}Fehlender Volltext, der abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
 
+  case $stufe_stichwortabfrage in
+  0) json_speicher_datei=$(json_speicher_datei $volltext_text);
+     titel_text="Volltextsuche „$volltext_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"; ;;
+  1) json_speicher_datei=$(json_speicher_datei $volltext_text $stichwort_text);
+     titel_text="Volltextsuche „$volltext_text“ mit Stichwort „${stichwort_text}“ aus Grimm-Wörterbuch ($datum_heute_lang)"; ;;
+  esac
   dateivariablen_filter_bereitstellen "${json_speicher_datei}"
   abhaenigkeiten_pruefen
   json_filter_code > "${json_speicher_filter_ueber_textid_verknuepfen}"
+
   return 0
 }
 
@@ -287,34 +316,59 @@ parameter_abarbeiten "$@"
 case $stufe_verausgaben in
  0)  ;;
  1)
-  meldung "${ORANGE}DEBUG - stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
-  meldung "${ORANGE}DEBUG - stufe_verausgaben:     $stufe_verausgaben ${FORMAT_FREI}"
-  meldung "${ORANGE}DEBUG - stufe_dateienbehalten: $stufe_dateienbehalten ${FORMAT_FREI}"
-  meldung "${ORANGE}DEBUG - volltextabfrage: $volltextabfrage ${FORMAT_FREI}"
-  meldung "${ORANGE}DEBUG - volltext_text:   $volltext_text ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_verausgaben:     $stufe_verausgaben ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten: $stufe_dateienbehalten ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - volltextabfrage:       $volltextabfrage ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - volltext_text:         $volltext_text ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stichwortabfrage:      $stichwortabfrage ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stichwort_text:        $stichwort_text ${FORMAT_FREI}"
   ;;
 esac
 
 # Programm Logik hier Anfang
-
+# https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=*fug*;lemma,reflemma,variante=*fug*?token=Cs6lg4S7KFR6z9XZikhWY9oBSEBnt3ew&pageSize=20&pageNumber=1&_=1669804417852
 case $stufe_verausgaben in
  0)
-  wget \
-    --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
-    --output-document="${json_speicher_datei}" \
-    && wget \
-    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
-    --output-document="${json_speicher_all_query_datei}"
+    case $stufe_stichwortabfrage in
+    0) wget \
+      --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
+      --output-document="${json_speicher_datei}" \
+      && wget \
+      --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
+      --output-document="${json_speicher_all_query_datei}"; ;;
+    1) wget \
+      --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
+      --output-document="${json_speicher_datei}" \
+      && wget \
+      --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage};lemma,reflemma,variante=${stichwortabfrage}" \
+      --output-document="${json_speicher_all_query_datei}"; ;;
+    esac
+  
  ;;
  1)
-  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage)"
-  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=})"
-  wget --show-progress \
-    --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
-    --output-document="${json_speicher_datei}" \
-    && wget --show-progress \
-    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
-    --output-document="${json_speicher_all_query_datei}"
+    case $stufe_stichwortabfrage in
+    0) 
+      meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage)"
+      meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=})"
+      wget --show-progress \
+        --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
+        --output-document="${json_speicher_datei}" \
+        && wget --show-progress \
+        --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
+        --output-document="${json_speicher_all_query_datei}";
+    ;;
+    1) 
+      meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage)"
+      meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage};lemma,reflemma,variante=${stichwortabfrage})"
+      wget --show-progress \
+        --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
+        --output-document="${json_speicher_datei}" \
+        && wget --show-progress \
+        --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage};lemma,reflemma,variante=${stichwortabfrage}" \
+        --output-document="${json_speicher_all_query_datei}";
+    ;;
+    esac
 
  ;;
 esac
@@ -328,15 +382,50 @@ esac
 if [[ -e "${json_speicher_datei}" ]];then
   # cat ./test/stupere.json | jq ' .result_count '
   # cat "${json_speicher_datei}" | jq ' .result_set[] | .lemma | tostring '
-  n_suchergebnisse=$( cat "${json_speicher_datei}" | jq ' .result_count ' ) && abbruch_code_nummer=$?
+  n_suchergebnisse_volltext=$( cat "${json_speicher_datei}" | jq ' .result_count ' ) && abbruch_code_nummer=$?
   case $abbruch_code_nummer in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
     msg "${ORANGE}Irgendwas lief schief mit cat … jq. Abbruch Code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${FORMAT_FREI}" ;;
   esac
-  if [[ ${n_suchergebnisse-0} -eq 0 ]];then
-    meldung_abbruch "${ORANGE}Datei '${json_speicher_datei}' enthält $n_suchergebnisse Suchergebnisse (Abbruch)${FORMAT_FREI}"
+  
+  # kombiniere json_speicher_all_query_datei und json_speicher_datei für wbnetzkwiclink mit richtiger Fund-Textstelle
+  # jq flatten JSON
+  # kombiniere über textid
+  # nutze verknüpftes JSON
+  jq '[
+    [
+      [ .[]
+        | {fid:.formid, tid:(.textidlist|flatten),wid:(.wordidlist|flatten)}
+        | {fid:.fid, path_kwic_fid_tid:"/kwic/\(.fid)/textid/\(.tid[])"}
+      ],
+      [ .[]
+        | {fid:.formid, tid:(.textidlist|flatten),wid:(.wordidlist|flatten)}
+        | {fid:.fid, textid:(.tid[])}
+      ],
+      [ .[]
+        | {fid:.formid, tid:(.textidlist|flatten),wid:(.wordidlist|flatten)}
+        | {fid:.fid, path_wid:"/wordid/\(.wid[])"}
+      ]
+    ]
+    | (transpose | map(add))
+    | .[] | {textid: .textid, wbnetzkwiclink_all_result:"https://api.woerterbuchnetz.de/dictionaries/DWB\(.path_kwic_fid_tid)\(.path_wid)"}
+  ]
+  |flatten[]
+  ' "${json_speicher_all_query_datei}" > "${json_speicher_allquery_datei_zwischenablage}"
+
+  jq '.result_set | flatten[]' "${json_speicher_datei}" > "${json_speicher_datei_zwischenablage}"
+
+  jq -n \
+    --slurpfile file1 "${json_speicher_allquery_datei_zwischenablage}" \
+    --slurpfile file2 "${json_speicher_datei_zwischenablage}" \
+    -f "${json_speicher_filter_ueber_textid_verknuepfen}" > "${json_speicher_vereinte_abfragen_zwischenablage}"  
+  
+  n_suchergebnisse_volltext_mit_stichwort=$( jq '.|length' -s "${json_speicher_vereinte_abfragen_zwischenablage}" );
+  
+  if [[ ${n_suchergebnisse_volltext-0} -eq 0 ]];then
+    meldung_abbruch "${ORANGE}Datei '${json_speicher_datei}' enthält $n_suchergebnisse_volltext Volltext-Suchergebnisse, $n_suchergebnisse_volltext_mit_stichwort Stichwort-Suchergebnisse (Abbruch)${FORMAT_FREI}"
   fi
 
-  cat "${json_speicher_datei}" | jq -r '
+  dieser_jq_filter_code='
   def woerterbehalten: ["DWB1", "DWB2"];
   def Anfangsgrosz:
     INDEX(woerterbehalten[]; .) as $wort_behalten
@@ -406,9 +495,18 @@ if [[ -e "${json_speicher_datei}" ]];then
     then "\(.Wort), das;"
   else "\(.wort);"
   end
-  ' > "${datei_utf8_text_zwischenablage}" \
+  '
+  cat "${json_speicher_datei}" | jq -r "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage}" \
   && printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text}" \
   && pandoc -f html -t plain "${datei_utf8_text_zwischenablage}" >> "${datei_utf8_reiner_text}"
+  # anfügen der eingeschrängten Wörterliste
+  case $stufe_stichwortabfrage in 1)
+    jq '{result_set:.}' -s "${json_speicher_vereinte_abfragen_zwischenablage}" | jq -r "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage}" \
+    && printf "%s\n\n" "" >> "${datei_utf8_reiner_text}" \
+    && pandoc -f html -t plain "${datei_utf8_text_zwischenablage}" >> "${datei_utf8_reiner_text}"
+  ;;
+  esac
+  
 else
   meldung_abbruch "${ORANGE}Datei '${json_speicher_datei}' fehlt oder konnte nicht erstellt werden (Abbruch)${FORMAT_FREI}"
 fi
@@ -419,7 +517,7 @@ case $stufe_verausgaben in
  1) meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text_gram})" ;;
 esac
 
-cat "${json_speicher_datei}" | jq ' def woerterbehalten: ["DWB1", "DWB2"];
+dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
 def Anfangsgrosz:
   INDEX(woerterbehalten[]; .) as $wort_behalten
   | [splits("^ *") | select(length>0)]
@@ -491,55 +589,51 @@ def Anfangsgrosz:
 
   else "\(.wort) (\(.gram));"
   end
-  ' | sed -r 's@"@@g; ' | uniq > "${datei_utf8_text_zwischenablage_gram}"
+  '
 
-if [[ -e "${datei_utf8_text_zwischenablage_gram}" ]];then
-  # (3.1.) Sonderzeichen, Umlaute dekodieren in lesbare Zeichen als UTF8
-  printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text_gram}" \
+# cat "${json_speicher_datei}" | jq "${dieser_jq_filter_code}" | sed -r 's@"@@g; ' | uniq > "${datei_utf8_text_zwischenablage_gram}"
+
+cat "${json_speicher_datei}" | jq -r "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage_gram}" \
+&& printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text_gram}" \
+&& pandoc -f html -t plain "${datei_utf8_text_zwischenablage_gram}" >> "${datei_utf8_reiner_text_gram}"
+# anfügen der eingeschrängten Wörterliste
+case $stufe_stichwortabfrage in 1)
+  jq '{result_set:.}' -s "${json_speicher_vereinte_abfragen_zwischenablage}" | jq -r "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage_gram}" \
+  && printf "%s\n\n" "" >> "${datei_utf8_reiner_text_gram}" \
   && pandoc -f html -t plain "${datei_utf8_text_zwischenablage_gram}" >> "${datei_utf8_reiner_text_gram}"
-else
-  meldung_abbruch "${ORANGE}Textdatei '${datei_utf8_reiner_text_gram}' fehlt oder konnte nicht erstellt werden (Abbruch)${FORMAT_FREI}"
-fi
+;;
+esac
+  
+  # if [[ -e "${datei_utf8_text_zwischenablage_gram}" ]];then
+  #   # (3.1.) Sonderzeichen, Umlaute dekodieren in lesbare Zeichen als UTF8
+  #   printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text_gram}" \
+  #   && pandoc -f html -t plain "${datei_utf8_text_zwischenablage_gram}" >> "${datei_utf8_reiner_text_gram}"
+  # else
+  #   meldung_abbruch "${ORANGE}Textdatei '${datei_utf8_reiner_text_gram}' fehlt oder konnte nicht erstellt werden (Abbruch)${FORMAT_FREI}"
+  # fi
 
 case $volltext_text in
-…*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Abfrage <i>${volltext_text}</i> zu tun haben)." ;;
-…*)  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch Wörter enthalten sein, die nichts mit der Endung <i>$volltext_text</i> gemein haben)." ;;
-*…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang <i>${volltext_text}</i> gemein haben)." ;;
-*) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Abfrage <i>${volltext_text}</i> zu tun haben)." ;;
+…*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i>STICHWORT_PLATZHALTER zu tun haben)." ;;
+…*)  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortende (im Volltext) <i>$volltext_text</i>STICHWORT_PLATZHALTER gemein haben)." ;;
+*…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang (im Volltext) <i>${volltext_text}</i>STICHWORT_PLATZHALTER gemein haben)." ;;
+*)   bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i>STICHWORT_PLATZHALTER zu tun haben)." ;;
 esac
+
+case $stichwort_text in
+…*…) bearbeitungstext_stichwort=", und Abfrage (Stichwort) <i>${stichwort_text}</i>" ;;
+…*)  bearbeitungstext_stichwort=", und Wortende (Stichwort) <i>${stichwort_text}</i>" ;;
+*…)  bearbeitungstext_stichwort=", und Wortanfang (Stichwort) <i>${stichwort_text}</i>" ;;
+*) case $stufe_stichwortabfrage in 
+  1) bearbeitungstext_stichwort=", und Abfrage (Stichwort) <i>${stichwort_text}</i>" ;; 
+  0|*) bearbeitungstext_stichwort='' ;; 
+  esac
+  ;;
+esac
+
+bearbeitungstext_html=$(echo "$bearbeitungstext_html" | sed "s@STICHWORT_PLATZHALTER@${bearbeitungstext_stichwort}@" );
+
 html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-de/tree/main/DWB1#dwb-pss_volltext_abfragen-und-ausgebensh\"><code>DWB-PSS_volltext_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
 
-# kombiniere json_speicher_all_query_datei und json_speicher_datei für wbnetzkwiclink mit richtiger Fund-Textstelle
-# jq flatten JSON
-# kombiniere über textid
-# nutze verknüpftes JSON
-jq '[
-  [
-    [ .[]
-      | {fid:.formid, tid:(.textidlist|flatten),wid:(.wordidlist|flatten)}
-      | {fid:.fid, path_kwic_fid_tid:"/kwic/\(.fid)/textid/\(.tid[])"}
-    ],
-    [ .[]
-      | {fid:.formid, tid:(.textidlist|flatten),wid:(.wordidlist|flatten)}
-      | {fid:.fid, textid:(.tid[])}
-    ],
-    [ .[]
-      | {fid:.formid, tid:(.textidlist|flatten),wid:(.wordidlist|flatten)}
-      | {fid:.fid, path_wid:"/wordid/\(.wid[])"}
-    ]
-  ]
-  | (transpose | map(add))
-  | .[] | {textid: .textid, wbnetzkwiclink_all_result:"https://api.woerterbuchnetz.de/dictionaries/DWB\(.path_kwic_fid_tid)\(.path_wid)"}
-]
-|flatten[]
-' "${json_speicher_all_query_datei}" > "${json_speicher_allquery_datei_zwischenablage}"
-
-jq '.result_set | flatten[]' "${json_speicher_datei}" > "${json_speicher_datei_zwischenablage}"
-
-jq -n \
-  --slurpfile file1 "${json_speicher_allquery_datei_zwischenablage}" \
-  --slurpfile file2 "${json_speicher_datei_zwischenablage}" \
-  -f "${json_speicher_filter_ueber_textid_verknuepfen}" > "${json_speicher_vereinte_abfragen_zwischenablage}"
 
 case $stufe_formatierung in
  0)  ;;
@@ -669,7 +763,17 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 
   case $stufe_verausgaben in
   0)  ;;
-  1) meldung "${GRUEN}Weiterverarbeitung → HTML (wbnetzkwiclink: ${ORANGE}$n_suchergebnisse Fundstellen${GRUEN} abfragen)${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" ;;
+  1) 
+    case $stufe_stichwortabfrage in
+    0) 
+      meldung "${GRUEN}Weiterverarbeitung → HTML (wbnetzkwiclink: ${ORANGE}$n_suchergebnisse_volltext Fundstellen${GRUEN} abfragen)${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" 
+      ;;
+    1)       
+      meldung "${GRUEN}Weiterverarbeitung → HTML (wbnetzkwiclink: ${ORANGE}$n_suchergebnisse_volltext_mit_stichwort Fundstellen (aus $n_suchergebnisse_volltext Volltext-Funden)${GRUEN} abfragen)${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" 
+    ;;
+    esac
+
+  ;;
   esac
 
   i_textverknuepfung=1;
@@ -794,7 +898,7 @@ case $stufe_formatierung in
     if [[ -z ${janein// /} ]];then janein="ja"; fi
     case $janein in
       [jJ]|[jJ][aA])
-        printf " (überschreibe ODT)\n"
+        printf "  (überschreibe ODT)\n"
         pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}" # siehe ~/.pandoc/reference.odt
       ;;
       [nN]|[nN][eE][iI][nN])
