@@ -216,6 +216,13 @@ parameter_abarbeiten() {
   # [[ ${#argumente[@]} -eq 0 ]] && meldung "${ROT}Fehlendes Lemma, das abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
   [[ -z "${lemmaabfrage-}" ]] && meldung "${ROT}Fehlendes Lemma, das abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
 
+  # keine Abfragen nur mit: * oder ?
+  if [[ "${lemmaabfrage-}" == "*" ]] || [[ "${lemmaabfrage-}" =~ ^\*+$ ]] ;then
+    meldung_abbruch "${ORANGE}Alle Lemmata abzufragen (--Lemmaabfrage '${lemmaabfrage}')  wird nicht unterstützt (Abbruch)${FORMAT_FREI}"
+  fi
+  if [[ "${lemmaabfrage-}" == "?" ]] || [[ "${lemmaabfrage-}" =~ ^[*?]+$ ]] ;then
+    meldung_abbruch "${ORANGE}Alle Lemmata abzufragen (--Lemmaabfrage '${lemmaabfrage}')  wird nicht unterstützt (Abbruch)${FORMAT_FREI}"
+  fi
   dateivariablen_bereitstellen $json_speicher_datei
 
   return 0
@@ -267,7 +274,18 @@ if [[ -e "${json_speicher_datei}" ]];then
   def Anfangsgrosz:
     INDEX(woerterbehalten[]; .) as $wort_behalten
     | [splits("^ *") | select(length>0)]
-    | map(if $wort_behalten[.] then . else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) end)
+    | map(
+      if $wort_behalten[.] 
+      then . 
+      elif (.|test("^&#x00e4;"))
+      then "&#x00C4;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#x00f6;"))
+      then "&#x00D6;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#x00fc;"))
+      then "&#x00DC;" +  (.[8:] |ascii_downcase) 
+      else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
+      end
+      )
     | join("");
 
   .
@@ -277,59 +295,59 @@ if [[ -e "${json_speicher_datei}" ]];then
   | if .gram == null or .gram == ""
   then "\(.wort);"
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
-  then "\(.Wort), die;"
+  then "die \(.Wort);"
     elif (.gram|test("^ *f[_.,;]*\\? *$"))
-    then "\(.Wort), ?die;"
+    then "?die \(.Wort);"
     elif (.gram|test("^ *f[_.,;]* +m[_.,;]* *$"))
-    then "\(.Wort), die o. der;"
+    then "die o. der \(.Wort);"
     elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$"))
-    then "\(.Wort), die o. das;"
+    then "die o. das \(.Wort);"
     elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
-    then "\(.Wort), die o. das;"
+    then "die o. das \(.Wort);"
     elif (.gram|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
-    then "\(.Wort), die o. das o. der;"
+    then "die o. das o. der \(.Wort);"
     elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
-    then "\(.Wort), die o. der o. das;"
+    then "die o. der o. das \(.Wort);"
     elif (.gram|test("^ *f[_.,;]* +nomen +actionis[.]* *$"))
-    then "\(.Wort), die;"
+    then "die \(.Wort);"
     elif (.gram|test("^ *f[_.,;]* +nomen +agentis[.]* *$"))
-    then "\(.Wort), die;"
-    elif (.gram|test("^ *f. +subst. *$"))
-    then "\(.Wort), die;"
+    then "die \(.Wort);"
+    elif (.gram|test("^ *f[_.,;]* +subst. *$"))
+    then "die \(.Wort);"
   elif (.gram|test("^ *m[_.,;]* *$"))
-    then "\(.Wort), der;"
+    then "der \(.Wort);"
     elif (.gram|test("^ *m[_.,;]*\\? *$"))
-    then "\(.Wort), ?der;"
+    then "?der \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
-    then "\(.Wort), der o. die;"
+    then "der o. die \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
-    then "\(.Wort), der u. die;"
+    then "der u. die \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
-    then "\(.Wort), der o. das;"
+    then "der o. das \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
-    then "\(.Wort), der o. die o. das;"
+    then "der o. die o. das \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
-    then "\(.Wort), der o. das o. die;"
+    then "der o. das o. die \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +nomen +actionis[.]* *$"))
-    then "\(.Wort), der;"
+    then "der \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +nomen +agentis[.]* *$"))
-    then "\(.Wort), der;"
+    then "der \(.Wort);"
   elif (.gram|test("^ *n[_.,;]* *$"))
-    then "\(.Wort), das;"
+    then "das \(.Wort);"
     elif (.gram|test("^ *n[_.,;]*\\? *$"))
-    then "\(.Wort), ?das;"
+    then "?das \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
-    then "\(.Wort), das o. der;"
+    then "das o. der \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
-    then "\(.Wort), das o. die;"
+    then "das o. die \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
-    then "\(.Wort), das o. der o. die;"
+    then "das o. der o. die \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
-    then "\(.Wort), das o. die o. der;"
+    then "das o. die o. der \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +nomen +actionis[.]* *$"))
-    then "\(.Wort), das;"
+    then "das \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
-    then "\(.Wort), das;"
+    then "das \(.Wort);"
   else "\(.wort);"
   end
   ' > "${datei_utf8_text_zwischenablage}" \
@@ -346,11 +364,22 @@ case $stufe_verausgaben in
 esac
 
 cat "${json_speicher_datei}" | jq ' def woerterbehalten: ["DWB1", "DWB2"];
-def Anfangsgrosz:
-  INDEX(woerterbehalten[]; .) as $wort_behalten
-  | [splits("^ *") | select(length>0)]
-  | map(if $wort_behalten[.] then . else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) end)
-  | join("");
+  def Anfangsgrosz:
+    INDEX(woerterbehalten[]; .) as $wort_behalten
+    | [splits("^ *") | select(length>0)]
+    | map(
+      if $wort_behalten[.] 
+      then . 
+      elif (.|test("^&#x00e4;"))
+      then "&#x00C4;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#x00f6;"))
+      then "&#x00D6;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#x00fc;"))
+      then "&#x00DC;" +  (.[8:] |ascii_downcase) 
+      else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
+      end
+      )
+    | join("");
 
 . | map({gram: (.gram), Wort: (.label|Anfangsgrosz), wort: (.label)})
 | unique_by(.wort) | sort_by(.gram,.wort ) 
@@ -358,59 +387,59 @@ def Anfangsgrosz:
 | if .gram == null or .gram == ""
 then "\(.wort);"
 elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
-then "\(.Wort), die (\(.gram));"
+then "die \(.Wort) (\(.gram));"
   elif (.gram|test("^ *f[_.,;]*\\? *$"))
-  then "\(.Wort), ?die (\(.gram));"
+  then "?die \(.Wort) (\(.gram));"
   elif (.gram|test("^ *f[_.,;]* +m[_.,;]* *$"))
-  then "\(.Wort), die o. der (\(.gram));"
+  then "die o. der \(.Wort) (\(.gram));"
   elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$"))
-  then "\(.Wort), die o. das (\(.gram));"
+  then "die o. das \(.Wort) (\(.gram));"
   elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
-  then "\(.Wort), die o. das (\(.gram));"
+  then "die o. das \(.Wort) (\(.gram));"
   elif (.gram|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
-  then "\(.Wort), die o. das o. der (\(.gram));"
+  then "die o. das o. der \(.Wort) (\(.gram));"
   elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
-  then "\(.Wort), die o. der o. das (\(.gram));"
+  then "die o. der o. das \(.Wort) (\(.gram));"
   elif (.gram|test("^ *f[_.,;]* +nomen +actionis[.]* *$"))
-  then "\(.Wort), die (\(.gram));"
+  then "die \(.Wort) (\(.gram));"
   elif (.gram|test("^ *f[_.,;]* +nomen +agentis[.]* *$"))
-  then "\(.Wort), die (\(.gram));"
+  then "die \(.Wort) (\(.gram));"
 
 elif (.gram|test("^ *m[_.,;]* *$"))
-  then "\(.Wort), der (\(.gram));"
+  then "der \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]*\\? *$"))
-  then "\(.Wort), ?der (\(.gram));"
+  then "?der \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
-  then "\(.Wort), der o. die (\(.gram));"
+  then "der o. die \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
-  then "\(.Wort), der u. die (\(.gram));"
+  then "der u. die \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
-  then "\(.Wort), der o. das (\(.gram));"
+  then "der o. das \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
-  then "\(.Wort), der o. die o. das (\(.gram));"
+  then "der o. die o. das \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
-  then "\(.Wort), der o. das o. die (\(.gram));"
+  then "der o. das o. die \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* +nomen +actionis[.]* *$"))
-  then "\(.Wort), der (\(.gram));"
+  then "der \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* +nomen +agentis[.]* *$"))
-  then "\(.Wort), der (\(.gram));"
+  then "der \(.Wort) (\(.gram));"
 
 elif (.gram|test("^ *n[_.,;]* *$"))
-  then "\(.Wort), das (\(.gram));"
+  then "das \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]*\\? *$"))
-  then "\(.Wort), ?das (\(.gram));"
+  then "?das \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
-  then "\(.Wort), das o. der (\(.gram));"
+  then "das o. der \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
-  then "\(.Wort), das o. die (\(.gram));"
+  then "das o. die \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
-  then "\(.Wort), das o. der o. die (\(.gram));"
+  then "das o. der o. die \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
-  then "\(.Wort), das o. die o. der (\(.gram));"
+  then "das o. die o. der \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]* +nomen +actionis[.]* *$"))
-  then "\(.Wort), das (\(.gram));"
+  then "das \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
-  then "\(.Wort), das (\(.gram));"
+  then "das \(.Wort) (\(.gram));"
 
 else "\(.wort) (\(.gram));"
 end
@@ -469,7 +498,7 @@ case $stufe_formatierung in
   then "<tr><td>\(.label), die</td><td>\(.gram)</td><td>Nennwort einer Handlung, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +nomen +agentis[.]* *$"))
   then "<tr><td>\(.label), die</td><td>\(.gram)</td><td>Nennwort-Machende, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
-  elif (.gram|test("^ *f. +subst. *$"))
+  elif (.gram|test("^ *f[_.,;]* +subst. *$"))
   then "<tr><td>\(.label), die</td><td>\(.gram)</td><td>Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif  (.gram|test("^ *interj[.]?[;]? *$|^ *interjection[;]? *$"))
@@ -539,6 +568,9 @@ s@&#x00f6;@ö@g;
 s@&#x00fc;@ü@g;
   # s@<td>([^ ])([^ ]+)(, [d][eia][res][^<>]*)</td>@<td>\U\1\L\2\E\3</td>@g; # ersten Buchstaben Groß bei Nennwörtern
 s@<td>([^ ])([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>\U\1\L\2\E\3\4@g; # ersten Buchstaben Groß bei Nennwörtern
+s@<td>(&#x00e4;|&#196;|&auml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>&#x00C4;\L\2\E\3\4@g; # ä Ä 
+s@<td>(&#x00f6;|&#246;|&ouml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>&#x00D6;\L\2\E\3\4@g; # ö Ö
+s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>&#x00DC;\L\2\E\3\4@g; # ü Ü 
 1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik<br/>(<i>Grimm</i>)</th><th>Sprachkunst, Sprachlehre<br/>(s. a. <i style=\"font-variant:small-caps;\">Schottel 1663</i>)</th><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
 $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
