@@ -85,6 +85,9 @@ aufraeumen() {
         if [[ -e "${datei_utf8_odt_gram-}" ]];then               rm -- "${datei_utf8_odt_gram}"; fi
         if [[ -e "${datei_utf8_html_gram_tidy_log-}" ]];then      rm -- "${datei_utf8_html_gram_tidy_log}"; fi
       ;;
+      esac      
+      case $stufe_fundstellen in 1)
+        if [[ -e "${datei_diese_wbnetzkwiclink-}" ]];then                      rm -- "${datei_diese_wbnetzkwiclink}"; fi
       esac
     fi
     case ${stufe_verausgaben:-0} in
@@ -138,6 +141,8 @@ dateivariablen_bereitstellen() {
   datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html"
     datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html.log"
   datei_utf8_odt_gram="${diese_json_speicher_datei%.*}_Wortliste+gram.odt"
+    datei_diese_wbnetzkwiclink="${datei_utf8_html_zwischenablage_gram}.wbnetzkwiclink.txt"
+
 }
 
 parameter_abarbeiten() {
@@ -156,11 +161,14 @@ parameter_abarbeiten() {
     11) datum_heute_lang=$(date '+%_d. Nebelmonat (%B) %Y'  | sed 's@^ *@@;') ;;
     12) datum_heute_lang=$(date '+%_d. Christmonat (%B) %Y' | sed 's@^ *@@;') ;;
   esac
-  stufe_verausgaben=1
-  stufe_textauszug=0
-  stufe_formatierung=0
+
+  abbruch_code_nummer=0
   stufe_aufraeumen_aufhalten=0
   stufe_dateienbehalten=0
+  stufe_formatierung=0
+  stufe_fundstellen=0
+  stufe_textauszug=0
+  stufe_verausgaben=1
   # Grundlage: rein Text, und mit Grammatik
   # zusätzlich
   # 2^0: 1-1 = 0 rein Text, und mit Grammatik
@@ -168,6 +176,7 @@ parameter_abarbeiten() {
   #      3-1 = 2 nur mit ODT
   # 2^2: 4-1 = 3 mit HTML, mit ODT
   ohne_woerterliste=''
+  ohne_woerterliste_text=''
   ohne_woerterliste_regex=''
   zusatzbemerkungen_textdatei=''
   zusatzbemerkungen_htmldatei=''
@@ -183,8 +192,9 @@ parameter_abarbeiten() {
     -h | --[Hh]ilfe) stufe_aufraeumen_aufhalten=1; nutzung ;;
     --debug) set -x ;;
     -b | --behalte_Dateien) stufe_dateienbehalten=1 ;;
-    -s | --stillschweigend) stufe_verausgaben=0 ;;
     --farb-frei) FARB_FREI=1 ;;
+    -F | --Fundstellen) stufe_fundstellen=1 ;;
+    -s | --stillschweigend) stufe_verausgaben=0 ;;
     -[lL] | --[lL]emmaabfrage)  # Parameter
       lemmaabfrage="${2-}"
       lemma_text=$(echo "$lemmaabfrage" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…{2,}$@@')
@@ -192,10 +202,44 @@ parameter_abarbeiten() {
       titel_text="Wörter-Abfrage „$lemma_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"
       shift
       ;;
-    --ohne)  # Parameter
+    -o|--ohne)  # Parameter
       ohne_woerterliste="${2-}"
-      ohne_woerterliste=$(echo "$ohne_woerterliste" | sed --regexp-extended 's@[[:punct:]]+@ @g;s@[ ]+@, @g')
-      ohne_woerterliste_regex=$(echo "$ohne_woerterliste" | sed --regexp-extended 's@[[:punct:]]+@ @g; s@[ ]+@.*|.*@g; s@^@.*@g; s@$@.*@;')
+      ohne_woerterliste_text=$(echo "$ohne_woerterliste" | sed --regexp-extended '
+        s@\*+@ρεγεξ@g; 
+        s@\?+@φραγεζειχψεν@g; 
+        s@\[([^][]+)-([^][]+)\]@λκλαμμερ\1βισ\2ρκλαμμερ@g;
+        s@\[([^][-]+)\]@λκλαμμερ\1ρκλαμμερ@g;
+        s@[[:punct:]]+@ @g; 
+        s@ρεγεξ@…@g; 
+        s@(^…{2,}|…{2,}$)@@; 
+        s@φραγεζειχψεν@?@g;
+        s@λκλαμμερ(.)βισ(.)ρκλαμμερ@[\1-\2]@g;
+        s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
+        s@[ ]+@, @g; 
+      ')
+      ohne_woerterliste_regex=$(echo "$ohne_woerterliste" | sed --regexp-extended '
+        # einfache reg. Ausdrücke: 
+        # Wort* → Wort.*  
+        # W[oöœ]+rt* → W[oöœ]+rt.*
+        # Waa?rt* → Waa?rt.*
+        # Wort, anderesWort nochanderesWort → Wort|anderesWort|nochanderesWort
+        s@\*+@ρεγεξστερν@g; 
+        s@\^+@ρεγεξανφανγ@g; 
+        s@\?+@φραγεζειχψεν@g; 
+        s@\+@πλυσζειχψεν@g; 
+        s@\[([^][]+)-([^][]+)\]@λκλαμμερ\1βισ\2ρκλαμμερ@g;
+        s@\[([^][-]+)\]@λκλαμμερ\1ρκλαμμερ@g;
+        s@\$+@ρεγεξενδε@g; 
+        s@[[:punct:]]+@ @g; 
+        s@ρεγεξστερν@.*@g; 
+        s@ρεγεξανφανγ@^@g; 
+        s@ρεγεξενδε@$@g; 
+        s@φραγεζειχψεν@?@g;
+        s@πλυσζειχψεν@+@g;
+        s@λκλαμμερ(.)βισ(.)ρκλαμμερ@[\1-\2]@g;
+        s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
+        s@[ ]+@|@g; 
+      ')
       shift
       ;;
     -H | --[Hh][Tt][Mm][Ll])
@@ -245,7 +289,7 @@ parameter_abarbeiten() {
   zusatzbemerkungen_htmldatei=$([[ "${ohne_woerterliste_regex}" == "" ]] && printf "" || printf "; der Liste wurden bewußt Wortverbindungen mit „${ohne_woerterliste}“ entnommen (diese wurden herausgefiltert).")
   
   zusatzbemerkungen_textdatei="Die Liste ist vorgruppiert geordnet nach den Grammatik-Angaben von Grimm,\nd.h. die Wörter sind nach Wortarten gruppiert: Eigenschaftswörter (Adjektive),\nNennwörter (Substantive), Tunwörter usw.."
-  zusatzbemerkungen_textdatei=$([[ "${ohne_woerterliste_regex}" == "" ]] && printf "${zusatzbemerkungen_textdatei}" || printf "${zusatzbemerkungen_textdatei}\n\nDer Liste wurden bewußt Wortverbindungen mit „${ohne_woerterliste}“\nentnommen (diese wurden herausgefiltert).")
+  zusatzbemerkungen_textdatei=$([[ "${ohne_woerterliste_regex}" == "" ]] && printf "${zusatzbemerkungen_textdatei}" || printf "${zusatzbemerkungen_textdatei}\n\nDer Liste wurden bewußt Wortverbindungen mit „${ohne_woerterliste_text}“\nentnommen (diese wurden herausgefiltert).")
   
   
   return 0
@@ -288,7 +332,10 @@ esac
 
 case $stufe_verausgaben in
  0)  ;;
- 1) meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text})" ;;
+ 1) 
+  printf "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} %s Ergebnisse …\n" $(jq '.|length' "${json_speicher_datei}")
+  meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text})" 
+ ;;
 esac
 
 if [[ -e "${json_speicher_datei}" ]];then
@@ -528,100 +575,104 @@ case $stufe_formatierung in
       else .
       end
     |  if .gram == null or .gram == ""
-  then "<tr><td>\(.label)</td><td><!-- keine Grammatik angegeben --><!-- ohne Sprachkunst-Begriff --></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td><!-- keine Grammatik angegeben --><!-- ohne Sprachkunst-Begriff --></td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *adje?c?t?[_.,;]* *$|^ *adje?c?t?[_.,;]* adje?c?t?[_.,;]* *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Eigenschaftswort, Beiwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *adje?c?t?[_.,;]*\\?[_.,;]* *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ ?Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ ?Eigenschaftswort, Beiwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *adj[_.,;]* +und +adv[_.,;]* *$|^ *adj[_.,;]* +u. +adv[_.,;]* *$|^ *adj[_.,;]* +adv[_.,;]* *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Eigenschaftswort, Beiwort und Zuwort, Umstandswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Eigenschaftswort, Beiwort und Umstandswort, Zuwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif  (.gram|test("^ *adv[_.,;] *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Zuwort, Umstandswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Umstandswort, Zuwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
-  then "<tr><td>\(.label), die</td><td>\(.gram) ~ Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die</td><td>\(.gram) ~ Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]*\\? *$"))
-  then "<tr><td>\(.label), die?</td><td>\(.gram) ~ Nennwort, ?weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die?</td><td>\(.gram) ~ Nennwort, ?weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +m[_.,;]* *$"))
-  then "<tr><td>\(.label), die o. der</td><td>\(.gram) ~ Nennwort, weiblich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die o. der</td><td>\(.gram) ~ Nennwort, weiblich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$"))
-  then "<tr><td>\(.label), die o. das</td><td>\(.gram) ~ Nennwort, weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die o. das</td><td>\(.gram) ~ Nennwort, weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
-  then "<tr><td>\(.label), die o. das</td><td>\(.gram) ~ Nennwort, weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die o. das</td><td>\(.gram) ~ Nennwort, weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
-  then "<tr><td>\(.label), die o. das o. der</td><td>\(.gram) ~ Nennwort, weiblich o. sächlich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die o. das o. der</td><td>\(.gram) ~ Nennwort, weiblich o. sächlich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
-  then "<tr><td>\(.label), die o. das o. der</td><td>\(.gram) ~ Nennwort, weiblich o. männlich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die o. das o. der</td><td>\(.gram) ~ Nennwort, weiblich o. männlich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *f[_.,;]* +nomen +actionis[.]* *$"))
-  then "<tr><td>\(.label), die</td><td>\(.gram) ~ Nennwort einer Handlung, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die</td><td>\(.gram) ~ Nennwort einer Handlung, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +nomen +agentis[.]* *$"))
-  then "<tr><td>\(.label), die</td><td>\(.gram) ~ Nennwort-Machende, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die</td><td>\(.gram) ~ Nennwort-Machende, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +subst. *$"))
-  then "<tr><td>\(.label), die</td><td>\(.gram) ~ Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label), die</td><td>\(.gram) ~ Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif  (.gram|test("^ *interj[.]?[;]? *$|^ *interjection[;]? *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Zwischenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Zwischenwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *m[_.,;]* *$"))
-    then "<tr><td>\(.label), der</td><td>\(.gram) ~ Nennwort, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), der</td><td>\(.gram) ~ Nennwort, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]*\\? *$"))
-    then "<tr><td>\(.label), der?</td><td>\(.gram) ~ Nennwort, ?männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), der?</td><td>\(.gram) ~ Nennwort, ?männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
-    then "<tr><td>\(.label), der o. die</td><td>\(.gram) ~ Nennwort, männlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), der o. die</td><td>\(.gram) ~ Nennwort, männlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
-    then "<tr><td>\(.label), der u. die</td><td>\(.gram) ~ Nennwort, männlich u. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), der u. die</td><td>\(.gram) ~ Nennwort, männlich u. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
-    then "<tr><td>\(.label), der o. das</td><td>\(.gram) ~ Nennwort, männlich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), der o. das</td><td>\(.gram) ~ Nennwort, männlich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
-    then "<tr><td>\(.label), der o. die o. das</td><td>\(.gram) ~ Nennwort, männlich o. weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), der o. die o. das</td><td>\(.gram) ~ Nennwort, männlich o. weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
-    then "<tr><td>\(.label), der o. das o. die</td><td>\(.gram) ~ Nennwort, männlich o. sächlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), der o. das o. die</td><td>\(.gram) ~ Nennwort, männlich o. sächlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* +nomen +actionis[.]* *$"))
-    then "<tr><td>\(.label), der</td><td>\(.gram) ~ Nennwort einer Handlung, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), der</td><td>\(.gram) ~ Nennwort einer Handlung, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* +nomen +agentis[.]* *$"))
-    then "<tr><td>\(.label), der</td><td>\(.gram) ~ Nennwort-Machender, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), der</td><td>\(.gram) ~ Nennwort-Machender, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* *$"))
-    then "<tr><td>\(.label), das</td><td>\(.gram) ~ Nennwort, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), das</td><td>\(.gram) ~ Nennwort, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *n[_.,;]*\\? *$"))
-    then "<tr><td>\(.label), das?</td><td>\(.gram) ~ Nennwort, ?sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), das?</td><td>\(.gram) ~ Nennwort, ?sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
-    then "<tr><td>\(.label), das o. der</td><td>\(.gram) ~ Nennwort, sächlich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), das o. der</td><td>\(.gram) ~ Nennwort, sächlich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
-    then "<tr><td>\(.label), das o. die</td><td>\(.gram) ~ Nennwort, sächlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), das o. die</td><td>\(.gram) ~ Nennwort, sächlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
-    then "<tr><td>\(.label), das o. der o. die</td><td>\(.gram) ~ Nennwort, sächlich o. männlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), das o. der o. die</td><td>\(.gram) ~ Nennwort, sächlich o. männlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
-    then "<tr><td>\(.label), das o. der o. die</td><td>\(.gram) ~ Nennwort, sächlich o. weiblich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), das o. der o. die</td><td>\(.gram) ~ Nennwort, sächlich o. weiblich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *n[_.,;]* +nomen +actionis[.]* *$"))
-    then "<tr><td>\(.label), das</td><td>\(.gram) ~ Nennwort einer Handlung (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), das</td><td>\(.gram) ~ Nennwort einer Handlung (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
-    then "<tr><td>\(.label), das</td><td>\(.gram) ~ Nennwort-Machendes (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    then "<tr><td>\(.label), das</td><td>\(.gram) ~ Nennwort-Machendes (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif  (.gram|test("^ *part[icz]*[.]?[;]? *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Mittelwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Mittelwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *part[icpalesz]*.[ -]+adj. *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ mittelwörtliches Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ mittelwörtliches Eigenschaftswort, Beiwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif  (.gram|test("^ *präp[.]?[;]? *$|^ *praep[.]?[;]? *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Vorwort, Verhältniswort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Vorwort, Verhältniswort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *praet.[;]? *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Vergangenheit</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Vergangenheit</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *subst. *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Nennwort (auch Dingwort, Hauptwort, Namenwort, Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Nennwort (auch Dingwort, Hauptwort, Namenwort, Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *v. +u. +subst. +n. *$"))
-  then "<tr><td>\(.label); \(.label), das</td><td>\(.gram) ~ Tunwort und Nennwort sächlich (Tunwort: auch Zeitwort, Tätigkeitswort; Nennwort: auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label); \(.label), das</td><td>\(.gram) ~ Tunwort und Nennwort sächlich (Tunwort: auch Zeitwort, Tätigkeitswort; Nennwort: auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif (.gram|test("^ *v.[;]? *$|^ *vb.[;]? *$|^ *verb.[;]? *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Tunwort (auch Zeitwort, Tätigkeitswort)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
-  else "<tr><td>\(.label)</td><td>\(.gram) ~ ?</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *v[_.,;]* *$|^ *vb[_.,;]* *$|^ *verb[_.,;]* *$|^ *verbum[_.,;]* *$"))
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Tunwort (auch Zeitwort, Tätigkeitswort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  
+  elif (.gram|test("^ *verbal[-]?adj[_.,;]+[ -–—]adv[_.,;]* *$"))
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Eigenschafts- oder Umstandswort tunwörtlichen Ursprungs</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  
+  else "<tr><td>\(.label)</td><td>\(.gram) ~ ?</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   end
   ' | sed -r "s@\"@@g;
   s@“([^“”]+)”@\"\1\"@g;
@@ -632,21 +683,122 @@ s@<td>([^ ])([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>\U\1\L\2\E\3\4@
 s@<td>(&#x00e4;|&#196;|&auml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00C4;\L\2\E\3\4@g; # ä Ä 
 s@<td>(&#x00f6;|&#246;|&ouml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00D6;\L\2\E\3\4@g; # ö Ö
 s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00DC;\L\2\E\3\4@g; # ü Ü 
-1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
+1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><!--wbnetzkwiclink<th>Textauszug (gekürzt)</th>wbnetzkwiclink--><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
 $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
   s@<th>@<th style="border-top:2px solid gray;border-bottom:2px solid gray;">@g;
   ' \
- > "${datei_utf8_html_zwischenablage_gram}"
+> "${datei_utf8_html_zwischenablage_gram}"
+ 
+  meldung "${ORANGE}ENTWICKLUNG: sed ${datei_utf8_html_zwischenablage_gram} ${FORMAT_FREI}"
+      
+  sed --in-place '# für sed später der wbnetzkwiclink in einzelner Zeile
+  s@\(<wbnetzkwiclink>\)@\n\1@g; 
+  s@\(</wbnetzkwiclink>\)@\1\n@g; 
+  s@<!--wbnetzkwiclink@@g; 
+  s@wbnetzkwiclink-->@@g; 
+  ' "${datei_utf8_html_zwischenablage_gram}" 
+  
+  case $stufe_fundstellen in
+  1)  
+    # Fundstellen Anfang
+    meldung "${ORANGE}ENTWICKLUNG: Fundstellen${FORMAT_FREI}"
+    # ZUTUN table is Missing
+    i_textverknuepfung=1;
+    abbruch_code_nummer=0
+    n_textverknuepfung=$( grep --count '<wbnetzkwiclink>[^<>]*</wbnetzkwiclink>' "${datei_utf8_html_zwischenablage_gram}" ) && abbruch_code_nummer=$?
+    case $abbruch_code_nummer in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+      meldung "${ORANGE}Irgendwas lief schief mit grep. Abbruch Code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${FORMAT_FREI}" ;;
+    esac
+    case $stufe_verausgaben in
+    0)  ;;
+    1) meldung "${GRUEN}Weiterverarbeitung → JSON → HTML${FORMAT_FREI} ($n_textverknuepfung Fundstellen)" ;;
+    esac
+       
+    echo "" > "${datei_diese_wbnetzkwiclink}"
 
-  # Abkürzungsverzeichnis eigentlich ohne Textauszüge unnötig
-  # Falls HTML-Datei mit Tabelle vorhanden ist
-  # if [[ -e "Abkürzungen-GRIMM-Tabelle-DWB2.html"  ]];then
-  # sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
-  # 
-  # sed --in-place 's@<!-- *hierher Abkürzungsverzeichnis einfügen *-->@<p>Siehe auch das <a href="#sec-GRIMM_Abkuerzungen">Abkürzungsverzeichnis</a>.</p>\n@' "${datei_utf8_html_zwischenablage_gram}"
-  # 
-  # fi
+    for wbnetzkwiclink_text in $( grep --only-matching '<wbnetzkwiclink>[^<>]*</wbnetzkwiclink>' "${datei_utf8_html_zwischenablage_gram}" );do
+      datei_diese_fundstelle="${datei_utf8_html_zwischenablage_gram}.fundstelle_text.$i_textverknuepfung.txt"
+      case $i_textverknuepfung in 1) echo '' > "${datei_diese_fundstelle}" ;; esac
+
+      # echo $wbnetzkwiclink_text
+      # Punkte pro 100 Bearbeitungsschritte ausgeben
+      if [[ $(( $i_textverknuepfung % 100 )) -eq 0 ]];then
+      printf '. %04d\n' $i_textverknuepfung;
+      else
+        if [[ ${i_textverknuepfung-0} -eq ${n_textverknuepfung--1} ]];then printf '.\n'; else printf '.'; fi
+      fi
+
+      wbnetzkwiclink=$( echo $wbnetzkwiclink_text | sed --regexp-extended 's@<wbnetzkwiclink>([^<>]+)</wbnetzkwiclink>@\1@' )
+      printf "%s\n" "$wbnetzkwiclink" >> "${datei_diese_wbnetzkwiclink}"
+      wbnetzkwiclink_regex_suchadresse=$(echo $wbnetzkwiclink_text | sed 's@/@\\/@g; ' )
+      # https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/A07187/textid/697253/wordid/2
+      textid=$( echo "${wbnetzkwiclink}" | sed --regexp-extended 's@.+/textid/([[:digit:]]+)/.+@\1@;' )
+
+      fundstelle_text=$(
+        wget --wait 5 --random-wait --quiet --no-check-certificate -O - "$wbnetzkwiclink"  | jq  --arg textid ${textid-0} --join-output ' .[]
+        | if (.textid|tonumber) == ($textid|tonumber)
+        then "<b class=\"gefunden-hervorheben\" id=\"textid-\($textid)\">\(.word)</b>"
+        elif .typeset == "italics"
+        then (
+          if .charposition == "super"
+          then "<i><sup>\(.word)</sup></i>"
+          else "<i>\(.word)</i>"
+          end
+        )
+        elif .typeset == "caps"
+        then (
+          if .charposition == "super"
+          then "<span style=\"font-variant:small-caps\"><sup>\(.word)</sup></span>"
+          else "<span style=\"font-variant:small-caps\">\(.word)</span>"
+          end
+        )
+        elif .typeset == "recte"
+        then (
+          if .charposition == "super"
+          then "<sup>\(.word)</sup>"
+          elif (.elementtype|test("sensemark[1-9]+"))
+          then "<b>\(.word)</b>"
+          else "\(.word)"
+          end
+        )
+        else (
+          if .charposition == "super"
+          then "<sup>\(.word)</sup>"
+          elif (.elementtype|test("sensemark[1-9]+"))
+          then "<b>\(.word)</b>"
+          else "\(.word)"
+          end
+        )
+        end
+        ' | sed --regexp-extended 's@</i><i>@@g'
+      ) && this_exit_code=$?
+      
+      case $this_exit_code in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+        meldung "${ORANGE}Etwas lief schief … exit code: ${this_exit_code} $(kill -l $this_exit_code)${NOFORMAT} (?wget, ?jq …)" ;;
+      esac
+      # echo "ENTWICKLUNG ${wbnetzkwiclink_regex_suchadresse}"
+      echo "»${fundstelle_text}«" | sed --regexp-extended 's@»([ ;.:]+)@»…\1@g; s@«@…«@' > "${datei_diese_fundstelle}"
+      # sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
+      sed --in-place "/${wbnetzkwiclink_regex_suchadresse}/r ${datei_diese_fundstelle}" "${datei_utf8_html_zwischenablage_gram}"
+      sed --in-place "/${wbnetzkwiclink_regex_suchadresse}/d" "${datei_utf8_html_zwischenablage_gram}"
+      rm -- "${datei_diese_fundstelle}"
+
+      i_textverknuepfung=$(( $i_textverknuepfung + 1 ))
+    done
+    # Falls HTML-Datei mit Tabelle vorhanden ist
+    if [[ -e "Abkürzungen-GRIMM-Tabelle-DWB2.html"  ]];then
+    sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
+
+    sed --in-place 's@<!-- *hierher Abkürzungsverzeichnis einfügen *-->@<p>Siehe auch das <a href="#sec-GRIMM_Abkuerzungen">Abkürzungsverzeichnis</a>.</p>\n@' "${datei_utf8_html_zwischenablage_gram}"
+    fi
+    # Fundstellen Ende
+  ;;  
+  0)
+    sed 's@<!--wbnetzkwiclink.*wbnetzkwiclink-->@@g' "${datei_utf8_html_zwischenablage_gram}"
+  ;;
+  esac
+  
 
   case $stufe_verausgaben in
   0)  ;;
