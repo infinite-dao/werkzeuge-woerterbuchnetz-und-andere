@@ -41,8 +41,15 @@ Verwendbare Wahlmöglichkeiten:
 
 -v,-V  --Volltextabfrage   Pflichtfeld für die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
 -S     --Stichwortabfrage  zusätzliche Einschränkung der möglichen Stichworte, es werden nicht alle abgefragt, sondern
-                           die hier angegebene Sucheinschränkung (z.B. --Volltextabfrage "*lösen*" --Stichwortabfrage "*lösen*")
-
+                           die hier angegebene Sucheinschränkung, einfache reguläre Ausdrücke anwendbar, z.B.:
+                           --Stichwortabfrage "*lösen*" 
+                           --Stichwortabfrage "*heili*, *heils*, *heilb*"
+                            *        = 0 bis viele
+                            ?        = 0 bis 1
+                            [aeiou]+ = 1 bis viele Buchstaben: a oder e oder i, o, u oder mehrere in Verbindung zusammen
+                            [a-f]+   = 1 bis viele Buchstaben: a oder b, c, d, e, f oder mehrere in Verbindung zusammen
+-o,    --ohne              ohne diese Wörterliste – einfache reguläre Ausdrücke anwendbar
+-e,    --eineinzig         Ergebnisliste verringern, daß nur jedes Stichwort einmal vorkommt
 -H,    --HTML              HTML Datei erzeugen
 -O,    --ODT               ODT Datei (für LibreOffice) erzeugen
 -b,    --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
@@ -160,20 +167,20 @@ meldung_abbruch() {
 }
 
 # json_speicher_datei volltext_text
-# json_speicher_datei volltext_text stichwort_text
+# json_speicher_datei volltext_text mit_wortliste_stichwoerter_text
 json_speicher_datei() {
   local volltextabfrage=${1-unbekannt}
   local stichwortabfrage=${2-}
   local diese_json_speicher_datei=''
   
   if [[ -z "${stichwortabfrage-}" ]]; then
-    diese_json_speicher_datei=$(printf "%s…DWB1_Abfrage-Volltext_%s.json" \
-      $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
+    diese_json_speicher_datei=$(printf "%s_Volltext-Abfrage-DWB1_%s.json" \
+      $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@…@') \
       $(date '+%Y%m%d'));
   else
-    diese_json_speicher_datei=$(printf "%s…DWB1_Abfrage-Volltext_+_Stichwort-„%s“_%s.json" \
-      $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
-      $(echo $stichwortabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@@') \
+    diese_json_speicher_datei=$(printf "%s_im-Volltext_+_Stichwort-„%s“_DWB1_%s.json" \
+      $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@…@') \
+      $(echo $stichwortabfrage | sed --regexp-extended 's@[,;]+@ @g; s@[[:punct:]]+@…@g; s@^…{2,}@@; s@ +@, @g; s@…+$@…@g; s@^([^, ]+, [^, ]+, [^, ]+), .+@\1 usw.@; ') \
       $(date '+%Y%m%d'));
   fi
   printf "${diese_json_speicher_datei}"
@@ -223,18 +230,30 @@ parameter_abarbeiten() {
   stufe_aufraeumen_aufhalten=0
   stufe_dateienbehalten=0
   stufe_stichwortabfrage=0
+  stufe_stichworte_eineinzig=0
   # Grundlage: rein Text, und mit Grammatik
   # zusätzlich
   # 2^0: 1-1 = 0 rein Text, und mit Grammatik
   # 2^1: 2-1 = 1 nur mit HTML
   #      3-1 = 2 nur mit ODT
   # 2^2: 4-1 = 3 mit HTML, mit ODT
+  abbruch_code_nummer=0
   n_suchergebnisse_volltext=0
   n_suchergebnisse_volltext_mit_stichwort=0
   volltextabfrage=''
   volltext_text=''
   stichwortabfrage=''
-  stichwort_text=''
+  mit_wortliste_stichwoerter_text=''
+  mit_woerterliste=''
+  mit_woerterliste_regex=''
+  
+  hinweis_mit_stichwortliste_html=""
+  hinweis_ohne_stichwortliste=""
+  zusatzbemerkungen_textdatei=''
+
+  ohne_woerterliste_regex='' # ZUTUN
+  ohne_woerterliste='' # ZUTUN
+  ohne_woerterliste_text='' # ZUTUN
   json_speicher_datei=$(json_speicher_datei unbekannt)
   titel_text="Volltextsuche „??“ aus Grimm-Wörterbuch ($datum_heute_lang)"
   # param=''
@@ -245,6 +264,10 @@ parameter_abarbeiten() {
     -h | --[Hh]ilfe) stufe_aufraeumen_aufhalten=1; nutzung ;;
     --debug) set -x ;;
     -b | --behalte_Dateien) stufe_dateienbehalten=1 ;;
+    -e | --eineinzig) 
+      stufe_stichwortabfrage=1; 
+      stufe_stichworte_eineinzig=1 
+      ;;
     -s | --stillschweigend) stufe_verausgaben=0 ;;
     --farb-frei) FARB_FREI=1 ;;
     -[Vv] | --[Vv]olltextabfrage)  # Parameter
@@ -254,8 +277,38 @@ parameter_abarbeiten() {
       ;;
     -S | --[Ss]tichwortabfrage)  # Parameter
       stichwortabfrage="${2-}"
-      stichwort_text=$(echo "$stichwortabfrage" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…{2,}$@@')
+      mit_wortliste_stichwoerter_text=$(echo "$stichwortabfrage" | sed --regexp-extended '
+        s@\*+@ρεγεξ@g; 
+        s@[[:punct:]]+@ @g; 
+        s@ρεγεξ@…@g; 
+        s@(^…{2,}|…{2,}$)@@; 
+        s@[ ]+@, @g; 
+        ')
+      mit_woerterliste_regex=$(echo "$stichwortabfrage" | sed --regexp-extended '
+        # einfache reg. Ausdrücke: 
+        # Wort* → Wort.*  
+        # W[oöœ]+rt* → W[oöœ]+rt.*
+        # Waa?rt* → Waa?rt.*
+        # Wort, anderesWort nochanderesWort → Wort|anderesWort|nochanderesWort
+        s@\*+@ρεγεξστερν@g; 
+        s@\^+@ρεγεξανφανγ@g; 
+        s@\?+@φραγεζειχψεν@g; 
+        s@\+@πλυσζειχψεν@g; 
+        s@\[([^][]+)-([^][]+)\]@λκλαμμερ\1βισ\2ρκλαμμερ@g;
+        s@\[([^][-]+)\]@λκλαμμερ\1ρκλαμμερ@g;
+        s@\$+@ρεγεξενδε@g; 
+        s@[[:punct:]]+@ @g; 
+        s@ρεγεξστερν@.*@g; 
+        s@ρεγεξανφανγ@^@g; 
+        s@ρεγεξενδε@$@g; 
+        s@φραγεζειχψεν@?@g;
+        s@πλυσζειχψεν@+@g;
+        s@λκλαμμερ(.)βισ(.)ρκλαμμερ@[\1-\2]@g;
+        s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
+        s@[ ]+@|@g; 
+      ')
       stufe_stichwortabfrage=1
+      # ohne_woerterliste_regex=$(echo "$ohne_woerterliste" | sed --regexp-extended 's@[[:punct:]]+@ @g; s@[ ]+@.*|.*@g; s@^@.*@g; s@$@.*@;')
 
       shift
       ;;
@@ -275,7 +328,47 @@ parameter_abarbeiten() {
       *) stufe_formatierung=2 ;;
       esac
     ;;
-
+    -o|--ohne)  # Parameter
+      ohne_woerterliste="${2-}"
+      ohne_woerterliste_text=$(echo "$ohne_woerterliste" | sed --regexp-extended '
+        s@\*+@ρεγεξ@g; 
+        s@\?+@φραγεζειχψεν@g; 
+        s@\[([^][]+)-([^][]+)\]@λκλαμμερ\1βισ\2ρκλαμμερ@g;
+        s@\[([^][-]+)\]@λκλαμμερ\1ρκλαμμερ@g;
+        s@[[:punct:]]+@ @g; 
+        s@ρεγεξ@…@g; 
+        s@(^…{2,}|…{2,}$)@@; 
+        s@φραγεζειχψεν@?@g;
+        s@λκλαμμερ(.)βισ(.)ρκλαμμερ@[\1-\2]@g;
+        s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
+        s@[ ]+@, @g; 
+      ')
+      ohne_woerterliste_regex=$(echo "$ohne_woerterliste" | sed --regexp-extended '
+        # einfache reg. Ausdrücke: 
+        # Wort* → Wort.*  
+        # W[oöœ]+rt* → W[oöœ]+rt.*
+        # Waa?rt* → Waa?rt.*
+        # Wort, anderesWort nochanderesWort → Wort|anderesWort|nochanderesWort
+        s@\*+@ρεγεξστερν@g; 
+        s@\^+@ρεγεξανφανγ@g; 
+        s@\?+@φραγεζειχψεν@g; 
+        s@\+@πλυσζειχψεν@g; 
+        s@\[([^][]+)-([^][]+)\]@λκλαμμερ\1βισ\2ρκλαμμερ@g;
+        s@\[([^][-]+)\]@λκλαμμερ\1ρκλαμμερ@g;
+        s@\$+@ρεγεξενδε@g; 
+        s@[[:punct:]]+@ @g; 
+        s@ρεγεξστερν@.*@g; 
+        s@ρεγεξανφανγ@^@g; 
+        s@ρεγεξενδε@$@g; 
+        s@φραγεζειχψεν@?@g;
+        s@πλυσζειχψεν@+@g;
+        s@λκλαμμερ(.)βισ(.)ρκλαμμερ@[\1-\2]@g;
+        s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
+        s@[ ]+@|@g; 
+      ')
+      stufe_stichwortabfrage=1
+      shift
+    ;;
     #-p | --param) # example named parameter
     #  param="${2-}"
     #  shift
@@ -296,8 +389,8 @@ parameter_abarbeiten() {
   case $stufe_stichwortabfrage in
   0) json_speicher_datei=$(json_speicher_datei $volltext_text);
      titel_text="Volltextsuche „$volltext_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"; ;;
-  1) json_speicher_datei=$(json_speicher_datei $volltext_text $stichwort_text);
-     titel_text="Volltextsuche „$volltext_text“ mit Stichwort „${stichwort_text}“ aus Grimm-Wörterbuch ($datum_heute_lang)"; ;;
+  1) json_speicher_datei=$(json_speicher_datei $volltext_text "${mit_wortliste_stichwoerter_text}");
+     titel_text="Volltextsuche „$volltext_text“ mit Stichwort „${mit_wortliste_stichwoerter_text}“ aus Grimm-Wörterbuch ($datum_heute_lang)"; ;;
   esac
   
   # keine Abfragen nur mit: * oder ?
@@ -311,6 +404,38 @@ parameter_abarbeiten() {
   abhaenigkeiten_pruefen
   json_filter_code > "${json_speicher_filter_ueber_textid_verknuepfen}"
   
+  zusatzbemerkungen_textdatei="Die Liste ist vorgruppiert geordnet nach den Grammatik-Angaben von Grimm,\nd.h. die Wörter sind nach Wortarten gruppiert: Eigenschaftswörter (Adjektive),\nNennwörter (Substantive), Tunwörter usw.."
+  zusatzbemerkungen_textdatei=$([[ "${mit_woerterliste_regex}" == "" ]] \
+    && printf "${zusatzbemerkungen_textdatei}" \
+    || printf "${zusatzbemerkungen_textdatei}\n\nDie Liste wurde bewußt auf Worte mit „${mit_wortliste_stichwoerter_text}“\nbeschränkt.")
+    
+  zusatzbemerkungen_textdatei=$([[ "${ohne_woerterliste_regex}" == "" ]] \
+    && printf "${zusatzbemerkungen_textdatei}" \
+    || ( [[ ${#zusatzbemerkungen_textdatei} -gt 1 ]] \
+      && printf "${zusatzbemerkungen_textdatei%.*},\n und bewußt ohne die Worte „${ohne_woerterliste_text}“\nweiter eingerenzt." \
+      || printf "${zusatzbemerkungen_textdatei}" ) )
+  
+  case $stufe_stichworte_eineinzig in 1) 
+    zusatzbemerkungen_textdatei=$( [[ ${#zusatzbemerkungen_textdatei} -gt 1 ]] \
+      && printf "${zusatzbemerkungen_textdatei%.*},\n es wurden nur die ersten Fundstellen berücksichtigt,\n und alle weiteren Fundstellen innerhalb eines Stichwortes entfernt." \
+      || printf "${zusatzbemerkungen_textdatei}" )
+  ;; 
+  esac
+  
+  case $stufe_stichwortabfrage in 
+  1) 
+    hinweis_mit_stichwortliste_html=", die Liste ist auf die Stichworte <i>${mit_wortliste_stichwoerter_text}</i> beschränkt." 
+    if [[ ${#ohne_woerterliste_text} -gt 1 ]];then 
+      hinweis_mit_stichwortliste_html="${hinweis_mit_stichwortliste_html%.*}, und bewußt ohne die Worte „<i>${ohne_woerterliste_text}</i>“ weiter eingerenzt."
+    fi
+    case $stufe_stichworte_eineinzig in 1) 
+      hinweis_mit_stichwortliste_html="${hinweis_mit_stichwortliste_html%.*}, es wurden nur die ersten Fundstellen berücksichtigt, und alle weiteren Fundstellen innerhalb eines Stichwortes entfernt." 
+      ;;
+    esac
+  ;;
+  0|*) hinweis_mit_stichwortliste_html='' ;; 
+  esac
+
 
   return 0
 }
@@ -325,60 +450,39 @@ parameter_abarbeiten "$@"
 case $stufe_verausgaben in
  0)  ;;
  1)
-  meldung "${ORANGE}ENTWICKLUNG - stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_verausgaben:     $stufe_verausgaben ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten: $stufe_dateienbehalten ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - volltextabfrage:       $volltextabfrage ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - volltext_text:         $volltext_text ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stichwortabfrage:      $stichwortabfrage ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stichwort_text:        $stichwort_text ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_formatierung:              $stufe_formatierung ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_verausgaben:               $stufe_verausgaben ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_stichwortabfrage:          $stufe_stichwortabfrage ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten:           $stufe_dateienbehalten ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_stichworte_eineinzig:      $stufe_stichworte_eineinzig${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - volltextabfrage:                 $volltextabfrage ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - volltext_text:                   $volltext_text ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stichwortabfrage:                $stichwortabfrage ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - mit_woerterliste_regex:          $mit_woerterliste_regex ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - mit_wortliste_stichwoerter_text: $mit_wortliste_stichwoerter_text ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex:         $ohne_woerterliste_regex ${FORMAT_FREI}"
   ;;
 esac
 
 # Programm Logik hier Anfang
 # https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=*fug*;lemma,reflemma,variante=*fug*?token=Cs6lg4S7KFR6z9XZikhWY9oBSEBnt3ew&pageSize=20&pageNumber=1&_=1669804417852
 case $stufe_verausgaben in
- 0)
-    case $stufe_stichwortabfrage in
-    0) wget \
-      --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
+ 0) wget \
+      --quiet --wait 2 --random-wait "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
       --output-document="${json_speicher_datei}" \
       && wget \
-      --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
-      --output-document="${json_speicher_all_query_datei}"; ;;
-    1) wget \
-      --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
-      --output-document="${json_speicher_datei}" \
-      && wget \
-      --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage};lemma,reflemma,variante=${stichwortabfrage}" \
-      --output-document="${json_speicher_all_query_datei}"; ;;
-    esac
-  
+      --quiet --wait 2 --random-wait "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
+      --output-document="${json_speicher_all_query_datei}";
  ;;
- 1)
-    case $stufe_stichwortabfrage in
-    0) 
-      meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage)"
-      meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=})"
-      wget --show-progress \
-        --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
-        --output-document="${json_speicher_datei}" \
-        && wget --show-progress \
-        --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
-        --output-document="${json_speicher_all_query_datei}";
-    ;;
-    1) 
-      meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage)"
-      meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage};lemma,reflemma,variante=${stichwortabfrage})"
-      wget --show-progress \
-        --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
-        --output-document="${json_speicher_datei}" \
-        && wget --show-progress \
-        --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage};lemma,reflemma,variante=${stichwortabfrage}" \
-        --output-document="${json_speicher_all_query_datei}";
-    ;;
-    esac
-
+ 1) 
+  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage)"
+  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=})"
+  wget --show-progress  --wait 2 --random-wait \
+    --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
+    --output-document="${json_speicher_datei}" \
+    && wget --show-progress  --wait 2 --random-wait \
+    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
+      --output-document="${json_speicher_all_query_datei}";
  ;;
 esac
 
@@ -393,7 +497,7 @@ if [[ -e "${json_speicher_datei}" ]];then
   # cat "${json_speicher_datei}" | jq ' .result_set[] | .lemma | tostring '
   n_suchergebnisse_volltext=$( cat "${json_speicher_datei}" | jq ' .result_count ' ) && abbruch_code_nummer=$?
   case $abbruch_code_nummer in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
-    msg "${ORANGE}Irgendwas lief schief mit cat … jq. Abbruch Code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${FORMAT_FREI}" ;;
+    meldung "${ORANGE}Irgendwas lief schief mit cat … jq. Abbruch Code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${FORMAT_FREI}" ;;
   esac
   
   # kombiniere json_speicher_all_query_datei und json_speicher_datei für wbnetzkwiclink mit richtiger Fund-Textstelle
@@ -420,20 +524,53 @@ if [[ -e "${json_speicher_datei}" ]];then
   ]
   |flatten[]
   ' "${json_speicher_all_query_datei}" > "${json_speicher_allquery_datei_zwischenablage}"
-
+  
   jq '.result_set | flatten[]' "${json_speicher_datei}" > "${json_speicher_datei_zwischenablage}"
-
+  
   jq -n \
     --slurpfile file1 "${json_speicher_allquery_datei_zwischenablage}" \
     --slurpfile file2 "${json_speicher_datei_zwischenablage}" \
     -f "${json_speicher_filter_ueber_textid_verknuepfen}" > "${json_speicher_vereinte_abfragen_zwischenablage}"  
+  
+  case $stufe_stichworte_eineinzig in 1)
+    jq --slurp \
+    --arg stufe_stichworte_eineinzig $stufe_stichworte_eineinzig \
+    '. | if ($stufe_stichworte_eineinzig|tonumber) > 0
+      then (sort_by(.gram, .lemma) |unique_by(.lemma,.gram))
+      else .
+      end
+      | flatten[]
+    ' "${json_speicher_vereinte_abfragen_zwischenablage}" > 'zeitweiliges.json' \
+    && mv 'zeitweiliges.json' "${json_speicher_vereinte_abfragen_zwischenablage}"  ;;
+  esac
+  case $stufe_stichwortabfrage in 1) 
+    jq \
+  --arg mit_woerterliste_regex "${mit_woerterliste_regex}" \
+    --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
+    '. | if ($mit_woerterliste_regex|length) == 0
+      then .
+      elif (.lemma|test("\($mit_woerterliste_regex)"))
+      then .
+      else empty
+      end
+    | if ($ohne_woerterliste_regex|length) == 0
+      then .
+      elif (.lemma|test("\($ohne_woerterliste_regex)"))
+      then empty
+      else .
+      end
+  ' "${json_speicher_vereinte_abfragen_zwischenablage}" > 'zeitweiliges.json' \
+  && mv 'zeitweiliges.json' "${json_speicher_vereinte_abfragen_zwischenablage}"
+ 
+  ;; 
+  esac
   
   n_suchergebnisse_volltext_mit_stichwort=$( jq '.|length' -s "${json_speicher_vereinte_abfragen_zwischenablage}" );
   
   if [[ ${n_suchergebnisse_volltext-0} -eq 0 ]];then
     meldung_abbruch "${ORANGE}Datei '${json_speicher_datei}' enthält $n_suchergebnisse_volltext Volltext-Suchergebnisse, $n_suchergebnisse_volltext_mit_stichwort Stichwort-Suchergebnisse (Abbruch)${FORMAT_FREI}"
   fi
-
+  
   dieser_jq_filter_code='
   def woerterbehalten: ["DWB1", "DWB2"];
   def Anfangsgrosz:
@@ -455,8 +592,24 @@ if [[ -e "${json_speicher_datei}" ]];then
 
   .result_set
   | map({gram: (.gram), Wort: (.lemma|Anfangsgrosz), wort: (.lemma)})
-  | unique_by(.wort)  | sort_by(.gram, .wort) 
+  | unique_by(.wort, .gram)  | sort_by(.gram, .wort) 
   | .[] 
+| if ($mit_woerterliste_regex|length) == 0
+      then .
+      elif (.wort|test("\($mit_woerterliste_regex)"))
+      then .
+      elif (.Wort|test("\($mit_woerterliste_regex)"))
+      then .
+      else empty
+      end
+| if ($ohne_woerterliste_regex|length) == 0
+      then .
+      elif (.wort|test("\($ohne_woerterliste_regex)"))
+      then empty
+      elif (.Wort|test("\($ohne_woerterliste_regex)"))
+      then empty
+      else .
+      end
   | if .gram == null or .gram == ""
   then "\(.wort);"
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
@@ -516,17 +669,14 @@ if [[ -e "${json_speicher_datei}" ]];then
   else "\(.wort);"
   end
   '
-  cat "${json_speicher_datei}" | jq -r "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage}" \
-  && printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text}" \
+  cat "${json_speicher_datei}" | jq -r  \
+    --arg mit_woerterliste_regex "${mit_woerterliste_regex}" \
+    --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
+    "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage}" \
+  && printf "%s\n\n%s\n\n" "${titel_text}" "${zusatzbemerkungen_textdatei}" > "${datei_utf8_reiner_text}" \
   && pandoc -f html -t plain "${datei_utf8_text_zwischenablage}" >> "${datei_utf8_reiner_text}"
-  # anfügen der eingeschrängten Wörterliste
-  case $stufe_stichwortabfrage in 1)
-    jq '{result_set:.}' -s "${json_speicher_vereinte_abfragen_zwischenablage}" | jq -r "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage}" \
-    && printf "%s\n\n" "" >> "${datei_utf8_reiner_text}" \
-    && pandoc -f html -t plain "${datei_utf8_text_zwischenablage}" >> "${datei_utf8_reiner_text}"
-  ;;
-  esac
-  
+  # ZUTUN anfügen der eingeschrängten Wörterliste
+
 else
   meldung_abbruch "${ORANGE}Datei '${json_speicher_datei}' fehlt oder konnte nicht erstellt werden (Abbruch)${FORMAT_FREI}"
 fi
@@ -557,8 +707,24 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
 
   .result_set
   | map({gram: (.gram), Wort: (.lemma|Anfangsgrosz), wort: (.lemma)})
-  | unique_by(.wort)  | sort_by(.gram, .wort) 
+  | unique_by(.wort, .gram)  | sort_by(.gram, .wort) 
   | .[] 
+| if ($mit_woerterliste_regex|length) == 0
+      then .
+      elif (.wort|test("\($mit_woerterliste_regex)"))
+      then .
+      elif (.Wort|test("\($mit_woerterliste_regex)"))
+      then .
+      else empty
+      end
+| if ($ohne_woerterliste_regex|length) == 0
+      then .
+      elif (.wort|test("\($ohne_woerterliste_regex)"))
+      then empty
+      elif (.Wort|test("\($ohne_woerterliste_regex)"))
+      then empty
+      else .
+      end
   | if .gram == null or .gram == ""
   then "\(.wort);"
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
@@ -624,16 +790,13 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
 
 # cat "${json_speicher_datei}" | jq "${dieser_jq_filter_code}" | sed -r 's@"@@g; ' | uniq > "${datei_utf8_text_zwischenablage_gram}"
 
-cat "${json_speicher_datei}" | jq -r "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage_gram}" \
-&& printf "%s\n\n" "${titel_text}" > "${datei_utf8_reiner_text_gram}" \
-&& pandoc -f html -t plain "${datei_utf8_text_zwischenablage_gram}" >> "${datei_utf8_reiner_text_gram}"
-# anfügen der eingeschrängten Wörterliste
-case $stufe_stichwortabfrage in 1)
-  jq '{result_set:.}' -s "${json_speicher_vereinte_abfragen_zwischenablage}" | jq -r "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage_gram}" \
-  && printf "%s\n\n" "" >> "${datei_utf8_reiner_text_gram}" \
+cat "${json_speicher_datei}" | jq -r  \
+    --arg mit_woerterliste_regex "${mit_woerterliste_regex}" \
+    --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
+  "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage_gram}" \
+  && printf "%s\n\n%s\n\n" "${titel_text}" "${zusatzbemerkungen_textdatei}" > "${datei_utf8_reiner_text_gram}" \
   && pandoc -f html -t plain "${datei_utf8_text_zwischenablage_gram}" >> "${datei_utf8_reiner_text_gram}"
-;;
-esac
+# ZUTUN anfügen der eingeschrängten Wörterliste
   
   # if [[ -e "${datei_utf8_text_zwischenablage_gram}" ]];then
   #   # (3.1.) Sonderzeichen, Umlaute dekodieren in lesbare Zeichen als UTF8
@@ -643,25 +806,13 @@ esac
   #   meldung_abbruch "${ORANGE}Textdatei '${datei_utf8_reiner_text_gram}' fehlt oder konnte nicht erstellt werden (Abbruch)${FORMAT_FREI}"
   # fi
 
+
 case $volltext_text in
-…*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i>STICHWORT_PLATZHALTER zu tun haben)." ;;
-…*)  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortende (im Volltext) <i>$volltext_text</i>STICHWORT_PLATZHALTER gemein haben)." ;;
-*…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang (im Volltext) <i>${volltext_text}</i>STICHWORT_PLATZHALTER gemein haben)." ;;
-*)   bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i>STICHWORT_PLATZHALTER zu tun haben)." ;;
+…*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_mit_stichwortliste_html-.}" ;;
+…*)  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortende (im Volltext) <i>$volltext_text</i> gemein haben)${hinweis_mit_stichwortliste_html-.}" ;;
+*…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang (im Volltext) <i>${volltext_text}</i> gemein haben)${hinweis_mit_stichwortliste_html-.}" ;;
+*)   bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_mit_stichwortliste_html-.}" ;;
 esac
-
-case $stichwort_text in
-…*…) bearbeitungstext_stichwort=", und Abfrage (Stichwort) <i>${stichwort_text}</i>" ;;
-…*)  bearbeitungstext_stichwort=", und Wortende (Stichwort) <i>${stichwort_text}</i>" ;;
-*…)  bearbeitungstext_stichwort=", und Wortanfang (Stichwort) <i>${stichwort_text}</i>" ;;
-*) case $stufe_stichwortabfrage in 
-  1) bearbeitungstext_stichwort=", und Abfrage (Stichwort) <i>${stichwort_text}</i>" ;; 
-  0|*) bearbeitungstext_stichwort='' ;; 
-  esac
-  ;;
-esac
-
-bearbeitungstext_html=$(echo "$bearbeitungstext_html" | sed "s@STICHWORT_PLATZHALTER@${bearbeitungstext_stichwort}@" );
 
 html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-de/tree/main/DWB1#dwb-pss_volltext_abfragen-und-ausgebensh\"><code>DWB-PSS_volltext_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
 
@@ -673,102 +824,110 @@ case $stufe_formatierung in
   0)  ;;
   1) meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" ;;
   esac
-  jq ' . |  sort_by(.gram,.lemma)[] |  if .gram == null or .gram == ""
-  then "<tr><td>\(.lemma)</td><td><!-- keine Grammatik angegeben --></td><td><!-- ohne Sprachkunst-Begriff --></td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  jq  \
+  ' . |  sort_by(.gram,.lemma)[] |  if .gram == null or .gram == ""
+  then "<tr><td>\(.lemma)</td><td><!-- keine Grammatik angegeben --><!-- ohne Sprachkunst-Begriff --></td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif (.gram|test("^ *adj. +und +adv. *$|^ *adj. +u. +adv. *$|^ *adj. +adv. *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Eigenschaftswort, Beiwort und Zuwort, Umstandswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *adje?c?t?[_.,;]* *$|^ *adje?c?t?[_.,;]* adje?c?t?[_.,;]* *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Eigenschaftswort, Beiwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Eigenschaftswort, Beiwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif  (.gram|test("^ *adv[.]?[;]? *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Zuwort, Umstandswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *adje?c?t?[_.,;]*\\?[_.,;]* *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ ?Eigenschaftswort, Beiwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+
+  elif (.gram|test("^ *adj[_.,;]* +und +adv[_.,;]* *$|^ *adj[_.,;]* +u. +adv[_.,;]* *$|^ *adj[_.,;]* +adv[_.,;]* *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Eigenschaftswort, Beiwort und Umstandswort, Zuwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif  (.gram|test("^ *adv[_.,;] *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Umstandswort, Zuwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
-  then "<tr><td>\(.lemma), die</td><td>\(.gram)</td><td>Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die</td><td>\(.gram) ~ Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]*\\? *$"))
-  then "<tr><td>\(.lemma), die?</td><td>\(.gram)</td><td>Nennwort, ?weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die?</td><td>\(.gram) ~ Nennwort, ?weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +m[_.,;]* *$"))
-  then "<tr><td>\(.lemma), die o. der</td><td>\(.gram)</td><td>Nennwort, weiblich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die o. der</td><td>\(.gram) ~ Nennwort, weiblich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$"))
-  then "<tr><td>\(.lemma), die o. das</td><td>\(.gram)</td><td>Nennwort, weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die o. das</td><td>\(.gram) ~ Nennwort, weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
-  then "<tr><td>\(.lemma), die o. das</td><td>\(.gram)</td><td>Nennwort, weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die o. das</td><td>\(.gram) ~ Nennwort, weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
-  then "<tr><td>\(.lemma), die o. das o. der</td><td>\(.gram)</td><td>Nennwort, weiblich o. sächlich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die o. das o. der</td><td>\(.gram) ~ Nennwort, weiblich o. sächlich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
-  then "<tr><td>\(.lemma), die o. das o. der</td><td>\(.gram)</td><td>Nennwort, weiblich o. männlich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die o. das o. der</td><td>\(.gram) ~ Nennwort, weiblich o. männlich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *f[_.,;]* +nomen +actionis[.]* *$"))
-  then "<tr><td>\(.lemma), die</td><td>\(.gram)</td><td>Nennwort einer Handlung, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die</td><td>\(.gram) ~ Nennwort einer Handlung, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +nomen +agentis[.]* *$"))
-  then "<tr><td>\(.lemma), die</td><td>\(.gram)</td><td>Nennwort-Machende, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die</td><td>\(.gram) ~ Nennwort-Machende, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +subst. *$"))
-  then "<tr><td>\(.lemma), die</td><td>\(.gram)</td><td>Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), die</td><td>\(.gram) ~ Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif  (.gram|test("^ *interj[.]?[;]? *$|^ *interjection[;]? *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Zwischenwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Zwischenwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *m[_.,;]* *$"))
-  then "<tr><td>\(.lemma), der</td><td>\(.gram)</td><td>Nennwort, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), der</td><td>\(.gram) ~ Nennwort, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]*\\? *$"))
-  then "<tr><td>\(.lemma), der?</td><td>\(.gram)</td><td>Nennwort, ?männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), der?</td><td>\(.gram) ~ Nennwort, ?männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
-  then "<tr><td>\(.lemma), der o. die</td><td>\(.gram)</td><td>Nennwort, männlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), der o. die</td><td>\(.gram) ~ Nennwort, männlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
-  then "<tr><td>\(.lemma), der u. die</td><td>\(.gram)</td><td>Nennwort, männlich u. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), der u. die</td><td>\(.gram) ~ Nennwort, männlich u. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
-  then "<tr><td>\(.lemma), der o. das</td><td>\(.gram)</td><td>Nennwort, männlich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), der o. das</td><td>\(.gram) ~ Nennwort, männlich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
-  then "<tr><td>\(.lemma), der o. die o. das</td><td>\(.gram)</td><td>Nennwort, männlich o. weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), der o. die o. das</td><td>\(.gram) ~ Nennwort, männlich o. weiblich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
-  then "<tr><td>\(.lemma), der o. das o. die</td><td>\(.gram)</td><td>Nennwort, männlich o. sächlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), der o. das o. die</td><td>\(.gram) ~ Nennwort, männlich o. sächlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +nomen +actionis[.]* *$"))
-  then "<tr><td>\(.lemma), der</td><td>\(.gram)</td><td>Nennwort einer Handlung, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), der</td><td>\(.gram) ~ Nennwort einer Handlung, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +nomen +agentis[.]* *$"))
-  then "<tr><td>\(.lemma), der</td><td>\(.gram)</td><td>Nennwort-Machender, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), der</td><td>\(.gram) ~ Nennwort-Machender, männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
 elif (.gram|test("^ *n[_.,;]* *$"))
-  then "<tr><td>\(.lemma), das</td><td>\(.gram)</td><td>Nennwort, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), das</td><td>\(.gram) ~ Nennwort, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]*\\? *$"))
-  then "<tr><td>\(.lemma), das?</td><td>\(.gram)</td><td>Nennwort, ?sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), das?</td><td>\(.gram) ~ Nennwort, ?sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
-  then "<tr><td>\(.lemma), das o. der</td><td>\(.gram)</td><td>Nennwort, sächlich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), das o. der</td><td>\(.gram) ~ Nennwort, sächlich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
-  then "<tr><td>\(.lemma), das o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), das o. die</td><td>\(.gram) ~ Nennwort, sächlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
-  then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. männlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram) ~ Nennwort, sächlich o. männlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
-  then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram)</td><td>Nennwort, sächlich o. weiblich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), das o. der o. die</td><td>\(.gram) ~ Nennwort, sächlich o. weiblich o. männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* +nomen +actionis[.]* *$"))
-  then "<tr><td>\(.lemma), das</td><td>\(.gram)</td><td>Nennwort einer Handlung, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), das</td><td>\(.gram) ~ Nennwort einer Handlung, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
-  then "<tr><td>\(.lemma), das</td><td>\(.gram)</td><td>Nennwort-Machendes, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma), das</td><td>\(.gram) ~ Nennwort-Machendes, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif  (.gram|test("^ *part[icz]*[.]?[;]? *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Mittelwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Mittelwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif (.gram|test("^ *part[icz]*.[ -]+adj. *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Mittelwort und Eigenschaftswort, Beiwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *part[icpalesz]*.[ -]+adj. *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ mittelwörtliches Eigenschaftswort, Beiwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif  (.gram|test("^ *pr&#x00e4;p[_.,;]* *$|^ *praep[_.,;]* *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Vorwort, Verhältniswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Vorwort, Verhältniswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *praet.[;]? *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Vergangenheit</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Vergangenheit</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *subst. *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Nennwort (auch Dingwort, Hauptwort, Namenwort, Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Nennwort (auch Dingwort, Hauptwort, Namenwort, Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *v. +u. +subst. +n. *$"))
-  then "<tr><td>\(.lemma); \(.lemma), das</td><td>\(.gram)</td><td>Tunwort und Nennwort sächlich (Tunwort: auch Zeitwort, Tätigkeitswort; Nennwort: auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma); \(.lemma), das</td><td>\(.gram) ~ Tunwort und Nennwort sächlich (Tunwort: auch Zeitwort, Tätigkeitswort; Nennwort: auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *schwaches +verbum *$|^ *sw[_.,;]* +vb[_.,;]* *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Tunwort schwach (auch Zeitwort, Tätigkeitswort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Tunwort schwach (auch Zeitwort, Tätigkeitswort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *v[_.,;]* *$|^ *vb[_.,;]* *$|^ *verb[_.,;]* *$|^ *verbum[_.,;]* *$"))
-  then "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>Tunwort (auch Zeitwort, Tätigkeitswort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  else "<tr><td>\(.lemma)</td><td>\(.gram)</td><td>?</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Tunwort (auch Zeitwort, Tätigkeitswort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+
+  elif (.gram|test("^ *verbal[-]*adj[_.,;]+[ -–—]adv[_.,;]* *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Eigenschafts- oder Umstandswort tunwörtlichen Ursprungs</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+
+  else "<tr><td>\(.lemma)</td><td>\(.gram) ~ ?</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   end
   ' --slurp "${json_speicher_vereinte_abfragen_zwischenablage}" \
@@ -783,12 +942,12 @@ s@<wbnetzkwiclink>@\n&@g; s@</wbnetzkwiclink>@&\n@g # für leichteres JSON Einf�
 s@woerterbuchnetz.de//\?@woerterbuchnetz.de/?@g;
 
   # s@<td>([^ ])([^ ]+)(, [d][eia][res][^<>]*)</td>@<td>\U\1\L\2\E\3</td>@g; # ersten Buchstaben Groß bei Nennwörtern
-s@<td>([^ ])([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>\U\1\L\2\E\3\4@g; # ersten Buchstaben Groß bei Nennwörtern
-s@<td>(&#x00e4;|&#196;|&auml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>&#x00C4;\L\2\E\3\4@g; # ä Ä 
-s@<td>(&#x00f6;|&#246;|&ouml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>&#x00D6;\L\2\E\3\4@g; # ö Ö
-s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]*</td><td> *Nennwort)@<td>&#x00DC;\L\2\E\3\4@g; # ü Ü 
+s@<td>([^ ])([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>\U\1\L\2\E\3\4@g; # ersten Buchstaben Groß bei Nennwörtern
+s@<td>(&#x00e4;|&#196;|&auml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00C4;\L\2\E\3\4@g; # ä Ä 
+s@<td>(&#x00f6;|&#246;|&ouml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00D6;\L\2\E\3\4@g; # ö Ö
+s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00DC;\L\2\E\3\4@g; # ü Ü 
 
-1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.). Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tunwörter (Tätigkeitswörter, Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Hauptwörter, Substantive), als auch die Wörter bei denen GRIMM keine Angabe der Grammatik/Sprachkunst-Begriffe gemacht haben oder sie vergessen wurden.</p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik<br/>(<i>Grimm</i>)</th><th>Sprachkunst, Sprachlehre<br/>(s. a. <i style=\"font-variant:small-caps;\">Schottel 1663</i>)</th><th>Fundstelle (gekürzt)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr>
+1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.). Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tunwörter (Tätigkeitswörter, Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Hauptwörter, Substantive), als auch die Wörter bei denen GRIMM keine Angabe der Grammatik/Sprachkunst-Begriffe gemacht haben oder sie vergessen wurden.</p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><th>Fundstelle (gekürzt)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr>
 $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
   s@<th>@<th style="border-top:2px solid gray;border-bottom:2px solid gray;">@g;
@@ -838,7 +997,7 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
     textid=$( echo "${wbnetzkwiclink}" | sed --regexp-extended 's@.+/textid/([[:digit:]]+)/.+@\1@;' )
 
     fundstelle_text=$(
-      wget --wait 1s --random-wait --quiet --no-check-certificate -O - "$wbnetzkwiclink"  | jq  --arg textid ${textid-0} --join-output ' .[]
+      wget --wait 5 --random-wait --quiet --no-check-certificate -O - "$wbnetzkwiclink"  | jq  --arg textid ${textid-0} --join-output ' .[]
       | if (.textid|tonumber) == ($textid|tonumber)
       then "<b class=\"gefunden-hervorheben\" id=\"textid-\($textid)\">\(.word)</b>"
       elif .typeset == "italics"
@@ -874,7 +1033,12 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
       )
       end
       ' | sed --regexp-extended 's@</i><i>@@g'
-    )
+    ) && this_exit_code=$?
+    
+    case $this_exit_code in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+      meldung "${ORANGE}Etwas lief schief … exit code: ${this_exit_code} $(kill -l $this_exit_code)${NOFORMAT} (?wget, ?jq …)" ;;
+    esac
+  
     echo "»${fundstelle_text}«" | sed --regexp-extended 's@»([ ;.:]+)@»…\1@g; ' > "${datei_diese_fundstelle}"
     # sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
     sed --in-place "/${wbnetzkwiclink_regex_suchadresse}/r ${datei_diese_fundstelle}" "${datei_utf8_html_zwischenablage_gram}"
@@ -927,7 +1091,7 @@ case $stufe_formatierung in
 
     meldung  "${ORANGE}Überschreibe vorhandene Textverarbeitungsdatei${FORMAT_FREI} ${datei_utf8_odt_gram} ${ORANGE}?${FORMAT_FREI}"
     meldung  "  ${ORANGE}Falls „nein“, dann erfolgt Sicherung als${FORMAT_FREI}"
-    meldung  "  → $datei_sicherung ${ORANGE}(wird also umbenannt)${FORMAT_FREI}"
+    meldung  "  → $datei_sicherung ${ORANGE}(würde also umbenannt)${FORMAT_FREI}"
     echo -en "  ${ORANGE}Jetzt überschreiben (JA/nein):${FORMAT_FREI} "
     read janein
     if [[ -z ${janein// /} ]];then janein="ja"; fi
