@@ -305,11 +305,12 @@ parameter_abarbeiten "$@"
 case $stufe_verausgaben in
  0)  ;;
  1)
-  meldung "${ORANGE}DEBUG - stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
-  meldung "${ORANGE}DEBUG - stufe_verausgaben:     $stufe_verausgaben ${FORMAT_FREI}"
-  meldung "${ORANGE}DEBUG - stufe_dateienbehalten: $stufe_dateienbehalten ${FORMAT_FREI}"
-  meldung "${ORANGE}DEBUG - lemmaabfrage: $lemmaabfrage ${FORMAT_FREI}"
-  meldung "${ORANGE}DEBUG - lemma_text:   $lemma_text ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_fundstellen:     $stufe_fundstellen ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_verausgaben:     $stufe_verausgaben ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten: $stufe_dateienbehalten ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - lemmaabfrage: $lemmaabfrage ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - lemma_text:   $lemma_text ${FORMAT_FREI}"
   ;;
 esac
 
@@ -687,11 +688,12 @@ s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<
 $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
   s@<th>@<th style="border-top:2px solid gray;border-bottom:2px solid gray;">@g;
-  ' \
-> "${datei_utf8_html_zwischenablage_gram}"
+  ' > "${datei_utf8_html_zwischenablage_gram}"
  
   meldung "${ORANGE}ENTWICKLUNG: sed ${datei_utf8_html_zwischenablage_gram} ${FORMAT_FREI}"
       
+  case $stufe_fundstellen in
+  1)  
   sed --in-place '# für sed später der wbnetzkwiclink in einzelner Zeile
   s@\(<wbnetzkwiclink>\)@\n\1@g; 
   s@\(</wbnetzkwiclink>\)@\1\n@g; 
@@ -699,8 +701,6 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
   s@wbnetzkwiclink-->@@g; 
   ' "${datei_utf8_html_zwischenablage_gram}" 
   
-  case $stufe_fundstellen in
-  1)  
     # Fundstellen Anfang
     meldung "${ORANGE}ENTWICKLUNG: Fundstellen${FORMAT_FREI}"
     # ZUTUN table is Missing
@@ -795,7 +795,7 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
     # Fundstellen Ende
   ;;  
   0)
-    sed 's@<!--wbnetzkwiclink.*wbnetzkwiclink-->@@g' "${datei_utf8_html_zwischenablage_gram}"
+    sed --in-place 's@<!--wbnetzkwiclink.*wbnetzkwiclink-->@@g' "${datei_utf8_html_zwischenablage_gram}"
   ;;
   esac
   
