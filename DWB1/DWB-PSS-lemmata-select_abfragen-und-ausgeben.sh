@@ -44,7 +44,8 @@ Zusätzlich kann man eine HTML oder ODT Datei erstellen lassen (benötigt Progra
 Verwendbare Wahlmöglichkeiten:
 -h,  --Hilfe          Hilfetext dieses Programms ausgeben.
 
--l,-L, --Lemmaabfrage   Die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
+-l,-L, --Lemmaabfrage     Die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
+-F     --Fundstellen      Fundstellen mit abfragen, jeden Stichworts
 
 -H,    --HTML             HTML Datei erzeugen
 -O,    --ODT              ODT Datei (für LibreOffice) erzeugen
