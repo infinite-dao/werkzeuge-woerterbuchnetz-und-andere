@@ -13,7 +13,7 @@ abhaenigkeiten_pruefen() {
     printf "${ORANGE}Kommando${FORMAT_FREI} jq ${ORANGE} zum Verarbeiten von JSON nicht gefunden: Bitte${FORMAT_FREI} jq ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v pandoc)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} pandoc ${ORANGE} zum Erstellen von Dokumenten in HTML, ODT nicht gefunden: Bitte${FORMAT_FREI} pandoc ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Kommando${FORMAT_FREI} pandoc ${ORANGE} zum Erstellen von Dokumenten in HTML, ODT, MD nicht gefunden: Bitte${FORMAT_FREI} pandoc ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v sed)" ]]; then
     printf "${ORANGE}Kommando${FORMAT_FREI} sed ${ORANGE}nicht gefunden: Bitte sed über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
@@ -52,6 +52,7 @@ Verwendbare Wahlmöglichkeiten:
 -e,    --eineinzig         Ergebnisliste verringern, daß nur jedes Stichwort einmal vorkommt
 -H,    --HTML              HTML Datei erzeugen
 -O,    --ODT               ODT Datei (für LibreOffice) erzeugen
+-T,    --Telegrammarkdown  MD  Datei (für Text in Markdown bei Telegram) erzeugen
 -b,    --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
 -s,    --stillschweigend   Kaum Meldungen ausgeben
        --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
@@ -131,9 +132,9 @@ aufraeumen() {
       if [[ -e "${json_speicher_datei_zwischenablage-}" ]];then              rm -- "${json_speicher_datei_zwischenablage}"; fi
       if [[ -e "${json_speicher_vereinte_abfragen_zwischenablage-}" ]];then  rm -- "${json_speicher_vereinte_abfragen_zwischenablage}"; fi
       if [[ -e "${json_speicher_filter_ueber_textid_verknuepfen-}" ]];then   rm -- "${json_speicher_filter_ueber_textid_verknuepfen}"; fi
-      if [[ -e "${datei_diese_wbnetzkwiclink-}" ]];then                      rm -- "${datei_diese_wbnetzkwiclink}";
-      fi
+      if [[ -e "${datei_diese_wbnetzkwiclink-}" ]];then                      rm -- "${datei_diese_wbnetzkwiclink}"; fi
 
+      # if [[ -e "${datei_utf8_html_gram_tidy_markdown_telegram}" ]];then               rm -- "${datei_utf8_html_gram_tidy_markdown_telegram}"; fi      
     fi
     case ${stufe_verausgaben:-0} in
     0)  ;;
@@ -167,20 +168,20 @@ meldung_abbruch() {
 }
 
 # json_speicher_datei volltext_text
-# json_speicher_datei volltext_text mit_wortliste_stichwoerter_text
+# json_speicher_datei volltext_text mit_woerterliste_text
 json_speicher_datei() {
   local volltextabfrage=${1-unbekannt}
   local stichwortabfrage=${2-}
   local diese_json_speicher_datei=''
+  local diese_datei_vorsilbe=$(echo "$volltextabfrage" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@…@')
+  local diese_datei_zeichenkette_stichwoerter=$(echo $stichwortabfrage | sed --regexp-extended 's@[,;]+@ @g; s@[[:punct:]]+@…@g; s@^…{2,}@@; s@ +@, @g; s@…+$@…@g; s@^([^, ]+, [^, ]+, [^, ]+), .+@\1 usw.@; ')
   
   if [[ -z "${stichwortabfrage-}" ]]; then
-    diese_json_speicher_datei=$(printf "%s_Volltext-Abfrage-DWB1_%s.json" \
-      $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@…@') \
-      $(date '+%Y%m%d'));
+    diese_json_speicher_datei=$( printf "%s_Volltext-Abfrage-DWB1_%s.json" "${diese_datei_vorsilbe}" $(date '+%Y%m%d') );
   else
     diese_json_speicher_datei=$(printf "%s_im-Volltext_+_Stichwort-„%s“_DWB1_%s.json" \
-      $(echo $volltextabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@…@') \
-      $(echo $stichwortabfrage | sed --regexp-extended 's@[,;]+@ @g; s@[[:punct:]]+@…@g; s@^…{2,}@@; s@ +@, @g; s@…+$@…@g; s@^([^, ]+, [^, ]+, [^, ]+), .+@\1 usw.@; ') \
+      "${diese_datei_vorsilbe}" \
+      "${diese_datei_zeichenkette_stichwoerter}" \
       $(date '+%Y%m%d'));
   fi
   printf "${diese_json_speicher_datei}"
@@ -200,6 +201,8 @@ dateivariablen_filter_bereitstellen() {
 
   datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html"
   datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html.log"
+  datei_utf8_html_gram_tidy_markdown_telegram="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy_(Telegram).md"
+
   datei_utf8_odt_gram="${diese_json_speicher_datei%.*}_Wortliste+gram.odt"
   json_speicher_all_query_datei="${diese_json_speicher_datei%.*}.allquery.json"
   # Zwischenablage für JSON Verarbeitung
@@ -212,24 +215,28 @@ dateivariablen_filter_bereitstellen() {
 parameter_abarbeiten() {
   # default values of variables set from params
   case $(date '+%m') in
-  01|1) datum_heute_lang=$(date '+%_d. Wintermonat (%B) %Y' | sed 's@^ *@@;');;
-  02|2) datum_heute_lang=$(date '+%_d. Hornung (%B) %Y'     | sed 's@^ *@@;') ;;
-  03|3) datum_heute_lang=$(date '+%_d. Lenzmonat (%B) %Y'   | sed 's@^ *@@;') ;;
-  04|4) datum_heute_lang=$(date '+%_d. Ostermonat (%B) %Y'  | sed 's@^ *@@;') ;;
-  05|5) datum_heute_lang=$(date '+%_d. Wonnemonat (%B) %Y'  | sed 's@^ *@@;') ;;
-  06|6) datum_heute_lang=$(date '+%_d. Brachmonat (%B) %Y'  | sed 's@^ *@@;') ;;
-  07|7) datum_heute_lang=$(date '+%_d. Heumonat (%B) %Y'    | sed 's@^ *@@;') ;;
-  08|8) datum_heute_lang=$(date '+%_d. Erntemonat (%B) %Y'  | sed 's@^ *@@;') ;;
-  09|9) datum_heute_lang=$(date '+%_d. Herbstmonat (%B) %Y' | sed 's@^ *@@;') ;;
-    10) datum_heute_lang=$(date '+%_d. Weinmonat (%B) %Y'   | sed 's@^ *@@;') ;;
-    11) datum_heute_lang=$(date '+%_d. Nebelmonat (%B) %Y'  | sed 's@^ *@@;') ;;
-    12) datum_heute_lang=$(date '+%_d. Christmonat (%B) %Y' | sed 's@^ *@@;') ;;
+  01|1) datum_heute_lang=$(date '+%_d. Wintermonat (%b.) %Y' | sed 's@^ *@@;');;
+  02|2) datum_heute_lang=$(date '+%_d. Hornung (%b.) %Y'     | sed 's@^ *@@;') ;;
+  03|3) datum_heute_lang=$(date '+%_d. Lenzmonat (%b.) %Y'   | sed 's@^ *@@;') ;;
+  04|4) datum_heute_lang=$(date '+%_d. Ostermonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+  05|5) datum_heute_lang=$(date '+%_d. Wonnemonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+  06|6) datum_heute_lang=$(date '+%_d. Brachmonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+  07|7) datum_heute_lang=$(date '+%_d. Heumonat (%b.) %Y'    | sed 's@^ *@@;') ;;
+  08|8) datum_heute_lang=$(date '+%_d. Erntemonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+  09|9) datum_heute_lang=$(date '+%_d. Herbstmonat (%b.) %Y' | sed 's@^ *@@;') ;;
+    10) datum_heute_lang=$(date '+%_d. Weinmonat (%b.) %Y'   | sed 's@^ *@@;') ;;
+    11) datum_heute_lang=$(date '+%_d. Nebelmonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+    12) datum_heute_lang=$(date '+%_d. Christmonat (%b.) %Y' | sed 's@^ *@@;') ;;
   esac
   stufe_verausgaben=1
   stufe_formatierung=0
+  stufe_markdown_telegram=0
   stufe_aufraeumen_aufhalten=0
   stufe_dateienbehalten=0
   stufe_stichwortabfrage=0
+  # 0 = keine Stichworte begrenzen
+  # 1 = Stichworte begrenzen (eineinzig)
+  # 2 = mit tatsächlicher Stichwortliste oder ohne_woerterliste oder mit_woerterliste
   stufe_stichworte_eineinzig=0
   # Grundlage: rein Text, und mit Grammatik
   # zusätzlich
@@ -243,12 +250,11 @@ parameter_abarbeiten() {
   volltextabfrage=''
   volltext_text=''
   stichwortabfrage=''
-  mit_wortliste_stichwoerter_text=''
+  mit_woerterliste_text=''
   mit_woerterliste=''
   mit_woerterliste_regex=''
   
-  hinweis_mit_stichwortliste_html=""
-  hinweis_ohne_stichwortliste=""
+  hinweis_stichwortliste_html=""
   zusatzbemerkungen_textdatei=''
 
   ohne_woerterliste_regex='' # ZUTUN
@@ -277,7 +283,7 @@ parameter_abarbeiten() {
       ;;
     -S | --[Ss]tichwortabfrage)  # Parameter
       stichwortabfrage="${2-}"
-      mit_wortliste_stichwoerter_text=$(echo "$stichwortabfrage" | sed --regexp-extended '
+      mit_woerterliste_text=$(echo "$stichwortabfrage" | sed --regexp-extended '
         s@\*+@ρεγεξ@g; 
         s@[[:punct:]]+@ @g; 
         s@ρεγεξ@…@g; 
@@ -307,12 +313,12 @@ parameter_abarbeiten() {
         s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
         s@[ ]+@|@g; 
       ')
-      stufe_stichwortabfrage=1
-      # ohne_woerterliste_regex=$(echo "$ohne_woerterliste" | sed --regexp-extended 's@[[:punct:]]+@ @g; s@[ ]+@.*|.*@g; s@^@.*@g; s@$@.*@;')
+      stufe_stichwortabfrage=2
 
       shift
       ;;
     -H | --[Hh][Tt][Mm][Ll])
+      # Stufe: 1 oder 3
       case $stufe_formatierung in
       0) stufe_formatierung=1 ;;
       1|3) stufe_formatierung=$stufe_formatierung ;;
@@ -321,6 +327,7 @@ parameter_abarbeiten() {
       esac
       ;;
     -O | --[Oo][Dd][Tt])
+      # Stufe: 2 oder 3
       case $stufe_formatierung in
       0) stufe_formatierung=2 ;;
       1) stufe_formatierung=$(( $stufe_formatierung + 2 )) ;;
@@ -328,6 +335,17 @@ parameter_abarbeiten() {
       *) stufe_formatierung=2 ;;
       esac
     ;;
+    -T | --[Tt][Ee][Ll][Ee][Gg][Rr][Aa][Mm][Mm][Aa][Rr][Cc][Dd][Oo][Ww][Nn])
+      # Stufe: 1 oder 3
+      case $stufe_formatierung in
+      0) stufe_formatierung=1 ;;
+      1|3) stufe_formatierung=$stufe_formatierung ;;
+      2) stufe_formatierung=$(( $stufe_formatierung + 1 )) ;;
+      *) stufe_formatierung=1 ;;
+      esac
+      stufe_markdown_telegram=1
+    ;;
+    
     -o|--ohne)  # Parameter
       ohne_woerterliste="${2-}"
       ohne_woerterliste_text=$(echo "$ohne_woerterliste" | sed --regexp-extended '
@@ -366,7 +384,7 @@ parameter_abarbeiten() {
         s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
         s@[ ]+@|@g; 
       ')
-      stufe_stichwortabfrage=1
+      stufe_stichwortabfrage=2
       shift
     ;;
     #-p | --param) # example named parameter
@@ -387,10 +405,15 @@ parameter_abarbeiten() {
   [[ -z "${volltextabfrage-}" ]] && meldung "${ROT}Fehlender Volltext, der abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
 
   case $stufe_stichwortabfrage in
-  0) json_speicher_datei=$(json_speicher_datei $volltext_text);
-     titel_text="Volltextsuche „$volltext_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"; ;;
-  1) json_speicher_datei=$(json_speicher_datei $volltext_text "${mit_wortliste_stichwoerter_text}");
-     titel_text="Volltextsuche „$volltext_text“ mit Stichwort „${mit_wortliste_stichwoerter_text}“ aus Grimm-Wörterbuch ($datum_heute_lang)"; ;;
+  0|1) json_speicher_datei=$(json_speicher_datei "$volltext_text");
+     titel_text="Volltextsuche „$volltext_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"; 
+     ;;
+  # 1) json_speicher_datei=$(json_speicher_datei "$volltext_text" "${mit_woerterliste_text}");
+  #     titel_text="Volltextsuche „$volltext_text“ mit Stichwort „${mit_woerterliste_text}“ aus Grimm-Wörterbuch ($datum_heute_lang)"; 
+  #     ;;
+  2) json_speicher_datei=$(json_speicher_datei "$volltext_text" "${mit_woerterliste_text}");
+     titel_text="Volltextsuche „$volltext_text“ mit Stichwort „${mit_woerterliste_text}“ aus Grimm-Wörterbuch ($datum_heute_lang)"; 
+     ;;
   esac
   
   # keine Abfragen nur mit: * oder ?
@@ -407,7 +430,7 @@ parameter_abarbeiten() {
   zusatzbemerkungen_textdatei="Die Liste ist vorgruppiert geordnet nach den Grammatik-Angaben von Grimm,\nd.h. die Wörter sind nach Wortarten gruppiert: Eigenschaftswörter (Adjektive),\nNennwörter (Substantive), Tunwörter usw.."
   zusatzbemerkungen_textdatei=$([[ "${mit_woerterliste_regex}" == "" ]] \
     && printf "${zusatzbemerkungen_textdatei}" \
-    || printf "${zusatzbemerkungen_textdatei}\n\nDie Liste wurde bewußt auf Worte mit „${mit_wortliste_stichwoerter_text}“\nbeschränkt.")
+    || printf "${zusatzbemerkungen_textdatei}\n\nDie Liste wurde bewußt auf Worte mit „${mit_woerterliste_text}“\nbeschränkt.")
     
   zusatzbemerkungen_textdatei=$([[ "${ohne_woerterliste_regex}" == "" ]] \
     && printf "${zusatzbemerkungen_textdatei}" \
@@ -424,16 +447,29 @@ parameter_abarbeiten() {
   
   case $stufe_stichwortabfrage in 
   1) 
-    hinweis_mit_stichwortliste_html=", die Liste ist auf die Stichworte <i>${mit_wortliste_stichwoerter_text}</i> beschränkt." 
-    if [[ ${#ohne_woerterliste_text} -gt 1 ]];then 
-      hinweis_mit_stichwortliste_html="${hinweis_mit_stichwortliste_html%.*}, und bewußt ohne die Worte „<i>${ohne_woerterliste_text}</i>“ weiter eingerenzt."
-    fi
-    case $stufe_stichworte_eineinzig in 1) 
-      hinweis_mit_stichwortliste_html="${hinweis_mit_stichwortliste_html%.*}, es wurden nur die ersten Fundstellen berücksichtigt, und alle weiteren Fundstellen innerhalb eines Stichwortes entfernt." 
+    # hinweis_stichwortliste_html=", die Liste ist auf die Stichworte <i>${mit_woerterliste_text}</i> beschränkt." 
+    case $stufe_stichworte_eineinzig in 
+    0)
+      hinweis_stichwortliste_html="" 
+      ;;
+    1) 
+      hinweis_stichwortliste_html=", der Liste Stichworte wurde beschränkt auf die allersten Fundstellen." 
       ;;
     esac
   ;;
-  0|*) hinweis_mit_stichwortliste_html='' ;; 
+  2) # ZUTUN WEITER
+    if [[ ${#mit_woerterliste_text} -gt 1 ]];then 
+      hinweis_stichwortliste_html=", die Liste ist auf die Stichworte <i>${mit_woerterliste_text}</i> beschränkt." 
+    fi
+    if [[ ${#ohne_woerterliste_text} -gt 1 ]];then 
+      hinweis_stichwortliste_html="${hinweis_stichwortliste_html%.*}, und bewußt ohne die Worte „<i>${ohne_woerterliste_text}</i>“ weiter eingerenzt."
+    fi
+    case $stufe_stichworte_eineinzig in 1) 
+      hinweis_stichwortliste_html="${hinweis_stichwortliste_html%.*}&nbsp;&emdash; es wurden nur die ersten Fundstellen berücksichtigt, und alle weiteren Fundstellen innerhalb eines Stichwortes entfernt." 
+      ;;
+    esac
+  ;;
+  0|*) hinweis_stichwortliste_html='' ;; 
   esac
 
 
@@ -453,14 +489,15 @@ case $stufe_verausgaben in
   meldung "${ORANGE}ENTWICKLUNG - stufe_formatierung:              $stufe_formatierung ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - stufe_verausgaben:               $stufe_verausgaben ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - stufe_stichwortabfrage:          $stufe_stichwortabfrage ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten:           $stufe_dateienbehalten ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - stufe_stichworte_eineinzig:      $stufe_stichworte_eineinzig${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten:           $stufe_dateienbehalten ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - volltextabfrage:                 $volltextabfrage ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - volltext_text:                   $volltext_text ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - stichwortabfrage:                $stichwortabfrage ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - mit_woerterliste_text:           $mit_woerterliste_text ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - mit_woerterliste_regex:          $mit_woerterliste_regex ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - mit_wortliste_stichwoerter_text: $mit_wortliste_stichwoerter_text ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex:         $ohne_woerterliste_regex ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - ohne_woerterliste_text:          $ohne_woerterliste_text ${FORMAT_FREI}"
   ;;
 esac
 
@@ -543,7 +580,7 @@ if [[ -e "${json_speicher_datei}" ]];then
     ' "${json_speicher_vereinte_abfragen_zwischenablage}" > 'zeitweiliges.json' \
     && mv 'zeitweiliges.json' "${json_speicher_vereinte_abfragen_zwischenablage}"  ;;
   esac
-  case $stufe_stichwortabfrage in 1) 
+  case $stufe_stichwortabfrage in 2) 
     jq \
   --arg mit_woerterliste_regex "${mit_woerterliste_regex}" \
     --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
@@ -808,10 +845,10 @@ cat "${json_speicher_datei}" | jq -r  \
 
 
 case $volltext_text in
-…*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_mit_stichwortliste_html-.}" ;;
-…*)  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortende (im Volltext) <i>$volltext_text</i> gemein haben)${hinweis_mit_stichwortliste_html-.}" ;;
-*…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang (im Volltext) <i>${volltext_text}</i> gemein haben)${hinweis_mit_stichwortliste_html-.}" ;;
-*)   bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_mit_stichwortliste_html-.}" ;;
+…*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_stichwortliste_html-.}" ;;
+…*)  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortende (im Volltext) <i>$volltext_text</i> gemein haben)${hinweis_stichwortliste_html-.}" ;;
+*…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang (im Volltext) <i>${volltext_text}</i> gemein haben)${hinweis_stichwortliste_html-.}" ;;
+*)   bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_stichwortliste_html-.}" ;;
 esac
 
 html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-de/tree/main/DWB1#dwb-pss_volltext_abfragen-und-ausgebensh\"><code>DWB-PSS_volltext_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
@@ -906,6 +943,12 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   elif (.gram|test("^ *part[icpalesz]*.[ -]+adj. *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ mittelwörtliches Eigenschaftswort, Beiwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
+  elif (.gram|test("^ *part[icpalesz]*[. -]+adj[ektiv]*[. ]+[oder ]*adv[erb]*.*$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ mittelwörtliches Eigenschaftswort oder Umstandswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+
+  elif (.gram|test("^ *part.[ -]+adv.[ ]+adj.*$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ mittelwörtliches Umstandswort oder Eigenschaftswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+
   elif  (.gram|test("^ *pr&#x00e4;p[_.,;]* *$|^ *praep[_.,;]* *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Vorwort, Verhältniswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
@@ -962,7 +1005,7 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
     0) 
       meldung "${GRUEN}Weiterverarbeitung → HTML (wbnetzkwiclink: ${ORANGE}$n_suchergebnisse_volltext Fundstellen${GRUEN} abfragen)${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" 
       ;;
-    1)       
+    1|2)       
       meldung "${GRUEN}Weiterverarbeitung → HTML (wbnetzkwiclink: ${ORANGE}$n_suchergebnisse_volltext_mit_stichwort Fundstellen (aus $n_suchergebnisse_volltext Volltext-Funden)${GRUEN} abfragen)${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" 
     ;;
     esac
@@ -1077,10 +1120,11 @@ case $stufe_formatierung in
  2|3)
   case $stufe_verausgaben in
   0)  ;;
-  1) meldung "${GRUEN}Weiterverarbeitung: HTML → ODT${FORMAT_FREI} (${datei_utf8_odt_gram})"
-  if [[ -e ~/.pandoc/reference.odt ]]; then
-  meldung "${GRUEN}Weiterverarbeitung: HTML → ODT, die Vorlage${FORMAT_FREI} ~/.pandoc/reference.odt ${GRUEN}wird für das Programm${FORMAT_FREI} pandoc ${GRUEN}wahrscheinlich verwendet${FORMAT_FREI}"
-  fi
+  1) 
+    meldung "${GRUEN}Weiterverarbeitung: HTML → ODT${FORMAT_FREI} (${datei_utf8_odt_gram})"
+    if [[ -e ~/.pandoc/reference.odt ]]; then
+    meldung "${GRUEN}Weiterverarbeitung: HTML → ODT, die Vorlage${FORMAT_FREI} ~/.pandoc/reference.odt ${GRUEN}wird für das Programm${FORMAT_FREI} pandoc ${GRUEN}wahrscheinlich verwendet${FORMAT_FREI}"
+    fi
   ;;
   esac
 
@@ -1117,6 +1161,28 @@ case $stufe_formatierung in
   else
     pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
   fi
+  if [[ $stufe_markdown_telegram -gt 0 ]];then 
+    case $stufe_verausgaben in
+    0)  ;;
+    1) 
+      meldung "${GRUEN}Weiterverarbeitung: HTML → HTML.MD${FORMAT_FREI} (${datei_utf8_html_gram_tidy_markdown_telegram})"
+    ;;
+    esac
+    
+    if [[ -e  "${datei_utf8_html_gram_tidy}" ]]; then 
+      pandoc --wrap=none -f html -t markdown "${datei_utf8_html_gram_tidy}" | \
+        sed --regexp-extended '
+          s@\*\*@FETTSCHRIFT@g; s@\*@__@g; 
+          s@FETTSCHRIFT@**@g; 
+          s@\[([^][]+)\]\{.smallcaps\}@\U\1\E@g; 
+          s@([^…]|[^.]{3})«@\1…«@g; 
+          s@__( +)__@\1@g; 
+          ' > "${datei_utf8_html_gram_tidy_markdown_telegram}"
+    else
+      meldung "${ORANGE}Fehler: HTML Datei nicht gefunden, ${datei_utf8_html_gram_tidy}${FORMAT_FREI} …"
+    fi
+  fi
+  
 ;;
 esac
 
