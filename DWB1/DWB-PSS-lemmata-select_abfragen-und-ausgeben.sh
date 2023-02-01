@@ -45,6 +45,7 @@ Verwendbare Wahlmöglichkeiten:
 -h,  --Hilfe          Hilfetext dieses Programms ausgeben.
 
 -l,-L, --Lemmaabfrage     Die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
+                          mehrere Suchwörter zugleich sind möglich: „*wohn*, *wöhn*“
 -F     --Fundstellen      Fundstellen mit abfragen, jeden Stichworts
 
 -H,    --HTML             HTML Datei erzeugen
@@ -96,7 +97,7 @@ aufraeumen() {
     1)
       if [[ $( find . -maxdepth 1 -iname "${json_speicher_datei%.*}*" ) ]];then
       meldung "${ORANGE}Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ;
-      ls -l ${json_speicher_datei%.*}*
+      ls -l "${json_speicher_datei%.*}"*
       fi
       ;;
     esac
@@ -124,16 +125,15 @@ meldung_abbruch() {
 
 # json_speicher_datei lemma_text
 json_speicher_datei() {
-  local lemmaabfrage=${1-unbekannt}
-  local diese_json_speicher_datei=$(printf "%s_Lemmata-Abfrage-DWB1_%s.json" \
-    $(echo $lemmaabfrage | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@…@') \
-    $(date '+%Y%m%d'))
+  local lemmaabfrage="${*-unbekannt}"
+  local diese_datei_vorsilbe=$(echo "$lemmaabfrage" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…+$@…@')
+  local diese_json_speicher_datei=$(printf "%s_Lemmata-Abfrage-DWB1_%s.json" "${diese_datei_vorsilbe}" $(date '+%Y%m%d') )
   printf "${diese_json_speicher_datei}"
 }
 
 # dateivariablen_bereitstellen json_speicher_datei
 dateivariablen_bereitstellen() {
-  local diese_json_speicher_datei=${1-unbekannt}
+  local diese_json_speicher_datei="${*-unbekannt}"
   datei_utf8_text_zwischenablage="${diese_json_speicher_datei%.*}-utf8_Zwischenablage.txt"
   datei_utf8_text_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8_Zwischenablage+gram.txt"
   datei_utf8_reiner_text="${diese_json_speicher_datei%.*}-utf8_nur-Wörter.txt"
@@ -149,18 +149,18 @@ dateivariablen_bereitstellen() {
 parameter_abarbeiten() {
   # default values of variables set from params
   case $(date '+%m') in
-  01|1) datum_heute_lang=$(date '+%_d. Wintermonat (%B) %Y' | sed 's@^ *@@;');;
-  02|2) datum_heute_lang=$(date '+%_d. Hornung (%B) %Y'     | sed 's@^ *@@;') ;;
-  03|3) datum_heute_lang=$(date '+%_d. Lenzmonat (%B) %Y'   | sed 's@^ *@@;') ;;
-  04|4) datum_heute_lang=$(date '+%_d. Ostermonat (%B) %Y'  | sed 's@^ *@@;') ;;
-  05|5) datum_heute_lang=$(date '+%_d. Wonnemonat (%B) %Y'  | sed 's@^ *@@;') ;;
-  06|6) datum_heute_lang=$(date '+%_d. Brachmonat (%B) %Y'  | sed 's@^ *@@;') ;;
-  07|7) datum_heute_lang=$(date '+%_d. Heumonat (%B) %Y'    | sed 's@^ *@@;') ;;
-  08|8) datum_heute_lang=$(date '+%_d. Erntemonat (%B) %Y'  | sed 's@^ *@@;') ;;
-  09|9) datum_heute_lang=$(date '+%_d. Herbstmonat (%B) %Y' | sed 's@^ *@@;') ;;
-    10) datum_heute_lang=$(date '+%_d. Weinmonat (%B) %Y'   | sed 's@^ *@@;') ;;
-    11) datum_heute_lang=$(date '+%_d. Nebelmonat (%B) %Y'  | sed 's@^ *@@;') ;;
-    12) datum_heute_lang=$(date '+%_d. Christmonat (%B) %Y' | sed 's@^ *@@;') ;;
+  01|1) datum_heute_lang=$(date '+%_d. Wintermonat (%b.) %Y' | sed 's@^ *@@;');;
+  02|2) datum_heute_lang=$(date '+%_d. Hornung (%b.) %Y'     | sed 's@^ *@@;') ;;
+  03|3) datum_heute_lang=$(date '+%_d. Lenzmonat (%b.) %Y'   | sed 's@^ *@@;') ;;
+  04|4) datum_heute_lang=$(date '+%_d. Ostermonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+  05|5) datum_heute_lang=$(date '+%_d. Wonnemonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+  06|6) datum_heute_lang=$(date '+%_d. Brachmonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+  07|7) datum_heute_lang=$(date '+%_d. Heumonat (%b.) %Y'    | sed 's@^ *@@;') ;;
+  08|8) datum_heute_lang=$(date '+%_d. Erntemonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+  09|9) datum_heute_lang=$(date '+%_d. Herbstmonat (%b.) %Y' | sed 's@^ *@@;') ;;
+    10) datum_heute_lang=$(date '+%_d. Weinmonat (%b.) %Y'   | sed 's@^ *@@;') ;;
+    11) datum_heute_lang=$(date '+%_d. Nebelmonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+    12) datum_heute_lang=$(date '+%_d. Christmonat (%b.) %Y' | sed 's@^ *@@;') ;;
   esac
 
   abbruch_code_nummer=0
@@ -182,6 +182,7 @@ parameter_abarbeiten() {
   zusatzbemerkungen_textdatei=''
   zusatzbemerkungen_htmldatei=''
   lemmaabfrage=''
+  lemmaabfrage_api=''
   lemma_text=''
   json_speicher_datei=$(json_speicher_datei unbekannt)
   titel_text="Abfrageversuch „??“ aus Grimm-Wörterbuch ($datum_heute_lang)"
@@ -197,10 +198,17 @@ parameter_abarbeiten() {
     -F | --Fundstellen) stufe_fundstellen=1 ;;
     -s | --stillschweigend) stufe_verausgaben=0 ;;
     -[lL] | --[lL]emmaabfrage)  # Parameter
-      lemmaabfrage="${2-}"
-      lemma_text=$(echo "$lemmaabfrage" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…{2,}$@@')
-      json_speicher_datei=$(json_speicher_datei $lemma_text)
-      titel_text="Wörter-Abfrage „$lemma_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"
+      lemmaabfrage=$( echo "${2-}" | sed --regexp-extended ' s@^[[:blank:]]+@@; s@[[:blank:]]+$@@; ' )
+      lemmaabfrage_api=$( echo "$lemmaabfrage" | sed --regexp-extended 's@[[:blank:]]@@g; ' )
+      lemma_text=$( echo "$lemmaabfrage" | sed --regexp-extended ' 
+        s@,@κομμα@g; # Komma später wieder zurückwandeln
+        s@[[:punct:]]@…@g; 
+        s@^…{2,}@@; 
+        s@…{2,}$@@;
+        s@κομμα@,@g;
+        ' )
+      json_speicher_datei=$( json_speicher_datei "${lemma_text}" )
+      titel_text="Wörter-Abfrage „${lemma_text}“ aus Grimm-Wörterbuch (${datum_heute_lang})"
       shift
       ;;
     -o|--ohne)  # Parameter
@@ -278,6 +286,9 @@ parameter_abarbeiten() {
   # [[ ${#argumente[@]} -eq 0 ]] && meldung "${ROT}Fehlendes Lemma, das abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
   [[ -z "${lemmaabfrage-}" ]] && meldung "${ROT}Fehlendes Lemma, das abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
 
+  if [[ ${#ohne_woerterliste_text} -gt 1 ]]; then
+    json_speicher_datei=$( json_speicher_datei "${lemma_text} und ohne Wörter" )
+  fi
   # keine Abfragen nur mit: * oder ?
   if [[ "${lemmaabfrage-}" == "*" ]] || [[ "${lemmaabfrage-}" =~ ^\*+$ ]] ;then
     meldung_abbruch "${ORANGE}Alle Lemmata abzufragen (--Lemmaabfrage '${lemmaabfrage}')  wird nicht unterstützt (Abbruch)${FORMAT_FREI}"
@@ -285,6 +296,7 @@ parameter_abarbeiten() {
   if [[ "${lemmaabfrage-}" == "?" ]] || [[ "${lemmaabfrage-}" =~ ^[*?]+$ ]] ;then
     meldung_abbruch "${ORANGE}Alle Lemmata abzufragen (--Lemmaabfrage '${lemmaabfrage}')  wird nicht unterstützt (Abbruch)${FORMAT_FREI}"
   fi
+  
   dateivariablen_bereitstellen $json_speicher_datei
 
   zusatzbemerkungen_htmldatei=$([[ "${ohne_woerterliste_regex}" == "" ]] && printf "" || printf "; der Liste wurden bewußt Wortverbindungen mit „${ohne_woerterliste}“ entnommen (diese wurden herausgefiltert).")
@@ -310,8 +322,9 @@ case $stufe_verausgaben in
   meldung "${ORANGE}ENTWICKLUNG - stufe_fundstellen:     $stufe_fundstellen ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - stufe_verausgaben:     $stufe_verausgaben ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten: $stufe_dateienbehalten ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - lemmaabfrage: $lemmaabfrage ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - lemma_text:   $lemma_text ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - lemmaabfrage:          $lemmaabfrage ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - lemmaabfrage_api:      $lemmaabfrage_api ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - lemma_text:            $lemma_text ${FORMAT_FREI}"
   ;;
 esac
 
@@ -320,13 +333,13 @@ esac
 case $stufe_verausgaben in
  0)
   wget \
-    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/$lemmaabfrage/0/json" \
+    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/${lemmaabfrage_api}/0/json" \
     --output-document="${json_speicher_datei}"
  ;;
  1)
-  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/$lemmaabfrage/0/json)"
+  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/${lemmaabfrage_api}/0/json)"
   wget --show-progress \
-    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/$lemmaabfrage/0/json" \
+    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/${lemmaabfrage_api}/0/json" \
     --output-document="${json_speicher_datei}"
  ;;
 esac
@@ -653,8 +666,14 @@ case $stufe_formatierung in
   elif  (.gram|test("^ *part[icz]*[.]?[;]? *$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ Mittelwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif (.gram|test("^ *part[icpalesz]*.[ -]+adj. *$"))
+  elif (.gram|test("^ *part[icpalesz]*[. -]+adj. *$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ mittelwörtliches Eigenschaftswort, Beiwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif (.gram|test("^ *part[icpalesz]*[. -]+adj[ektiv]*[. ]+[oder ]*adv[erb]*.*$"))
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ mittelwörtliches Eigenschaftswort oder Umstandswort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
+  elif (.gram|test("^ *part.[ -]+adv.[ ]+adj.*$"))
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ mittelwörtliches Umstandswort oder Eigenschaftswort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif  (.gram|test("^ *präp[.]?[;]? *$|^ *praep[.]?[;]? *$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ Vorwort, Verhältniswort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
@@ -671,7 +690,7 @@ case $stufe_formatierung in
   elif (.gram|test("^ *v[_.,;]* *$|^ *vb[_.,;]* *$|^ *verb[_.,;]* *$|^ *verbum[_.,;]* *$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ Tunwort (auch Zeitwort, Tätigkeitswort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   
-  elif (.gram|test("^ *verbal[-]?adj[_.,;]+[ -–—]adv[_.,;]* *$"))
+  elif (.gram|test("^ *verbal[-]*adj[_.,;]+[ -–—]+adv[_.,;]* *$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ Eigenschafts- oder Umstandswort tunwörtlichen Ursprungs</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   
   else "<tr><td>\(.label)</td><td>\(.gram) ~ ?</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
@@ -685,7 +704,7 @@ s@<td>([^ ])([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>\U\1\L\2\E\3\4@
 s@<td>(&#x00e4;|&#196;|&auml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00C4;\L\2\E\3\4@g; # ä Ä 
 s@<td>(&#x00f6;|&#246;|&ouml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00D6;\L\2\E\3\4@g; # ö Ö
 s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00DC;\L\2\E\3\4@g; # ü Ü 
-1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><p><i style=\"font-variant:small-caps;\">Schottel (1663)</i> ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><!--wbnetzkwiclink<th>Textauszug (gekürzt)</th>wbnetzkwiclink--><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
+1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p><p>Zur Sprachkunst oder Grammatik siehe vor allem <i style=\"font-variant:small-caps;\">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><!--wbnetzkwiclink<th>Textauszug (gekürzt)</th>wbnetzkwiclink--><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
 $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
   s@<th>@<th style="border-top:2px solid gray;border-bottom:2px solid gray;">@g;
