@@ -141,7 +141,7 @@ aufraeumen() {
     1)
       if [[ $( find . -maxdepth 1 -iname "${json_speicher_datei%.*}*" ) ]];then
       meldung "${ORANGE}Abschluß: Folgende Dateien sind erstellt worden:${FORMAT_FREI}" ;
-      ls -l ${json_speicher_datei%.*}*
+      ls -l "${json_speicher_datei%.*}"*
       fi
       ;;
     esac
@@ -247,7 +247,7 @@ parameter_abarbeiten() {
   abbruch_code_nummer=0
   n_suchergebnisse_volltext=0
   n_suchergebnisse_volltext_mit_stichwort=0
-  volltextabfrage=''
+  volltextabfrage_api=''
   volltext_text=''
   stichwortabfrage=''
   mit_woerterliste_text=''
@@ -277,8 +277,8 @@ parameter_abarbeiten() {
     -s | --stillschweigend) stufe_verausgaben=0 ;;
     --farb-frei) FARB_FREI=1 ;;
     -[Vv] | --[Vv]olltextabfrage)  # Parameter
-      volltextabfrage="${2-}"
-      volltext_text=$(echo "$volltextabfrage" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…{2,}$@@')
+      volltextabfrage_api="${2-}"
+      volltext_text=$(echo "$volltextabfrage_api" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…{2,}$@@')
       shift
       ;;
     -S | --[Ss]tichwortabfrage)  # Parameter
@@ -402,7 +402,7 @@ parameter_abarbeiten() {
   # check required params and arguments
   # [[ -z "${param-}" ]] && meldung_abbruch "Missing required parameter: param"
   # [[ ${#argumente[@]} -eq 0 ]] && meldung "${ROT}Fehlendes Lemma, das abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
-  [[ -z "${volltextabfrage-}" ]] && meldung "${ROT}Fehlender Volltext, der abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
+  [[ -z "${volltextabfrage_api-}" ]] && meldung "${ROT}Fehlender Volltext, der abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
 
   case $stufe_stichwortabfrage in
   0|1) json_speicher_datei=$(json_speicher_datei "$volltext_text");
@@ -417,11 +417,11 @@ parameter_abarbeiten() {
   esac
   
   # keine Abfragen nur mit: * oder ?
-  if [[ "${volltextabfrage-}" == "*" ]] || [[ "${volltextabfrage-}" =~ ^\*+$ ]] ;then
-    meldung_abbruch "${ORANGE}Alles als Volltext abzufragen (--Volltextabfrage '${volltextabfrage}')  wird nicht unterstützt (Abbruch)${FORMAT_FREI}"
+  if [[ "${volltextabfrage_api-}" == "*" ]] || [[ "${volltextabfrage_api-}" =~ ^\*+$ ]] ;then
+    meldung_abbruch "${ORANGE}Alles als Volltext abzufragen (--Volltextabfrage '${volltextabfrage_api}')  wird nicht unterstützt (Abbruch)${FORMAT_FREI}"
   fi
-  if [[ "${volltextabfrage-}" == "?" ]] || [[ "${volltextabfrage-}" =~ ^[*?]+$ ]] ;then
-    meldung_abbruch "${ORANGE}Fragezeichen oder mehrere *** als Volltext abzufragen (--Volltextabfrage '${volltextabfrage}')  wird nicht unterstützt (Abbruch)${FORMAT_FREI}"
+  if [[ "${volltextabfrage_api-}" == "?" ]] || [[ "${volltextabfrage_api-}" =~ ^[*?]+$ ]] ;then
+    meldung_abbruch "${ORANGE}Fragezeichen oder mehrere *** als Volltext abzufragen (--Volltextabfrage '${volltextabfrage_api}')  wird nicht unterstützt (Abbruch)${FORMAT_FREI}"
   fi
   dateivariablen_filter_bereitstellen "${json_speicher_datei}"
   abhaenigkeiten_pruefen
@@ -491,7 +491,7 @@ case $stufe_verausgaben in
   meldung "${ORANGE}ENTWICKLUNG - stufe_stichwortabfrage:          $stufe_stichwortabfrage ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - stufe_stichworte_eineinzig:      $stufe_stichworte_eineinzig${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten:           $stufe_dateienbehalten ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - volltextabfrage:                 $volltextabfrage ${FORMAT_FREI}"
+  meldung "${ORANGE}ENTWICKLUNG - volltextabfrage_api:             $volltextabfrage_api ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - volltext_text:                   $volltext_text ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - stichwortabfrage:                $stichwortabfrage ${FORMAT_FREI}"
   meldung "${ORANGE}ENTWICKLUNG - mit_woerterliste_text:           $mit_woerterliste_text ${FORMAT_FREI}"
@@ -505,20 +505,20 @@ esac
 # https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=*fug*;lemma,reflemma,variante=*fug*?token=Cs6lg4S7KFR6z9XZikhWY9oBSEBnt3ew&pageSize=20&pageNumber=1&_=1669804417852
 case $stufe_verausgaben in
  0) wget \
-      --quiet --wait 2 --random-wait "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
+      --quiet --wait=2 --random-wait "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage_api" \
       --output-document="${json_speicher_datei}" \
       && wget \
-      --quiet --wait 2 --random-wait "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
+      --quiet --wait=2 --random-wait "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage_api// /;all=}" \
       --output-document="${json_speicher_all_query_datei}";
  ;;
  1) 
-  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage)"
-  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=})"
+  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage_api)"
+  meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage_api// /;all=})"
   wget --show-progress  --wait 2 --random-wait \
-    --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage" \
+    --quiet "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/$volltextabfrage_api" \
     --output-document="${json_speicher_datei}" \
     && wget --show-progress  --wait 2 --random-wait \
-    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage// /;all=}" \
+    --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=${volltextabfrage_api// /;all=}" \
       --output-document="${json_speicher_all_query_datei}";
  ;;
 esac
@@ -993,7 +993,8 @@ s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<
 1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.). Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tunwörter (Tätigkeitswörter, Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Hauptwörter, Substantive), als auch die Wörter bei denen GRIMM keine Angabe der Grammatik/Sprachkunst-Begriffe gemacht haben oder sie vergessen wurden.</p><p>Zur Sprachkunst oder Grammatik siehe vor allem <i style=\"font-variant:small-caps;\">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><th>Fundstelle (gekürzt)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr>
 $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
-  s@<th>@<th style="border-top:2px solid gray;border-bottom:2px solid gray;">@g;
+  s@<th>@<th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">@g;
+  s@<body>@<body style="font-family: Antykwa Torunska, serif; background: white;">@;
   ' \
   > "${datei_utf8_html_zwischenablage_gram}"
 
@@ -1171,14 +1172,16 @@ case $stufe_formatierung in
     
     if [[ -e  "${datei_utf8_html_gram_tidy}" ]]; then 
       pandoc --wrap=none -f html -t markdown "${datei_utf8_html_gram_tidy}" | \
-        sed --regexp-extended '
+        sed --regexp-extended "
           s@\*\*@FETTSCHRIFT@g; s@\*@__@g; 
           s@FETTSCHRIFT@**@g; 
           s@\[([^][]+)\]\{.smallcaps\}@\U\1\E@g; 
           s@([^…]|[^.]{3})«@\1…«@g; 
           s@__( +)__@\1@g; 
           s@\^@@g; # <sup></sup>
-          ' > "${datei_utf8_html_gram_tidy_markdown_telegram}"
+          s@\\\\~@~@g;
+          s@\\\\'@'@g;
+          " > "${datei_utf8_html_gram_tidy_markdown_telegram}"
     else
       meldung "${ORANGE}Fehler: HTML Datei nicht gefunden, ${datei_utf8_html_gram_tidy}${FORMAT_FREI} …"
     fi
