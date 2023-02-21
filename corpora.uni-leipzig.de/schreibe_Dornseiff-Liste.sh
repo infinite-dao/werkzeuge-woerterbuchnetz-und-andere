@@ -44,6 +44,7 @@ Verwendbare Wahlmöglichkeiten:
   -W,    --Wortliste         eine Wortliste aus Einzelworten, z.B. "Hilfe Not" oder "Hilfe, Not"
   
   -A,    --Ablaufbericht     Befehlsvorschriften ausführlicher berichten, was es im Einzelnen ausführt
+  -b,    --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
   -H,    --Hilfe             Hilfetext dieses Programms ausgeben
          --entwickeln        einzelne Befehlsausführungen ausgeben (zur Entwicklung der Befehlsvorschrift/Programmentwicklung)
          --farb-frei         Meldungen ohne Farben ausgeben
@@ -68,21 +69,32 @@ aufraeumen() {
   local diese_datei_liste=""
   case "${stufe_aufraeumen_aufhalten-}" in 0)
     null_zaehler=0
-    case "${stufe_verausgaben-}" in 1) meldung "${GRUEN}Aufräumen: zwischengespeicherte Einzeldateien werden getilgt …${FORMAT_FREI}" ;; esac
+    case "${stufe_verausgaben-}" in 1) meldung "${GRUEN}Abschluß: zwischengespeicherte Einzeldateien …${FORMAT_FREI}" ;; esac
 
     for wort in ${LISTE_WOERTER[@]}
     do
-    einzelne_speicher_datei=$(html_speicher_datei_vom_wort "${wort}" ); 
+    einzelne_speicher_datei=$( html_speicher_datei_vom_wort "${wort}" );
+    if [[ ${stufe_dateienbehalten:-0} -eq 0 ]];then
       case "${stufe_verausgaben-}" in 1) meldung "${GRUEN}- tilge: ${BLAU}${einzelne_speicher_datei}${GRUEN} …${FORMAT_FREI}" ;; esac
       if [[ -f "${einzelne_speicher_datei}" ]];then rm "${einzelne_speicher_datei}"; fi
+    fi
+    done
+    
+    diese_datei_liste=$(find . -iname "${gesamt_datei_markdown-}" -or -iname "${gesamt_datei_docx-}" -or -iname "${gesamt_datei_odt-}" )
+    if ! [[ -z "${diese_datei_liste-}" ]]; then 
+      meldung "${GRUEN}Folgende Dateien sind übrig oder erstellt:${FORMAT_FREI}";
+      ls -l $diese_datei_liste;
+    fi
+    
+    for wort in ${LISTE_WOERTER[@]}
+    do
+    if [[ ${stufe_dateienbehalten:-0} -gt 0 ]] && [[ -f "${einzelne_speicher_datei}" ]];then
+      diese_datei_liste=$(find . -iname "${einzelne_speicher_datei}" -or -iname "${einzelne_speicher_datei}.md" )
+      ls -l $diese_datei_liste;
+    fi
     done
     ;; 
   esac
-  diese_datei_liste=$(find . -iname "${gesamt_datei_markdown-}" -or -iname "${gesamt_datei_docx-}" -or -iname "${gesamt_datei_odt-}" )
-  if ! [[ -z "${diese_datei_liste-}" ]]; then 
-    meldung "${GRUEN}Folgende Dateien sind übrig oder erstellt:${FORMAT_FREI}";
-    ls -l $diese_datei_liste;
-  fi
 }
 
 farben_bereitstellen() {
@@ -122,6 +134,7 @@ parameter_abarbeiten() {
   # gesetzte Vorgabewerte
   stufe_verausgaben=0
   stufe_aufraeumen_aufhalten=1
+  stufe_dateienbehalten=0
   abbruch_code_nummer=0
   einzelne_speicher_datei="unbekannt.md"
   FARB_FREI=''
@@ -135,6 +148,7 @@ parameter_abarbeiten() {
   while :; do
     case "${1-}" in
     -A | --Ablaufbericht) stufe_verausgaben=1 ;;
+    -b | --behalte_Dateien) stufe_dateienbehalten=1 ;;
     --entwickeln) set -x ;;
     --farb-frei) FARB_FREI=1 ;;
     -[Hh] | --[Hh]ilfe) stufe_aufraeumen_aufhalten=1; nutzung ;;
@@ -202,8 +216,8 @@ do
   ;;
   esac # stufe_verausgaben
   
-  if [[ $(  cat "${einzelne_speicher_datei}.md" | tr -d '\n' | wc -l ) -eq 0 ]];then
-    echo -e "### ${wort}\nKeine Dornseiff-Bedeutungsgruppen für *${wort}* gefunden." >> "${einzelne_speicher_datei}.md"
+  if [[ $(  sed --regexp-extended '/^[[:space:]]*$/d' "${einzelne_speicher_datei}.md" | wc -l ) -eq 0 ]];then
+    echo -e "### ${wort}\n\nKeine Dornseiff-Bedeutungsgruppen für *${wort}* gefunden." >> "${einzelne_speicher_datei}.md"
   fi
 
   case $null_zaehler in 
