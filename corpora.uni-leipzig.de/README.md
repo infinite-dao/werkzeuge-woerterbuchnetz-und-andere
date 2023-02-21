@@ -29,7 +29,7 @@ Das Netzangebot von [corpora.uni-leipzig.de](https://corpora.uni-leipzig.de) ist
 
 ```bash
 ./schreibe_Dornseiff-Liste.sh --Hilfe # Benutzung lesen
-./schreibe_Dornseiff-Liste.sh --Wortliste "wohl Hilfe Not" # befrage 3 Wörter nach Dorn
+./schreibe_Dornseiff-Liste.sh --Wortliste "wohl Hilfe Not" # befrage 3 Wörter nach Dornseiff-Bedeutungsgruppen
 ```
 … und folglich wird eine Liste erstellt, mit gefundenen Dornseiff-Bedeutungen, je als Datei für Textverarbeitungen (Word: \*.docx, LibreOffice: \*.odt):
 ```
