@@ -10,3 +10,8 @@ Es gibt viele Möglichkeiten im Netz nach Wörtern gezielt zu suchen, eine ausf�
 Netzseiten, die vermittels dieser Sammlung verarbeitet werden können, sind:
 - Wortschatz Uni Leipzig: [corpora.uni-leipzig.de](https://corpora.uni-leipzig.de)
 - …
+
+## Übersicht Befehlsvorschriften dieser Sammlung
+
+- siehe Ordner ☞ [`./DWB1`](./DWB1) ~ für das Grimm-Wörterbuch (z.B. verschiedene Wortabfragen mit Befilterung der Ergebnisse)
+- siehe Ordner ☞ [`./corpora.uni-leipzig.de`](./corpora.uni-leipzig.de) ~ für Wortschatz Uni Leipzig (z.B. Dornseiff-Bedeutungsgruppen auflisten)
