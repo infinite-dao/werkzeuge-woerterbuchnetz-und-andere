@@ -201,7 +201,10 @@ do
       | sed --regexp-extended 's@  *@ @g; ' > "${einzelne_speicher_datei}.md"
   ;;
   esac # stufe_verausgaben
-
+  
+  if [[ $(  cat "${einzelne_speicher_datei}.md" | tr -d '\n' | wc -l ) -eq 0 ]];then
+    echo -e "### ${wort}\nKeine Dornseiff-Bedeutungsgruppen für *${wort}* gefunden." >> "${einzelne_speicher_datei}.md"
+  fi
 
   case $null_zaehler in 
   0) cat "${einzelne_speicher_datei}.md" | sed --regexp-extended 's@^(- +)([0-9]+\.[0-9]+[^:]+):@\1**\2**:@g; ' > "${gesamt_datei_markdown}" ;;
