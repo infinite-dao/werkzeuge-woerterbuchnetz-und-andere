@@ -6,7 +6,7 @@ trap aufraeumen SIGINT SIGTERM ERR EXIT
 
 progr_verz=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 
-abhaenigkeiten_pruefen() {
+abhaengigkeiten_pruefen() {
   local stufe_abbruch=0
 
   if ! [[ -x "$(command -v jq)" ]]; then
@@ -26,7 +26,9 @@ abhaenigkeiten_pruefen() {
 }
 
 nutzung() {
-  cat <<NUTZUNG
+  local diese_nutzung=''
+
+  diese_nutzung=$( cat <<NUTZUNG
 Nutzung:
   ./$(basename "${BASH_SOURCE[0]}") [-h] [-s] [-H] [-O] [-S "…"] -V "stupere"
 
@@ -58,13 +60,18 @@ Verwendbare Wahlmöglichkeiten:
        --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
        --farb-frei         Meldungen ohne Farben ausgeben
 
-Technische Abhängigkeiten:
-- jq
-- sed
-- pandoc: es kann eine Vorlagedatei im eigenen Nutzerverzeichnis erstellt werden, als ~/.pandoc/reference.odt
+Technische Anmerkungen:
+
+- abhängig von Befehl ${BLAU}jq${FORMAT_FREI} (JSON Verarbeitung)
+- abhängig von Befehl ${BLAU}sed${FORMAT_FREI} (Textersetzungen)
+- abhängig von Befehl ${BLAU}pandoc${FORMAT_FREI} (Umwandlung der Dateiformate)
+  - es kann eine Vorlagedatei im eigenen Nutzerverzeichnis erstellt werden, als ${BLAU}~/.pandoc/reference.odt${FARB_FREI}
 
 NUTZUNG
-  abhaenigkeiten_pruefen
+)
+  echo -e "${diese_nutzung}" # mit Farbausgabe 
+
+  abhaengigkeiten_pruefen
   exit
 }
 
@@ -149,7 +156,8 @@ aufraeumen() {
 }
 
 farben_bereitstellen() {
-  if [[ -t 2 ]] && [[ -z "${FARB_FREI-}" ]] && [[ "${TERM-}" != "dumb" ]]; then
+  # file descriptor [[ -t 2 ]] : 0 → stdin / 1 → stdout / 2 → stderr
+  if [[ -t 2 ]] && [[ -z "${FARB_FREI-}" ]] && [[ "${AUSDRUCK-}" != "stumm" ]]; then
     FORMAT_FREI='\033[0m' ROT='\033[0;31m' GRUEN='\033[0;32m' ORANGE='\033[0;33m' BLAU='\033[0;34m' VEILCHENROT='\033[0;35m' HIMMELBLAU='\033[0;36m' GELB='\033[1;33m'
   else
     FORMAT_FREI='' ROT='' GRUEN='' ORANGE='' BLAU='' VEILCHENROT='' HIMMELBLAU='' GELB=''
@@ -228,6 +236,7 @@ parameter_abarbeiten() {
     11) datum_heute_lang=$(date '+%_d. Nebelmonat (%b.) %Y'  | sed 's@^ *@@;') ;;
     12) datum_heute_lang=$(date '+%_d. Christmonat (%b.) %Y' | sed 's@^ *@@;') ;;
   esac
+  FARB_FREI=''
   stufe_verausgaben=1
   stufe_formatierung=0
   stufe_markdown_telegram=0
@@ -424,7 +433,7 @@ parameter_abarbeiten() {
     meldung_abbruch "${ORANGE}Fragezeichen oder mehrere *** als Volltext abzufragen (--Volltextabfrage '${volltextabfrage_api}')  wird nicht unterstützt (Abbruch)${FORMAT_FREI}"
   fi
   dateivariablen_filter_bereitstellen "${json_speicher_datei}"
-  abhaenigkeiten_pruefen
+  abhaengigkeiten_pruefen
   json_filter_code > "${json_speicher_filter_ueber_textid_verknuepfen}"
   
   zusatzbemerkungen_textdatei="Die Liste ist vorgruppiert geordnet nach den Grammatik-Angaben von Grimm,\nd.h. die Wörter sind nach Wortarten gruppiert: Eigenschaftswörter (Adjektive),\nNennwörter (Substantive), Tunwörter usw.."
@@ -851,7 +860,7 @@ case $volltext_text in
 *)   bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_stichwortliste_html-.}" ;;
 esac
 
-html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-de/tree/main/DWB1#dwb-pss_volltext_abfragen-und-ausgebensh\"><code>DWB-PSS_volltext_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
+html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-und-andere/tree/main/DWB1#dwb-pss_volltext_abfragen-und-ausgebensh\"><code>DWB-PSS_volltext_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
 
 
 case $stufe_formatierung in
