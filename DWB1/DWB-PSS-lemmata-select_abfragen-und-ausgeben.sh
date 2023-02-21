@@ -10,7 +10,7 @@ trap aufraeumen SIGINT SIGTERM ERR EXIT
 
 progr_verz=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 
-abhaenigkeiten_pruefen() {
+abhaengigkeiten_pruefen() {
   local stufe_abbruch=0
 
   if ! [[ -x "$(command -v jq)" ]]; then
@@ -30,7 +30,9 @@ abhaenigkeiten_pruefen() {
 }
 
 nutzung() {
-  cat <<NUTZUNG
+  local diese_nutzung=''
+
+  diese_nutzung=$( cat <<NUTZUNG
 Nutzung:
   ./$(basename "${BASH_SOURCE[0]}") [-h] [-s] [-H] [-O] -l "*fahren*"
 
@@ -55,8 +57,19 @@ Verwendbare Wahlmöglichkeiten:
        --ohne             ohne Wörter (Wortliste z.B. --ohne 'aufstand, verstand' bei --Lemmaabfrage '*stand*')
        --debug            Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
        --farb-frei        Meldungen ohne Farben ausgeben
+
+Technische Anmerkungen:
+
+- abhängig von Befehl ${BLAU}jq${FORMAT_FREI} (JSON Verarbeitung)
+- abhängig von Befehl ${BLAU}sed${FORMAT_FREI} (Textersetzungen)
+- abhängig von Befehl ${BLAU}pandoc${FORMAT_FREI} (Umwandlung der Dateiformate)
+  - es kann eine Vorlagedatei im eigenen Nutzerverzeichnis erstellt werden, als ${BLAU}~/.pandoc/reference.odt${FARB_FREI}
+
 NUTZUNG
-  abhaenigkeiten_pruefen
+)
+
+ echo -e "${diese_nutzung}" # mit Farbausgabe 
+ abhaengigkeiten_pruefen
   exit
 }
 
@@ -105,7 +118,8 @@ aufraeumen() {
 }
 
 farben_bereitstellen() {
-  if [[ -t 2 ]] && [[ -z "${FARB_FREI-}" ]] && [[ "${TERM-}" != "dumb" ]]; then
+  # file descriptor [[ -t 2 ]] : 0 → stdin / 1 → stdout / 2 → stderr
+  if [[ -t 2 ]] && [[ -z "${FARB_FREI-}" ]] && [[ "${AUSDRUCK-}" != "stumm" ]]; then
     FORMAT_FREI='\033[0m' ROT='\033[0;31m' GRUEN='\033[0;32m' ORANGE='\033[0;33m' BLAU='\033[0;34m' VEILCHENROT='\033[0;35m' HIMMELBLAU='\033[0;36m' GELB='\033[1;33m'
   else
     FORMAT_FREI='' ROT='' GRUEN='' ORANGE='' BLAU='' VEILCHENROT='' HIMMELBLAU='' GELB=''
@@ -199,7 +213,12 @@ parameter_abarbeiten() {
     -s | --stillschweigend) stufe_verausgaben=0 ;;
     -[lL] | --[lL]emmaabfrage)  # Parameter
       lemmaabfrage=$( echo "${2-}" | sed --regexp-extended ' s@^[[:blank:]]+@@; s@[[:blank:]]+$@@; ' )
-      lemmaabfrage_api=$( echo "$lemmaabfrage" | sed --regexp-extended 's@[[:blank:]]@@g; ' )
+      lemmaabfrage_api=$( echo "$lemmaabfrage" | sed --regexp-extended '
+        s/ +(ODER|OR) +/@OR@/g; 
+        s/ +(UND|AND) +/@AND@/g; 
+        s@[[:blank:]]@@g; 
+        ' 
+        )
       lemma_text=$( echo "$lemmaabfrage" | sed --regexp-extended ' 
         s@,@κομμα@g; # Komma später wieder zurückwandeln
         s@[[:punct:]]@…@g; 
@@ -330,15 +349,43 @@ esac
 
 # Programm Logik hier Anfang
 
+# ZUTUN https://api.woerterbuchnetz.de/dictionaries/DWB/query/lemma,reflemma,variante=*theilen@OR@*teilen
+# Problem: keine Grammatik gegeben
+#   {
+#     "formid": "Z13492",
+#     "textidlist": [
+#       [
+#         64602688
+#       ]
+#     ],
+#     "wordidlist": [
+#       [
+#         0
+#       ]
+#     ],
+#     "wbsigle": "DWB",
+#     "normlemma": "zwieteilen"
+#   }
+# ]
+# dagegen: https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/${lemmaabfrage_api}/0/json
+# [
+#   {
+#     "value": "A01587",
+#     "label": "abtheilen",
+#     "gram": ""
+#   },
+
 case $stufe_verausgaben in
  0)
   wget \
+    --wait=2 --random-wait \
     --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/${lemmaabfrage_api}/0/json" \
     --output-document="${json_speicher_datei}"
  ;;
  1)
   meldung "${GRUEN}Abfrage an api.woerterbuchnetz.de …${FORMAT_FREI} (https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/${lemmaabfrage_api}/0/json)"
   wget --show-progress \
+    --wait=2 --random-wait \
     --quiet "https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/${lemmaabfrage_api}/0/json" \
     --output-document="${json_speicher_datei}"
  ;;
@@ -566,7 +613,7 @@ esac
 
 
 
-html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-de/tree/main/DWB1#dwb-pss_lemmata-select_abfragen-und-ausgebensh\"><code>DWB-PSS_lemmata-select_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
+html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-und-andere/tree/main/DWB1#dwb-pss_lemmata-select_abfragen-und-ausgebensh\"><code>DWB-PSS_lemmata-select_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
 case $stufe_formatierung in
  0)  ;;
  1|2|3)
@@ -704,10 +751,11 @@ s@<td>([^ ])([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>\U\1\L\2\E\3\4@
 s@<td>(&#x00e4;|&#196;|&auml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00C4;\L\2\E\3\4@g; # ä Ä 
 s@<td>(&#x00f6;|&#246;|&ouml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00D6;\L\2\E\3\4@g; # ö Ö
 s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00DC;\L\2\E\3\4@g; # ü Ü 
-1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p><p>Zur Sprachkunst oder Grammatik siehe vor allem <i style=\"font-variant:small-caps;\">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><!--wbnetzkwiclink<th>Textauszug (gekürzt)</th>wbnetzkwiclink--><th>Verknüpfung1</th><th>Verknüpfung2</th></tr>
-$ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
+1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<body><p>${bearbeitungstext_html}</p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p><p>Zur Sprachkunst oder Grammatik siehe vor allem <i style=\"font-variant:small-caps;\">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><thead><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><!--wbnetzkwiclink<th>Textauszug (gekürzt)</th>wbnetzkwiclink--><th>Verknüpfung1</th><th>Verknüpfung2</th></tr></thead><tbody>
+$ a\</tbody></table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
-  s@<th>@<th style="border-top:2px solid gray;border-bottom:2px solid gray;">@g;
+  s@<th>@<th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">@g;
+  s@<body>@<body style="font-family: Antykwa Torunska, serif; background: white;">@;
   ' > "${datei_utf8_html_zwischenablage_gram}"
  
   meldung "${ORANGE}ENTWICKLUNG: sed ${datei_utf8_html_zwischenablage_gram} ${FORMAT_FREI}"
@@ -756,7 +804,7 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
       textid=$( echo "${wbnetzkwiclink}" | sed --regexp-extended 's@.+/textid/([[:digit:]]+)/.+@\1@;' )
 
       fundstelle_text=$(
-        wget --wait 5 --random-wait --quiet --no-check-certificate -O - "$wbnetzkwiclink"  | jq  --arg textid ${textid-0} --join-output ' .[]
+        wget --wait=2 --random-wait --quiet --no-check-certificate -O - "$wbnetzkwiclink"  | jq  --arg textid ${textid-0} --join-output ' .[]
         | if (.textid|tonumber) == ($textid|tonumber)
         then "<b class=\"gefunden-hervorheben\" id=\"textid-\($textid)\">\(.word)</b>"
         elif .typeset == "italics"
@@ -792,10 +840,10 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
         )
         end
         ' | sed --regexp-extended 's@</i><i>@@g'
-      ) && this_exit_code=$?
+      ) && abbruch_code_nummer=$?
       
-      case $this_exit_code in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
-        meldung "${ORANGE}Etwas lief schief … exit code: ${this_exit_code} $(kill -l $this_exit_code)${NOFORMAT} (?wget, ?jq …)" ;;
+      case $abbruch_code_nummer in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+        meldung "${ORANGE}Etwas lief schief … exit code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${NOFORMAT} (?wget, ?jq …)" ;;
       esac
       # echo "ENTWICKLUNG ${wbnetzkwiclink_regex_suchadresse}"
       echo "»${fundstelle_text}«" | sed --regexp-extended 's@»([ ;.:]+)@»…\1@g; s@«@…«@' > "${datei_diese_fundstelle}"
@@ -824,7 +872,7 @@ $ a\</table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
   0)  ;;
   1) meldung "${GRUEN}Weiterverarbeitung → JSON → HTML${FORMAT_FREI} (tidy: ${datei_utf8_html_gram_tidy})" ;;
   esac
-  tidy -quiet -output "${datei_utf8_html_gram_tidy}"  "${datei_utf8_html_zwischenablage_gram}" 2> "${datei_utf8_html_gram_tidy_log}" || this_exit_code=$?
+  tidy -quiet -output "${datei_utf8_html_gram_tidy}"  "${datei_utf8_html_zwischenablage_gram}" 2> "${datei_utf8_html_gram_tidy_log}" || abbruch_code_nummer=$?
 
   case $stufe_verausgaben in
   0)  ;;
