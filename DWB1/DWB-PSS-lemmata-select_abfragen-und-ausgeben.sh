@@ -63,7 +63,7 @@ Technische Anmerkungen:
 - abhängig von Befehl ${BLAU}jq${FORMAT_FREI} (JSON Verarbeitung)
 - abhängig von Befehl ${BLAU}sed${FORMAT_FREI} (Textersetzungen)
 - abhängig von Befehl ${BLAU}pandoc${FORMAT_FREI} (Umwandlung der Dateiformate)
-  - es kann eine Vorlagedatei im eigenen Nutzerverzeichnis erstellt werden, als ${BLAU}~/.pandoc/reference.odt${FARB_FREI}
+  - es kann eine Vorlagedatei im eigenen Nutzerverzeichnis erstellt werden, als ${BLAU}~/.pandoc/reference.odt${FORMAT_FREI}
 
 NUTZUNG
 )
@@ -119,7 +119,7 @@ aufraeumen() {
 
 farben_bereitstellen() {
   # file descriptor [[ -t 2 ]] : 0 → stdin / 1 → stdout / 2 → stderr
-  if [[ -t 2 ]] && [[ -z "${FARB_FREI-}" ]] && [[ "${AUSDRUCK-}" != "stumm" ]]; then
+  if [[ -t 2 ]] && [[ -z "${FORMAT_FREI-}" ]] && [[ "${AUSDRUCK-}" != "stumm" ]]; then
     FORMAT_FREI='\033[0m' ROT='\033[0;31m' GRUEN='\033[0;32m' ORANGE='\033[0;33m' BLAU='\033[0;34m' VEILCHENROT='\033[0;35m' HIMMELBLAU='\033[0;36m' GELB='\033[1;33m'
   else
     FORMAT_FREI='' ROT='' GRUEN='' ORANGE='' BLAU='' VEILCHENROT='' HIMMELBLAU='' GELB=''
@@ -208,7 +208,7 @@ parameter_abarbeiten() {
     -h | --[Hh]ilfe) stufe_aufraeumen_aufhalten=1; nutzung ;;
     --debug) set -x ;;
     -b | --behalte_Dateien) stufe_dateienbehalten=1 ;;
-    --farb-frei) FARB_FREI=1 ;;
+    --farb-frei) FORMAT_FREI=1 ;;
     -F | --Fundstellen) stufe_fundstellen=1 ;;
     -s | --stillschweigend) stufe_verausgaben=0 ;;
     -[lL] | --[lL]emmaabfrage)  # Parameter
@@ -722,14 +722,17 @@ case $stufe_formatierung in
   elif (.gram|test("^ *part.[ -]+adv.[ ]+adj.*$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ mittelwörtliches Umstandswort oder Eigenschaftswort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif  (.gram|test("^ *präp[.]?[;]? *$|^ *praep[.]?[;]? *$"))
+  elif  (.gram|test("^ *präp[_.,;]* *$|^ *pr&#x00e4;p[_.,;]* *$|^ *praep[os]*[_.,;]* *$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ Vorwort, Verhältniswort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *praet.[;]? *$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ Vergangenheit</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
+  elif  (.gram|test("^ *pron[omen]*[_.,;]* *$"))
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Vornennwort, Fürwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
   elif (.gram|test("^ *subst. *$"))
-  then "<tr><td>\(.label)</td><td>\(.gram) ~ Nennwort (auch Dingwort, Hauptwort, Namenwort, Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.label)</td><td>\(.gram) ~ Nennwort (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *v. +u. +subst. +n. *$"))
   then "<tr><td>\(.label); \(.label), das</td><td>\(.gram) ~ Tunwort und Nennwort sächlich (Tunwort: auch Zeitwort, Tätigkeitswort; Nennwort: auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
