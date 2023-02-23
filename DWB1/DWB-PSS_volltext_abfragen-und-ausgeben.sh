@@ -65,7 +65,7 @@ Technische Anmerkungen:
 - abhängig von Befehl ${BLAU}jq${FORMAT_FREI} (JSON Verarbeitung)
 - abhängig von Befehl ${BLAU}sed${FORMAT_FREI} (Textersetzungen)
 - abhängig von Befehl ${BLAU}pandoc${FORMAT_FREI} (Umwandlung der Dateiformate)
-  - es kann eine Vorlagedatei im eigenen Nutzerverzeichnis erstellt werden, als ${BLAU}~/.pandoc/reference.odt${FARB_FREI}
+  - es kann eine Vorlagedatei im eigenen Nutzerverzeichnis erstellt werden, als ${BLAU}~/.pandoc/reference.odt${FORMAT_FREI}
 
 NUTZUNG
 )
@@ -157,7 +157,7 @@ aufraeumen() {
 
 farben_bereitstellen() {
   # file descriptor [[ -t 2 ]] : 0 → stdin / 1 → stdout / 2 → stderr
-  if [[ -t 2 ]] && [[ -z "${FARB_FREI-}" ]] && [[ "${AUSDRUCK-}" != "stumm" ]]; then
+  if [[ -t 2 ]] && [[ -z "${FORMAT_FREI-}" ]] && [[ "${AUSDRUCK-}" != "stumm" ]]; then
     FORMAT_FREI='\033[0m' ROT='\033[0;31m' GRUEN='\033[0;32m' ORANGE='\033[0;33m' BLAU='\033[0;34m' VEILCHENROT='\033[0;35m' HIMMELBLAU='\033[0;36m' GELB='\033[1;33m'
   else
     FORMAT_FREI='' ROT='' GRUEN='' ORANGE='' BLAU='' VEILCHENROT='' HIMMELBLAU='' GELB=''
@@ -236,7 +236,7 @@ parameter_abarbeiten() {
     11) datum_heute_lang=$(date '+%_d. Nebelmonat (%b.) %Y'  | sed 's@^ *@@;') ;;
     12) datum_heute_lang=$(date '+%_d. Christmonat (%b.) %Y' | sed 's@^ *@@;') ;;
   esac
-  FARB_FREI=''
+  FORMAT_FREI=''
   stufe_verausgaben=1
   stufe_formatierung=0
   stufe_markdown_telegram=0
@@ -284,7 +284,7 @@ parameter_abarbeiten() {
       stufe_stichworte_eineinzig=1 
       ;;
     -s | --stillschweigend) stufe_verausgaben=0 ;;
-    --farb-frei) FARB_FREI=1 ;;
+    --farb-frei) FORMAT_FREI=1 ;;
     -[Vv] | --[Vv]olltextabfrage)  # Parameter
       volltextabfrage_api="${2-}"
       volltext_text=$(echo "$volltextabfrage_api" | sed --regexp-extended 's@[[:punct:]]@…@g; s@^…{2,}@@; s@…{2,}$@@')
@@ -958,11 +958,14 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   elif (.gram|test("^ *part.[ -]+adv.[ ]+adj.*$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ mittelwörtliches Umstandswort oder Eigenschaftswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif  (.gram|test("^ *pr&#x00e4;p[_.,;]* *$|^ *praep[_.,;]* *$"))
+  elif  (.gram|test("^ *präp[_.,;]* *$|^ *pr&#x00e4;p[_.,;]* *$|^ *praep[os]*[_.,;]* *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Vorwort, Verhältniswort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *praet.[;]? *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Vergangenheit</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+
+  elif  (.gram|test("^ *pron[omen]*[_.,;]* *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Vornennwort, Fürwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *subst. *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Nennwort (auch Dingwort, Hauptwort, Namenwort, Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
