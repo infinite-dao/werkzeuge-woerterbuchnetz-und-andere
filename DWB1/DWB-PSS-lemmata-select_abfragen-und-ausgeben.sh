@@ -237,12 +237,14 @@ parameter_abarbeiten() {
         s@\?+@φραγεζειχψεν@g; 
         s@\[([^][]+)-([^][]+)\]@λκλαμμερ\1βισ\2ρκλαμμερ@g;
         s@\[([^][-]+)\]@λκλαμμερ\1ρκλαμμερ@g;
+        s@(&#)(x[0-9a-f]+)(;)@hexadecimalanfang\2hexadecimalende@g; # hexadecimal
         s@[[:punct:]]+@ @g; 
         s@ρεγεξ@…@g; 
         s@(^…{2,}|…{2,}$)@@; 
         s@φραγεζειχψεν@?@g;
         s@λκλαμμερ(.)βισ(.)ρκλαμμερ@[\1-\2]@g;
         s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
+        s@(hexadecimalanfang)(x[0-9a-f]+)(hexadecimalende)@\&#\2;@g; # hexadecimal
         s@[ ]+@, @g; 
       ')
       ohne_woerterliste_regex=$(echo "$ohne_woerterliste" | sed --regexp-extended '
@@ -258,6 +260,7 @@ parameter_abarbeiten() {
         s@\[([^][]+)-([^][]+)\]@λκλαμμερ\1βισ\2ρκλαμμερ@g;
         s@\[([^][-]+)\]@λκλαμμερ\1ρκλαμμερ@g;
         s@\$+@ρεγεξενδε@g; 
+        s@(&#)(x[0-9a-f]+)(;)@hexadecimalanfang\2hexadecimalende@g; # hexadecimal
         s@[[:punct:]]+@ @g; 
         s@ρεγεξστερν@.*@g; 
         s@ρεγεξανφανγ@^@g; 
@@ -266,6 +269,7 @@ parameter_abarbeiten() {
         s@πλυσζειχψεν@+@g;
         s@λκλαμμερ(.)βισ(.)ρκλαμμερ@[\1-\2]@g;
         s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
+        s@(hexadecimalanfang)(x[0-9a-f]+)(hexadecimalende)@\&#\2;@g; # hexadecimal
         s@[ ]+@|@g; 
       ')
       shift
