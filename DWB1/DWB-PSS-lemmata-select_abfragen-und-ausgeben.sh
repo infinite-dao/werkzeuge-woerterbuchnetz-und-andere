@@ -55,7 +55,7 @@ Verwendbare Wahlmöglichkeiten:
 -b,    --behalte_Dateien  Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
 -s,    --stillschweigend  Kaum Meldungen ausgeben
        --ohne             ohne Wörter (Wortliste z.B. --ohne 'aufstand, verstand' bei --Lemmaabfrage '*stand*')
-       --debug            Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
+       --entwickeln,--debug Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
        --farb-frei        Meldungen ohne Farben ausgeben
 
 Technische Anmerkungen:
@@ -206,7 +206,7 @@ parameter_abarbeiten() {
   while :; do
     case "${1-}" in
     -h | --[Hh]ilfe) stufe_aufraeumen_aufhalten=1; nutzung ;;
-    --debug) set -x ;;
+    --debug|--entwickeln) set -x ;;
     -b | --behalte_Dateien) stufe_dateienbehalten=1 ;;
     --farb-frei) ANWEISUNG_FORMAT_FREI=1 ;;
     -F | --Fundstellen) stufe_fundstellen=1 ;;
@@ -271,7 +271,7 @@ parameter_abarbeiten() {
         s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
         s@(hexadecimalanfang)(x[0-9a-f]+)(hexadecimalende)@\&#\2;@g; # hexadecimal
         s@[ ]+@|@g; 
-        s@\|([[:alpha:]])@|\\b\1@g; 
+        s@\|([[:alpha:]])@|\\b\1@g; # beachte Wortgrenzen
         s@([[:alpha:]])\|@\1\\b|@g; 
         s@^([[:alpha:]])@\\b\1@; 
         s@([[:alpha:]])$@\1\\b@; 
@@ -433,7 +433,7 @@ if [[ -e "${json_speicher_datei}" ]];then
 
   .
   | map({gram: (.gram), Wort: (.label|Anfangsgrosz), wort: (.label)})
-  | sort_by(.gram,.wort ) 
+  | unique_by(.wort, .gram) | sort_by(.gram,.wort ) 
   | .[] 
 | if ($ohne_woerterliste_regex|length) == 0
       then .
@@ -536,7 +536,7 @@ cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterl
     # unique_by(.wort) schein ungünstig, wenn manche Wörter keine Grammatik haben
     
 . | map({gram: (.gram), Wort: (.label|Anfangsgrosz), wort: (.label)})
-| sort_by(.gram,.wort ) 
+| unique_by(.wort, .gram) | sort_by(.gram,.wort ) 
 | .[] 
 | if ($ohne_woerterliste_regex|length) == 0
       then .
@@ -757,7 +757,7 @@ case $stufe_formatierung in
   
   else "<tr><td>\(.label)</td><td>\(.gram) ~ ?</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   end
-  ' | sed -r "s@\"@@g;
+  ' | sed --regexp-extended "s@\"@@g;
   s@“([^“”]+)”@\"\1\"@g;
 s@&#x00e4;@ä@g;
 s@&#x00f6;@ö@g;
@@ -767,8 +767,7 @@ s@<td>(&#x00e4;|&#196;|&auml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<
 s@<td>(&#x00f6;|&#246;|&ouml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00D6;\L\2\E\3\4@g; # ö Ö
 s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00DC;\L\2\E\3\4@g; # ü Ü 
 1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<style type=\"text/css\" >\n#Wortliste-Tabelle td { vertical-align:top; }\n\n#Wortliste-Tabelle td:nth-child(2),\n#Wortliste-Tabelle td:nth-child(4),\n#Wortliste-Tabelle td:nth-child(5) { font-size:smaller; }\n\na.local { text-decoratcion:none; }\n</style>\n<body><p>${bearbeitungstext_html}</p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p><p>Zur Sprachkunst oder Grammatik siehe vor allem <i style=\"font-variant:small-caps;\">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><thead><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><!--wbnetzkwiclink<th>Textauszug (gekürzt)</th>wbnetzkwiclink--><th>Verknüpfung1</th><th>Verknüpfung2</th></tr></thead><tbody>
-$ a\</tbody><tfoot><tr><td colspan=\"5\" style=\"border-top:2px solid gray;border-bottom:0 none;\"></td>
-    </tr></tfoot></table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
+$ a\</tbody><tfoot><tr><td colspan=\"5\" style=\"border-top:2px solid gray;border-bottom:0 none;\"></td>\n</tr></tfoot></table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
   s@<th>@<th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">@g;
   s@<body>@<body style="font-family: Antykwa Torunska, serif; background: white;">@;
