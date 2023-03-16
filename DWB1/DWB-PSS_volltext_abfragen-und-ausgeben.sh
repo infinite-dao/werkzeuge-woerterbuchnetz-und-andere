@@ -321,6 +321,10 @@ parameter_abarbeiten() {
         s@λκλαμμερ(.)βισ(.)ρκλαμμερ@[\1-\2]@g;
         s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
         s@[ ]+@|@g; 
+        s@\|([[:alpha:]])@|\\b\1@g; # beachte Wortgrenzen
+        s@([[:alpha:]])\|@\1\\b|@g; 
+        s@^([[:alpha:]])@\\b\1@; 
+        s@([[:alpha:]])$@\1\\b@; 
       ')
       stufe_stichwortabfrage=2
 
@@ -396,6 +400,10 @@ parameter_abarbeiten() {
         s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
         s@(hexadecimalanfang)(x[0-9a-f]+)(hexadecimalende)@\&#\2;@g; # hexadecimal
         s@[ ]+@|@g; 
+        s@\|([[:alpha:]])@|\\b\1@g; # beachte Wortgrenzen
+        s@([[:alpha:]])\|@\1\\b|@g; 
+        s@^([[:alpha:]])@\\b\1@; 
+        s@([[:alpha:]])$@\1\\b@; 
       ')
       stufe_stichwortabfrage=2
       shift
@@ -499,18 +507,18 @@ parameter_abarbeiten "$@"
 case $stufe_verausgaben in
  0)  ;;
  1)
-  meldung "${ORANGE}ENTWICKLUNG - stufe_formatierung:              $stufe_formatierung ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_verausgaben:               $stufe_verausgaben ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_stichwortabfrage:          $stufe_stichwortabfrage ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_stichworte_eineinzig:      $stufe_stichworte_eineinzig${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten:           $stufe_dateienbehalten ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - volltextabfrage_api:             $volltextabfrage_api ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - volltext_text:                   $volltext_text ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stichwortabfrage:                $stichwortabfrage ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - mit_woerterliste_text:           $mit_woerterliste_text ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - mit_woerterliste_regex:          $mit_woerterliste_regex ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex:         $ohne_woerterliste_regex ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - ohne_woerterliste_text:          $ohne_woerterliste_text ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_formatierung:              $stufe_formatierung ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_verausgaben:               $stufe_verausgaben ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_stichwortabfrage:          $stufe_stichwortabfrage ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_stichworte_eineinzig:      $stufe_stichworte_eineinzig${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten:           $stufe_dateienbehalten ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - volltextabfrage_api:             $volltextabfrage_api ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - volltext_text:                   $volltext_text ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stichwortabfrage:                $stichwortabfrage ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - mit_woerterliste_text:           $mit_woerterliste_text ${FORMAT_FREI}"
+  echo -en "${ORANGE}ENTWICKLUNG - mit_woerterliste_regex:          ${FORMAT_FREI}"; echo "$mit_woerterliste_regex"
+  echo -en "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex:         ${FORMAT_FREI}"; echo "$ohne_woerterliste_regex"
+  meldung  "${ORANGE}ENTWICKLUNG - ohne_woerterliste_text:          $ohne_woerterliste_text ${FORMAT_FREI}"
   ;;
 esac
 
