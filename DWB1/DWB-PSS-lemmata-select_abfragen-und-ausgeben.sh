@@ -271,7 +271,12 @@ parameter_abarbeiten() {
         s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
         s@(hexadecimalanfang)(x[0-9a-f]+)(hexadecimalende)@\&#\2;@g; # hexadecimal
         s@[ ]+@|@g; 
+        s@\|([[:alpha:]])@|\\b\1@g; 
+        s@([[:alpha:]])\|@\1\\b|@g; 
+        s@^([[:alpha:]])@\\b\1@; 
+        s@([[:alpha:]])$@\1\\b@; 
       ')
+      
       shift
       ;;
     -H | --[Hh][Tt][Mm][Ll])
@@ -341,13 +346,14 @@ parameter_abarbeiten "$@"
 case $stufe_verausgaben in
  0)  ;;
  1)
-  meldung "${ORANGE}ENTWICKLUNG - stufe_formatierung:    $stufe_formatierung ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_fundstellen:     $stufe_fundstellen ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_verausgaben:     $stufe_verausgaben ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten: $stufe_dateienbehalten ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - lemmaabfrage:          $lemmaabfrage ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - lemmaabfrage_api:      $lemmaabfrage_api ${FORMAT_FREI}"
-  meldung "${ORANGE}ENTWICKLUNG - lemma_text:            $lemma_text ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_formatierung:      $stufe_formatierung ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_fundstellen:       $stufe_fundstellen ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_verausgaben:       $stufe_verausgaben ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten:   $stufe_dateienbehalten ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - lemmaabfrage:            $lemmaabfrage ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - lemmaabfrage_api:        $lemmaabfrage_api ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - lemma_text:              $lemma_text ${FORMAT_FREI}"
+  echo -en "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex: ${FORMAT_FREI}"; echo "$ohne_woerterliste_regex"
   ;;
 esac
 
@@ -427,7 +433,7 @@ if [[ -e "${json_speicher_datei}" ]];then
 
   .
   | map({gram: (.gram), Wort: (.label|Anfangsgrosz), wort: (.label)})
-  | unique_by(.wort) | sort_by(.gram,.wort ) 
+  | sort_by(.gram,.wort ) 
   | .[] 
 | if ($ohne_woerterliste_regex|length) == 0
       then .
@@ -527,8 +533,10 @@ cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterl
       )
     | join("");
 
+    # unique_by(.wort) schein ungünstig, wenn manche Wörter keine Grammatik haben
+    
 . | map({gram: (.gram), Wort: (.label|Anfangsgrosz), wort: (.label)})
-| unique_by(.wort) | sort_by(.gram,.wort ) 
+| sort_by(.gram,.wort ) 
 | .[] 
 | if ($ohne_woerterliste_regex|length) == 0
       then .
