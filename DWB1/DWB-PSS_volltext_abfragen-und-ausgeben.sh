@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Programm gründet auf Maciej Radzikowski’s englischer Vorlage https://betterdev.blog/minimal-safe-bash-script-template/
+# ZUTUN --Telegrammarkdown wird nicht erzeugt wenn --ODT fehlt
 
 set -Eeuo pipefail
 trap aufraeumen SIGINT SIGTERM ERR EXIT
@@ -1200,11 +1201,11 @@ case $stufe_formatierung in
           s@\*\*@FETTSCHRIFT@g; s@\*@__@g; 
           s@FETTSCHRIFT@**@g; 
           s@\[([^][]+)\]\{.smallcaps\}@\U\1\E@g; 
+          s@\{[.]small\}@@g;
           s@([^…]|[^.]{3})«@\1…«@g; 
           s@__( +)__@\1@g; 
           s@\^@@g; # <sup></sup>
-          s@\\\\~@~@g;
-          s@\\\\'@'@g;
+          s@\\\\([~'.])@\1@g;
           " > "${datei_utf8_html_gram_tidy_markdown_telegram}"
     else
       meldung "${ORANGE}Fehler: HTML Datei nicht gefunden, ${datei_utf8_html_gram_tidy}${FORMAT_FREI} …"
