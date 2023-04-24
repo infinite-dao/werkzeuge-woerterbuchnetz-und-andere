@@ -49,5 +49,59 @@ Eingabebeispiel
 
 # Volltextsuche „…lösen…“, aber nur Stichwörter auf Endung „…ung“
 ./DWB-PSS_volltext_abfragen-und-ausgeben.sh  --HTML --ODT --Volltextabfrage "*lösen*" --Stichwortabfrage "*ung"
-
 ```
+
+## Abfrage-Funktionen (PSS/API)
+
+☞ https://api.woerterbuchnetz.de/open-api/dictionaries/DWB
+```json
+{
+  "result_type": "method_list",
+  "query": "/open-api/dictionaries/DWB",
+  "result_set": [
+    {
+      "methodid": "fulltext",
+      "comment": "Gesamter Text",
+      "path": "/open-api/dictionaries/DWB/fulltext/:searchpattern"
+    },
+    {
+      "methodid": "lemmata",
+      "comment": "Stichwort",
+      "path": "/open-api/dictionaries/DWB/lemmata/:searchpattern"
+    }
+  ],
+  "result_count": 2
+}
+```
+
+☞ https://api.woerterbuchnetz.de/open-api/dictionaries/Lexer hat vergleichsweise mehr Funktionen
+```json
+{
+  "result_type": "method_list",
+  "query": "/open-api/dictionaries/Lexer",
+  "result_set": [
+    {
+      "methodid": "fulltext",
+      "comment": "Gesamter Text",
+      "path": "/open-api/dictionaries/Lexer/fulltext/:searchpattern"
+    },
+    {
+      "methodid": "lemmata",
+      "comment": "Stichwort",
+      "path": "/open-api/dictionaries/Lexer/lemmata/:searchpattern"
+    },
+    {
+      "methodid": "definition",
+      "comment": "Definitionen",
+      "path": "/open-api/dictionaries/Lexer/definition/:searchpattern"
+    },
+    {
+      "methodid": "citation",
+      "comment": "Beleg",
+      "path": "/open-api/dictionaries/Lexer/citation/:searchpattern"
+    }
+  ],
+  "result_count": 4
+}
+```
+
