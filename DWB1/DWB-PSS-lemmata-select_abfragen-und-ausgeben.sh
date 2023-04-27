@@ -664,7 +664,7 @@ case $stufe_formatierung in
   elif  (.gram|test("^ *adv[_.,;] *$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ Umstandswort, Zuwort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
-  elif  (.gram|test("^ *conj[unction]*[.,;] *$"))
+  elif  (.gram|test("^ *[kc]onj[unction]*[.,;] *$"))
   then "<tr><td>\(.label)</td><td>\(.gram) ~ Fügewort, Bindewort</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
