@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Programm gründet auf Maciej Radzikowski’s englischer Vorlage https://betterdev.blog/minimal-safe-bash-script-template/
 # ZUTUN --Telegrammarkdown wird nicht erzeugt wenn --ODT fehlt
+# ZUTUN https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-und-andere/issues/1
+# - verstehen https://api.woerterbuchnetz.de/dictionaries/Meta/lemmata/lemma/säuseln/0/json aller Wörterbücher Haupteinträge
+# - verstehen https://api.woerterbuchnetz.de/dictionaries/Meta/fulltext/säuseln/0/json aller Wörterbücher Haupteinträge
+
 
 set -Eeuo pipefail
 trap aufraeumen SIGINT SIGTERM ERR EXIT
@@ -551,6 +555,7 @@ case $stufe_verausgaben in
  1) meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text})" ;;
 esac
 
+# ZUTUN Suche "altes Wort" → all-api:"altes_Wort"
 if [[ -e "${json_speicher_datei}" ]];then
   # cat ./test/stupere.json | jq ' .result_count '
   # cat "${json_speicher_datei}" | jq ' .result_set[] | .lemma | tostring '
@@ -560,6 +565,42 @@ if [[ -e "${json_speicher_datei}" ]];then
   esac
   
   # kombiniere json_speicher_all_query_datei und json_speicher_datei für wbnetzkwiclink mit richtiger Fund-Textstelle
+    # -----------------------------
+    # https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=altes_Wort
+    # - funktioniert, aber gram usw. fehlt
+    # - Idee: aufdröseln ~ Einzelwort-Abfragen → jq dann vereifachen lassen (fulltext_altes.json + fulltext_Wort.json = fulltext_altes_Wort.json)
+    #   https://api.woerterbuchnetz.de/dictionaries/DWB/query/all=säuseln
+    # -----------------------------
+    #   {
+    #     "formid": "A05985",
+    #     "textidlist": [
+    #       [
+    #         552337
+    #       ]
+    #     ],
+    #     "wordidlist": [
+    #       [
+    #         46
+    #       ]
+    #     ],
+    #     "wbsigle": "DWB",
+    #     "normlemma": "aeu"
+    #   },  
+    # -----------------------------
+    # https://api.woerterbuchnetz.de/open-api/dictionaries/DWB2/fulltext/säuseln  
+    # -----------------------------
+    # ${json_speicher_datei}
+    #   "result_set": [
+    #   {
+    #     "sigle": "DWB",
+    #     "lemma": "&#x00e4;u",
+    #     "gram": "",
+    #     "wbnetzid": "A05985",
+    #     "textid": "552337",
+    #     "match": "saeuseln",
+    #     "wbnetzlink": "https://woerterbuchnetz.de//?sigle=DWB&lemid=A05985&textid=552337",
+    #     "wbnetzkwiclink": "https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/kwic/552337"
+    #   },
   # jq flatten JSON
   # kombiniere über textid
   # nutze verknüpftes JSON
@@ -586,10 +627,14 @@ if [[ -e "${json_speicher_datei}" ]];then
   
   jq '.result_set | flatten[]' "${json_speicher_datei}" > "${json_speicher_datei_zwischenablage}"
   
+#   if [[ ${n_suchergebnisse_volltext} -eq 0 ]] && [[ $(jq '[.[]|(.normlemma)?]|length' ${json_speicher_all_query_datei}) -gt 0 ]]; then
+#   # hashJoin( \$file1; \$file2; .textid)[]
+#   else
   jq -n \
     --slurpfile file1 "${json_speicher_allquery_datei_zwischenablage}" \
     --slurpfile file2 "${json_speicher_datei_zwischenablage}" \
     -f "${json_speicher_filter_ueber_textid_verknuepfen}" > "${json_speicher_vereinte_abfragen_zwischenablage}"  
+#   fi
   
   case $stufe_stichworte_eineinzig in 1)
     jq --slurp \
@@ -898,6 +943,9 @@ case $stufe_formatierung in
   elif  (.gram|test("^ *adv[_.,;] *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Umstandswort, Zuwort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
+  elif  (.gram|test("^ *[kc]onj[unction]*[.,;] *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Fügewort, Bindewort</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
   then "<tr><td>\(.lemma), die</td><td>\(.gram) ~ Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]*\\? *$"))
@@ -995,6 +1043,11 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   elif (.gram|test("^ *verbal[-]*adj[_.,;]+[ -–—]adv[_.,;]* *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Eigenschafts- oder Umstandswort tunwörtlichen Ursprungs</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
+  elif (.gram|test("^ *tr[ans]*\. *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Tunwort auf wen/was beziehend (transitiv)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"  
+  elif (.gram|test("^ *intr[ans]*\. *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Tunwort ohne wen/was Bezug (intransitiv)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  
   else "<tr><td>\(.lemma)</td><td>\(.gram) ~ ?</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   end
@@ -1015,7 +1068,7 @@ s@<td>(&#x00e4;|&#196;|&auml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<
 s@<td>(&#x00f6;|&#246;|&ouml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00D6;\L\2\E\3\4@g; # ö Ö
 s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00DC;\L\2\E\3\4@g; # ü Ü 
 
-1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<style type=\"text/css\" >\n#Wortliste-Tabelle td { vertical-align:top; }\n\n#Wortliste-Tabelle td:nth-child(2),\n#Wortliste-Tabelle td:nth-child(4),\n#Wortliste-Tabelle td:nth-child(5) { font-size:smaller; }\n\na.local { text-decoratcion:none; }\n</style>\n<body><p>${bearbeitungstext_html}</p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.). Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tunwörter (Tätigkeitswörter, Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Hauptwörter, Substantive), als auch die Wörter bei denen GRIMM keine Angabe der Grammatik/Sprachkunst-Begriffe gemacht haben oder sie vergessen wurden.</p><p>Zur Sprachkunst oder Grammatik siehe vor allem <i style=\"font-variant:small-caps;\">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><thead><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><th>Fundstelle (gekürzt)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr></thead><tbody>
+1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<style type=\"text/css\" >\n#Wortliste-Tabelle td { vertical-align:top; }\n\n#Wortliste-Tabelle td:nth-child(2),\n#Wortliste-Tabelle td:nth-child(4),\n#Wortliste-Tabelle td:nth-child(5) { font-size:smaller; }\n\na.local { text-decoratcion:none; }\n</style>\n<body><p>${bearbeitungstext_html}</p><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.). Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tunwörter (Tätigkeitswörter, Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Hauptwörter, Substantive), als auch die Wörter bei denen GRIMM keine Angabe der Grammatik/Sprachkunst-Begriffe gemacht haben oder sie vergessen wurden.</p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Zur Sprachkunst oder Grammatik siehe vor allem <i style=\"font-variant:small-caps;\">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><thead><tr><th>Wort</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><th>Fundstelle (gekürzt)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr></thead><tbody>
 $ a\</tbody><tfoot><tr><td colspan=\"5\" style=\"border-top:2px solid gray;border-bottom:0 none;\"></td>\n</tr></tfoot></table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
   s@<th>@<th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">@g;
