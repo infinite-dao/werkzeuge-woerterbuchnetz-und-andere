@@ -1043,9 +1043,9 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   elif (.gram|test("^ *verbal[-]*adj[_.,;]+[ -–—]adv[_.,;]* *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Eigenschafts- oder Umstandswort tunwörtlichen Ursprungs</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif (.gram|test("^ *tr[ans]*\. *$"))
+  elif (.gram|test("^ *tr[ans]*[.] *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Tunwort auf wen/was beziehend (transitiv)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"  
-  elif (.gram|test("^ *intr[ans]*\. *$"))
+  elif (.gram|test("^ *intr[ans]*[.] *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Tunwort ohne wen/was Bezug (intransitiv)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   
   else "<tr><td>\(.lemma)</td><td>\(.gram) ~ ?</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
