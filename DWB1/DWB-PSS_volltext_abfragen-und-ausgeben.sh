@@ -239,7 +239,7 @@ parameter_abarbeiten() {
   09|9) datum_heute_lang=$(date '+%_d. Herbstmonat (%b.) %Y' | sed 's@^ *@@;') ;;
     10) datum_heute_lang=$(date '+%_d. Weinmonat (%b.) %Y'   | sed 's@^ *@@;') ;;
     11) datum_heute_lang=$(date '+%_d. Nebelmonat (%b.) %Y'  | sed 's@^ *@@;') ;;
-    12) datum_heute_lang=$(date '+%_d. Christmonat (%b.) %Y' | sed 's@^ *@@;') ;;
+    12) datum_heute_lang=$(date '+%_d. Weihemonat (%b.) %Y'  | sed 's@^ *@@;') ;;
   esac
   ANWEISUNG_FORMAT_FREI=''
   stufe_verausgaben=1
@@ -479,7 +479,7 @@ parameter_abarbeiten() {
       hinweis_stichwortliste_html="" 
       ;;
     1) 
-      hinweis_stichwortliste_html=", der Liste Stichworte wurde beschränkt auf die allersten Fundstellen." 
+      hinweis_stichwortliste_html="; die Fundstellen wurden begrenzt auf die jeweils nur allerste innerhalb eines Stichwortes." 
       ;;
     esac
   ;;
@@ -488,7 +488,7 @@ parameter_abarbeiten() {
       hinweis_stichwortliste_html=", die Liste ist auf die Stichworte <i>${mit_woerterliste_text}</i> beschränkt." 
     fi
     if [[ ${#ohne_woerterliste_text} -gt 1 ]];then 
-      hinweis_stichwortliste_html="${hinweis_stichwortliste_html%.*}, und bewußt ohne die Worte „<i>${ohne_woerterliste_text}</i>“ weiter eingerenzt."
+      hinweis_stichwortliste_html="${hinweis_stichwortliste_html%.*}, und absichtlich ohne die Worte „<i>${ohne_woerterliste_text}</i>“ weiter eingerenzt."
     fi
     case $stufe_stichworte_eineinzig in 1) 
       hinweis_stichwortliste_html="${hinweis_stichwortliste_html%.*}&nbsp;&emdash; es wurden nur die ersten Fundstellen berücksichtigt, und alle weiteren Fundstellen innerhalb eines Stichwortes entfernt." 
@@ -742,7 +742,7 @@ if [[ -e "${json_speicher_datei}" ]];then
     then "?der \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
     then "der o. die \(.Wort);"
-    elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
+    elif (.gram|test("^ *m[_.,;]* +und +f[_.,;]* *$"))
     then "der u. die \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
     then "der o. das \(.Wort);"
@@ -858,7 +858,7 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
     then "?der \(.Wort) (\(.gram));"
     elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
     then "der o. die \(.Wort) (\(.gram));"
-    elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
+    elif (.gram|test("^ *m[_.,;]* +und +f[_.,;]* *$"))
     then "der u. die \(.Wort) (\(.gram));"
     elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
     then "der o. das \(.Wort) (\(.gram));"
@@ -912,10 +912,10 @@ cat "${json_speicher_datei}" | jq -r  \
 
 
 case $volltext_text in
-…*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_stichwortliste_html-.}" ;;
-…*)  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortende (im Volltext) <i>$volltext_text</i> gemein haben)${hinweis_stichwortliste_html-.}" ;;
-*…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang (im Volltext) <i>${volltext_text}</i> gemein haben)${hinweis_stichwortliste_html-.}" ;;
-*)   bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_stichwortliste_html-.}" ;;
+…*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch viele Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_stichwortliste_html-.}" ;;
+…*)  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch viele Wörter enthalten sein, die nichts mit dem Wortende (im Volltext) <i>$volltext_text</i> gemein haben)${hinweis_stichwortliste_html-.}" ;;
+*…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch viele Wörter enthalten sein, die nichts mit dem Wortanfang (im Volltext) <i>${volltext_text}</i> gemein haben)${hinweis_stichwortliste_html-.}" ;;
+*)   bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch viele Wörter enthalten sein, die nichts mit der Volltext-Abfrage <i>${volltext_text}</i> zu tun haben)${hinweis_stichwortliste_html-.}" ;;
 esac
 
 html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-und-andere/tree/main/DWB1#dwb-pss_volltext_abfragen-und-ausgebensh\"><code>DWB-PSS_volltext_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
@@ -977,7 +977,7 @@ case $stufe_formatierung in
   then "<tr><td>\(.lemma), der?</td><td>\(.gram) ~ Nennwort, ?männlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +f[_.,;]* *$"))
   then "<tr><td>\(.lemma), der o. die</td><td>\(.gram) ~ Nennwort, männlich o. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif (.gram|test("^ *m[_.,;]* und +f[_.,;]* *$"))
+  elif (.gram|test("^ *m[_.,;]* +und +f[_.,;]* *$"))
   then "<tr><td>\(.lemma), der u. die</td><td>\(.gram) ~ Nennwort, männlich u. weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
   then "<tr><td>\(.lemma), der o. das</td><td>\(.gram) ~ Nennwort, männlich o. sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
@@ -1040,7 +1040,9 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   elif (.gram|test("^ *v[_.,;]* *$|^ *vb[_.,;]* *$|^ *verb[_.,;]* *$|^ *verbum[_.,;]* *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Tunwort (auch Zeitwort, Tätigkeitswort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif (.gram|test("^ *verbal[-]*adj[_.,;]+[ -–—]adv[_.,;]* *$"))
+  elif (.gram|test("^ *verb[al]*[ .-]*adj[_.,;]* *$"))
+  then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Eigenschafts- oder Umstandswort tunwörtlichen Ursprungs</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *verb[al]*[ .-]*adj[_.,;]+[ -–—]+adv[_.,;]* *$"))
   then "<tr><td>\(.lemma)</td><td>\(.gram) ~ Eigenschafts- oder Umstandswort tunwörtlichen Ursprungs</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.lemma)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *tr[ans]*[.] *$"))
