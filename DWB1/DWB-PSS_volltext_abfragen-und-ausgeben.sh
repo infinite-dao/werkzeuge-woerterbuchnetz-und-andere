@@ -276,7 +276,6 @@ parameter_abarbeiten() {
   ohne_woerterliste_text='' # ZUTUN
   json_speicher_datei=$(json_speicher_datei unbekannt)
   titel_text="Volltextsuche „??“ aus Grimm-Wörterbuch ($datum_heute_lang)"
-  this_exit_code=0
   # param=''
 
   # To be able to pass two flags as -ab, instead of -a -b, some additional code would be needed.
@@ -1115,10 +1114,10 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
   then "<tr><td>\(.Wort), das</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Nennwort-Machendes, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.Wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif  (.gram|test("^ *part[icz]*[.]?[;]? *$"))
+  elif  (.gram|test("^ *part[icz]*[.;]? *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Mittelwort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif (.gram|test("^ *part[icpalesz]*.[ -]+adj. *$"))
+  elif (.gram|test("^ *part[icpalesz]*[. -]+adj[.]? *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ mittelwörtliches Eigenschaftswort, Beiwort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *part[icpalesz]*[. -]+adj[ektiv]*[. ]+[oder ]*adv[erb]*.*$"))
@@ -1138,6 +1137,8 @@ elif (.gram|test("^ *n[_.,;]* *$"))
 
   elif (.gram|test("^ *subst. *$"))
   then "<tr><td>\(.Wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Nennwort (auch Dingwort, Hauptwort, Namenwort, Eigenwort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.Wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *subst. *inf[.]?$|^ *subst. *v[er]?b[.]?$"))
+  then "<tr><td>\(.Wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ nennwörtliches Tunwort, Tätigkeitswort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.Wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *v. +u. +subst. +n. *$"))
   then "<tr><td>\(.wort); \(.Wort), das</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Tunwort und Nennwort sächlich (Tunwort: auch Zeitwort, Tätigkeitswort; Nennwort: auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
@@ -1265,10 +1266,12 @@ $ a\</tbody><tfoot><tr><td colspan=\"5\" style=\"border-top:2px solid gray;borde
       )
       end
       ' | sed --regexp-extended 's@</i><i>@@g'
-    ) && this_exit_code=$?
+    ) && abbruch_code_nummer=$?
     
-    case $this_exit_code in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
-      meldung "${ORANGE}Etwas lief schief … exit code: ${this_exit_code} $(kill -l $this_exit_code)${NOFORMAT} (?wget, ?jq …)" ;;
+    case $abbruch_code_nummer in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+      meldung "${ORANGE}Etwas lief schief bei den Fundstellen … exit code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${FORMAT_FREI} (?wget, ?jq, ?sed …)";
+        abbruch_code_nummer=0;
+      ;;
     esac
   
     echo "»${fundstelle_text}«" | sed --regexp-extended 's@»([ ;.:]+)@»…\1@g; ' > "${datei_diese_fundstelle}"
@@ -1292,7 +1295,13 @@ $ a\</tbody><tfoot><tr><td colspan=\"5\" style=\"border-top:2px solid gray;borde
   0)  ;;
   1) meldung "${GRUEN}Weiterverarbeitung → JSON → HTML${FORMAT_FREI} (tidy: ${datei_utf8_html_gram_tidy})" ;;
   esac
-  tidy -quiet -output "${datei_utf8_html_gram_tidy}"  "${datei_utf8_html_zwischenablage_gram}" 2> "${datei_utf8_html_gram_tidy_log}" || this_exit_code=$?
+  tidy -quiet -output "${datei_utf8_html_gram_tidy}"  "${datei_utf8_html_zwischenablage_gram}" 2> "${datei_utf8_html_gram_tidy_log}" || abbruch_code_nummer=$?
+
+  case $abbruch_code_nummer in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+    meldung "${ORANGE}Etwas lief schief bei der Weiterverarbeitung → JSON → HTML … exit code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${FORMAT_FREI} (?tidy …)";
+      abbruch_code_nummer=0;
+    ;;
+  esac
 
   case $stufe_verausgaben in
   0)  ;;
@@ -1369,6 +1378,7 @@ case $stufe_formatierung in
           s@__( +)__@\1@g; 
           s@\^@@g; # <sup></sup>
           s@\\\\([~'.])@\1@g;
+          s@\\\\\[@[@g; s@\\\\\]@]@g;
           " > "${datei_utf8_html_gram_tidy_markdown_telegram}"
     else
       meldung "${ORANGE}Fehler: HTML Datei nicht gefunden, ${datei_utf8_html_gram_tidy}${FORMAT_FREI} …"
