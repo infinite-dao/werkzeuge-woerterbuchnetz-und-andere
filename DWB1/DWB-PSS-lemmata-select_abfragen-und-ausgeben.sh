@@ -430,11 +430,11 @@ if [[ -e "${json_speicher_datei}" ]];then
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#[Xx]00[Ee]4;"))
+      elif (.|test("^(?i)&#x00e4;"))
       then "&#x00c4;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff]6;"))
+      elif (.|test("^(?i)&#x00f6;"))
       then "&#x00d6;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff][Cc];"))
+      elif (.|test("^(?i)&#x00fc;"))
       then "&#x00dc;" +  (.[8:] |ascii_downcase) 
       else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
       end
@@ -447,17 +447,17 @@ if [[ -e "${json_speicher_datei}" ]];then
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#[Xx]00[Ee]4;"))
+      elif (.|test("^(?i)&#x00e4;"))
       then "ae" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Cc]4;"))
+      elif (.|test("^(?i)&#x00c4;"))
       then "AE" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff]6;"))
+      elif (.|test("^(?i)&#x00f6;"))
       then "oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd]6;"))
+      elif (.|test("^(?i)&#x00d6;"))
       then "Oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff][Cc];"))
+      elif (.|test("^(?i)&#x00fc;"))
       then "ue" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd][Cc];"))
+      elif (.|test("^(?i)&#x00dc;"))
       then "UE" +  (.[8:] |ascii_downcase) 
       else . 
       end
@@ -467,7 +467,7 @@ if [[ -e "${json_speicher_datei}" ]];then
   .
   | map({
     gram: (.gram), 
-    Wort: (.label), # |Anfangsgrosz
+    Wort: (.label|Anfangsgrosz), # 
     wort: (.label), 
     wort_umlaut_geschrieben: (.label|Umlauteausschreiben)
   })
@@ -560,11 +560,11 @@ cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterl
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#[Xx]00[Ee]4;")) # ä
+      elif (.|test("^(?i)&#x00e4;")) # ä
       then "&#x00c4;" +  (.[8:] |ascii_downcase) # Ä
-      elif (.|test("^&#[Xx]00[Ff]6;")) # ö
+      elif (.|test("^(?i)&#x00f6;")) # ö
       then "&#x00d6;" +  (.[8:] |ascii_downcase) # Ö
-      elif (.|test("^&#[Xx]00[Ff][Cc];")) # ü
+      elif (.|test("^(?i)&#x00fc;")) # ü
       then "&#x00dc;" +  (.[8:] |ascii_downcase) # Ü
       else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
       end
@@ -577,17 +577,17 @@ cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterl
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#[Xx]00[Ee]4;"))
+      elif (.|test("^(?i)&#x00e4;"))
       then "ae" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Cc]4;"))
+      elif (.|test("^(?i)&#x00c4;"))
       then "AE" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff]6;"))
+      elif (.|test("^(?i)&#x00f6;"))
       then "oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd]6;"))
+      elif (.|test("^(?i)&#x00d6;"))
       then "Oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff][Cc];"))
+      elif (.|test("^(?i)&#x00fc;"))
       then "ue" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd][Cc];"))
+      elif (.|test("^(?i)&#x00dc;"))
       then "UE" +  (.[8:] |ascii_downcase) 
       else . 
       end
@@ -716,11 +716,11 @@ case $stufe_formatierung in
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#[Xx]00[Ee]4;")) # ä
+      elif (.|test("^(?i)&#x00e4;")) # ä
       then "&#x00c4;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff]6;")) # ö
+      elif (.|test("^(?i)&#x00f6;")) # ö
       then "&#x00d6;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff][Cc];")) # ü
+      elif (.|test("^(?i)&#x00fc;")) # ü
       then "&#x00dc;" +  (.[8:] |ascii_downcase) 
       else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
       end
@@ -733,17 +733,17 @@ case $stufe_formatierung in
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#[Xx]00[Ee]4;"))
+      elif (.|test("^(?i)&#x00e4;"))
       then "ae" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Cc]4;"))
+      elif (.|test("^(?i)&#x00c4;"))
       then "AE" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff]6;"))
+      elif (.|test("^(?i)&#x00f6;"))
       then "oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd]6;"))
+      elif (.|test("^(?i)&#x00d6;"))
       then "Oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff][Cc];"))
+      elif (.|test("^(?i)&#x00fc;"))
       then "ue" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd][Cc];"))
+      elif (.|test("^(?i)&#x00dc;"))
       then "UE" +  (.[8:] |ascii_downcase) 
       else . 
       end
