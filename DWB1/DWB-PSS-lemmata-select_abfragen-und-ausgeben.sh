@@ -4,6 +4,7 @@
 # ZUTUN filter wortliste zum beschränken z.B. bei Suche *stand* alle "aufstand" usw. weglassen
 # ZUTUN Grammatik ~ Schottel zusammenführen in Tabelle
 # ZUTUN Prüfung Nennwort → Großschreibung
+# ZUTUN Suche zü* Umlaute ersetzen nach &#x00fc; usw.
 
 set -Eeuo pipefail
 trap aufraeumen SIGINT SIGTERM ERR EXIT
@@ -192,7 +193,8 @@ parameter_abarbeiten() {
   # 2^2: 4-1 = 3 mit HTML, mit ODT
   ohne_woerterliste=''
   ohne_woerterliste_text=''
-  ohne_woerterliste_regex=''
+  ohne_woerterliste_regex='' # siehe auch https://github.com/kkos/oniguruma/blob/master/doc/RE
+  ohne_woerterliste_regex_xml=''
   zusatzbemerkungen_textdatei=''
   zusatzbemerkungen_htmldatei=''
   lemmaabfrage=''
@@ -276,7 +278,14 @@ parameter_abarbeiten() {
         s@^([[:alpha:]])@\\b\1@; 
         s@([[:alpha:]])$@\1\\b@; 
       ')
-      
+      ohne_woerterliste_regex_xml=$(echo "$ohne_woerterliste_regex" | sed --regexp-extended '
+        s@ü@\&#x00fc;@g;
+        s@Ü@\&#x00dc;@g;
+        s@ö@\&#x00f6;@g;
+        s@Ö@\&#x00d6;@g;
+        s@ä@\&#x00e4;@g;
+        s@Ä@\&#x00c4;@g;
+      ')
       shift
       ;;
     -H | --[Hh][Tt][Mm][Ll])
@@ -346,14 +355,15 @@ parameter_abarbeiten "$@"
 case $stufe_verausgaben in
  0)  ;;
  1)
-  meldung  "${ORANGE}ENTWICKLUNG - stufe_formatierung:      $stufe_formatierung ${FORMAT_FREI}"
-  meldung  "${ORANGE}ENTWICKLUNG - stufe_fundstellen:       $stufe_fundstellen ${FORMAT_FREI}"
-  meldung  "${ORANGE}ENTWICKLUNG - stufe_verausgaben:       $stufe_verausgaben ${FORMAT_FREI}"
-  meldung  "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten:   $stufe_dateienbehalten ${FORMAT_FREI}"
-  meldung  "${ORANGE}ENTWICKLUNG - lemmaabfrage:            $lemmaabfrage ${FORMAT_FREI}"
-  meldung  "${ORANGE}ENTWICKLUNG - lemmaabfrage_api:        $lemmaabfrage_api ${FORMAT_FREI}"
-  meldung  "${ORANGE}ENTWICKLUNG - lemma_text:              $lemma_text ${FORMAT_FREI}"
-  echo -en "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex: ${FORMAT_FREI}"; echo "$ohne_woerterliste_regex"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_formatierung:          $stufe_formatierung ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_fundstellen:           $stufe_fundstellen ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_verausgaben:           $stufe_verausgaben ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - stufe_dateienbehalten:       $stufe_dateienbehalten ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - lemmaabfrage:                $lemmaabfrage ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - lemmaabfrage_api:            $lemmaabfrage_api ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - lemma_text:                  $lemma_text ${FORMAT_FREI}"
+  echo -en "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex:     ${FORMAT_FREI}"; echo "$ohne_woerterliste_regex"
+  echo -en "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex_xml: ${FORMAT_FREI}"; echo "$ohne_woerterliste_regex_xml"
   ;;
 esac
 
@@ -411,7 +421,7 @@ case $stufe_verausgaben in
 esac
 
 if [[ -e "${json_speicher_datei}" ]];then
-    cat "${json_speicher_datei}" | jq  --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
+    cat "${json_speicher_datei}" | jq  --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
     -r '
   def woerterbehalten: ["DWB1", "DWB2"];
   def Anfangsgrosz:
@@ -420,12 +430,12 @@ if [[ -e "${json_speicher_datei}" ]];then
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#x00e4;"))
-      then "&#x00C4;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00f6;"))
-      then "&#x00D6;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00fc;"))
-      then "&#x00DC;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#[Xx]00[Ee]4;"))
+      then "&#x00c4;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#[Xx]00[Ff]6;"))
+      then "&#x00d6;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#[Xx]00[Ff][Cc];"))
+      then "&#x00dc;" +  (.[8:] |ascii_downcase) 
       else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
       end
       )
@@ -457,7 +467,7 @@ if [[ -e "${json_speicher_datei}" ]];then
   .
   | map({
     gram: (.gram), 
-    Wort: (.label|Anfangsgrosz), 
+    Wort: (.label), # |Anfangsgrosz
     wort: (.label), 
     wort_umlaut_geschrieben: (.label|Umlauteausschreiben)
   })
@@ -465,9 +475,9 @@ if [[ -e "${json_speicher_datei}" ]];then
   | .[] 
 | if ($ohne_woerterliste_regex|length) == 0
       then .
-      elif (.wort|test("\($ohne_woerterliste_regex)"))
+      elif (.wort|test($ohne_woerterliste_regex))
       then empty
-      elif (.Wort|test("\($ohne_woerterliste_regex)"))
+      elif (.Wort|test($ohne_woerterliste_regex))
       then empty
       else .
       end
@@ -542,7 +552,7 @@ case $stufe_verausgaben in
  1) meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text_gram})" ;;
 esac
 
-cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
+cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
   ' def woerterbehalten: ["DWB1", "DWB2"];
   def Anfangsgrosz:
     INDEX(woerterbehalten[]; .) as $wort_behalten
@@ -550,12 +560,12 @@ cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterl
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#x00e4;"))
-      then "&#x00C4;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00f6;"))
-      then "&#x00D6;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00fc;"))
-      then "&#x00DC;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#[Xx]00[Ee]4;")) # ä
+      then "&#x00c4;" +  (.[8:] |ascii_downcase) # Ä
+      elif (.|test("^&#[Xx]00[Ff]6;")) # ö
+      then "&#x00d6;" +  (.[8:] |ascii_downcase) # Ö
+      elif (.|test("^&#[Xx]00[Ff][Cc];")) # ü
+      then "&#x00dc;" +  (.[8:] |ascii_downcase) # Ü
       else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
       end
       )
@@ -588,7 +598,7 @@ cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterl
     
 . | map({
     gram: (.gram), 
-    Wort: (.label|Anfangsgrosz), 
+    Wort: (.label|Anfangsgrosz),# 
     wort: (.label), 
     wort_umlaut_geschrieben: (.label|Umlauteausschreiben)
   })
@@ -596,9 +606,9 @@ cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterl
 | .[] 
 | if ($ohne_woerterliste_regex|length) == 0
       then .
-      elif (.wort|test("\($ohne_woerterliste_regex)"))
+      elif (.wort|test($ohne_woerterliste_regex))
       then empty
-      elif (.Wort|test("\($ohne_woerterliste_regex)"))
+      elif (.Wort|test($ohne_woerterliste_regex))
       then empty
       else .
       end
@@ -691,14 +701,14 @@ case $stufe_formatierung in
   meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_html_zwischenablage_gram})" 
   if ! [[ "${ohne_woerterliste_regex}" == "" ]];then
   # meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (ohne: ${ohne_woerterliste_regex})"
-  echo -en "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (ohne: "; echo "${ohne_woerterliste_regex})"
+  echo -en "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (ohne: "; echo "${ohne_woerterliste_regex_xml})"
   
   fi
   ;;
   esac
   #   --arg a v        set variable $a to value <v>;
   
-  cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
+  cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
     ' def woerterbehalten: ["DWB1", "DWB2"];
   def Anfangsgrosz:
     INDEX(woerterbehalten[]; .) as $wort_behalten
@@ -706,12 +716,12 @@ case $stufe_formatierung in
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#x00e4;"))
-      then "&#x00C4;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00f6;"))
-      then "&#x00D6;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00fc;"))
-      then "&#x00DC;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#[Xx]00[Ee]4;")) # ä
+      then "&#x00c4;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#[Xx]00[Ff]6;")) # ö
+      then "&#x00d6;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^&#[Xx]00[Ff][Cc];")) # ü
+      then "&#x00dc;" +  (.[8:] |ascii_downcase) 
       else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
       end
       )
@@ -752,7 +762,7 @@ case $stufe_formatierung in
     | .[] 
     | if ($ohne_woerterliste_regex|length) == 0
       then .
-      elif (.label|test("\($ohne_woerterliste_regex)"))
+      elif (.label|test($ohne_woerterliste_regex))
       then empty
       else .
       end
