@@ -267,11 +267,13 @@ parameter_abarbeiten() {
   mit_woerterliste_text=''
   mit_woerterliste=''
   mit_woerterliste_regex=''
+  mit_woerterliste_regex_xml=''
   
   hinweis_stichwortliste_html=""
   zusatzbemerkungen_textdatei=''
 
-  ohne_woerterliste_regex='' # ZUTUN
+  ohne_woerterliste_regex='' # ZUTUN, siehe auch https://github.com/kkos/oniguruma/blob/master/doc/RE
+  ohne_woerterliste_regex_xml='' # ZUTUN
   ohne_woerterliste='' # ZUTUN
   ohne_woerterliste_text='' # ZUTUN
   json_speicher_datei=$(json_speicher_datei unbekannt)
@@ -317,6 +319,7 @@ parameter_abarbeiten() {
         s@\[([^][]+)-([^][]+)\]@λκλαμμερ\1βισ\2ρκλαμμερ@g;
         s@\[([^][-]+)\]@λκλαμμερ\1ρκλαμμερ@g;
         s@\$+@ρεγεξενδε@g; 
+        s@(&#)(x[0-9a-f]+)(;)@hexadecimalanfang\2hexadecimalende@g; # hexadecimal
         s@[[:punct:]]+@ @g; 
         s@ρεγεξστερν@.*@g; 
         s@ρεγεξανφανγ@^@g; 
@@ -325,11 +328,20 @@ parameter_abarbeiten() {
         s@πλυσζειχψεν@+@g;
         s@λκλαμμερ(.)βισ(.)ρκλαμμερ@[\1-\2]@g;
         s@λκλαμμερ([[:alpha:]]+)ρκλαμμερ@[\1]@g;
+        s@(hexadecimalanfang)(x[0-9a-f]+)(hexadecimalende)@\&#\2;@g; # hexadecimal
         s@[ ]+@|@g; 
         s@\|([[:alpha:]])@|\\b\1@g; # beachte Wortgrenzen
         s@([[:alpha:]])\|@\1\\b|@g; 
         s@^([[:alpha:]])@\\b\1@; 
         s@([[:alpha:]])$@\1\\b@; 
+      ')
+      mit_woerterliste_regex_xml=$(echo "$mit_woerterliste_regex" | sed --regexp-extended '
+        s@ü@\&#x00fc;@g;
+        s@Ü@\&#x00dc;@g;
+        s@ö@\&#x00f6;@g;
+        s@Ö@\&#x00d6;@g;
+        s@ä@\&#x00e4;@g;
+        s@Ä@\&#x00c4;@g;
       ')
       stufe_stichwortabfrage=2
 
@@ -409,6 +421,14 @@ parameter_abarbeiten() {
         s@([[:alpha:]])\|@\1\\b|@g; 
         s@^([[:alpha:]])@\\b\1@; 
         s@([[:alpha:]])$@\1\\b@; 
+      ')
+      ohne_woerterliste_regex_xml=$(echo "$ohne_woerterliste_regex" | sed --regexp-extended '
+        s@ü@\&#x00fc;@g;
+        s@Ü@\&#x00dc;@g;
+        s@ö@\&#x00f6;@g;
+        s@Ö@\&#x00d6;@g;
+        s@ä@\&#x00e4;@g;
+        s@Ä@\&#x00c4;@g;
       ')
       stufe_stichwortabfrage=2
       shift
@@ -522,7 +542,9 @@ case $stufe_verausgaben in
   meldung  "${ORANGE}ENTWICKLUNG - stichwortabfrage:                $stichwortabfrage ${FORMAT_FREI}"
   meldung  "${ORANGE}ENTWICKLUNG - mit_woerterliste_text:           $mit_woerterliste_text ${FORMAT_FREI}"
   echo -en "${ORANGE}ENTWICKLUNG - mit_woerterliste_regex:          ${FORMAT_FREI}"; echo "$mit_woerterliste_regex"
+  echo -en "${ORANGE}ENTWICKLUNG - mit_woerterliste_regex_xml:      ${FORMAT_FREI}"; echo "$mit_woerterliste_regex_xml"
   echo -en "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex:         ${FORMAT_FREI}"; echo "$ohne_woerterliste_regex"
+  echo -en "${ORANGE}ENTWICKLUNG - ohne_woerterliste_regex_xml:     ${FORMAT_FREI}"; echo "$ohne_woerterliste_regex_xml"
   meldung  "${ORANGE}ENTWICKLUNG - ohne_woerterliste_text:          $ohne_woerterliste_text ${FORMAT_FREI}"
   ;;
 esac
@@ -649,17 +671,17 @@ if [[ -e "${json_speicher_datei}" ]];then
   esac
   case $stufe_stichwortabfrage in 2) 
     jq \
-  --arg mit_woerterliste_regex "${mit_woerterliste_regex}" \
-    --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
+  --arg mit_woerterliste_regex "${mit_woerterliste_regex_xml}" \
+    --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
     '. | if ($mit_woerterliste_regex|length) == 0
       then .
-      elif (.lemma|test("\($mit_woerterliste_regex)"))
+      elif (.lemma|test($mit_woerterliste_regex))
       then .
       else empty
       end
     | if ($ohne_woerterliste_regex|length) == 0
       then .
-      elif (.lemma|test("\($ohne_woerterliste_regex)"))
+      elif (.lemma|test($ohne_woerterliste_regex))
       then empty
       else .
       end
@@ -683,12 +705,12 @@ if [[ -e "${json_speicher_datei}" ]];then
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#x00e4;"))
-      then "&#x00C4;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00f6;"))
-      then "&#x00D6;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00fc;"))
-      then "&#x00DC;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^(?i)&#x00e4;"))
+      then "&#x00c4;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^(?i)&#x00f6;"))
+      then "&#x00d6;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^(?i)&#x00fc;"))
+      then "&#x00dc;" +  (.[8:] |ascii_downcase) 
       else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
       end
       )
@@ -700,17 +722,17 @@ if [[ -e "${json_speicher_datei}" ]];then
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#[Xx]00[Ee]4;"))
+      elif (.|test("^(?i)&#x00e4;"))
       then "ae" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Cc]4;"))
+      elif (.|test("^(?i)&#x00c4;"))
       then "AE" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff]6;"))
+      elif (.|test("^(?i)&#x00f6;"))
       then "oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd]6;"))
+      elif (.|test("^(?i)&#x00d6;"))
       then "Oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff][Cc];"))
+      elif (.|test("^(?i)&#x00fc;"))
       then "ue" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd][Cc];"))
+      elif (.|test("^(?i)&#x00dc;"))
       then "UE" +  (.[8:] |ascii_downcase) 
       else . 
       end
@@ -728,17 +750,17 @@ if [[ -e "${json_speicher_datei}" ]];then
   | .[] 
 | if ($mit_woerterliste_regex|length) == 0
       then .
-      elif (.wort|test("\($mit_woerterliste_regex)"))
+      elif (.wort|test($mit_woerterliste_regex))
       then .
-      elif (.Wort|test("\($mit_woerterliste_regex)"))
+      elif (.Wort|test($mit_woerterliste_regex))
       then .
       else empty
       end
 | if ($ohne_woerterliste_regex|length) == 0
       then .
-      elif (.wort|test("\($ohne_woerterliste_regex)"))
+      elif (.wort|test($ohne_woerterliste_regex))
       then empty
-      elif (.Wort|test("\($ohne_woerterliste_regex)"))
+      elif (.Wort|test($ohne_woerterliste_regex))
       then empty
       else .
       end
@@ -802,8 +824,8 @@ if [[ -e "${json_speicher_datei}" ]];then
   end
   '
   cat "${json_speicher_datei}" | jq -r  \
-    --arg mit_woerterliste_regex "${mit_woerterliste_regex}" \
-    --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
+    --arg mit_woerterliste_regex "${mit_woerterliste_regex_xml}" \
+    --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
     "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage}" \
   && printf "%s\n\n%s\n\n" "${titel_text}" "${zusatzbemerkungen_textdatei}" > "${datei_utf8_reiner_text}" \
   && pandoc -f html -t plain "${datei_utf8_text_zwischenablage}" >> "${datei_utf8_reiner_text}"
@@ -826,12 +848,12 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#x00e4;"))
-      then "&#x00C4;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00f6;"))
-      then "&#x00D6;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00fc;"))
-      then "&#x00DC;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^(?i)&#x00e4;"))
+      then "&#x00c4;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^(?i)&#x00f6;"))
+      then "&#x00d6;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^(?i)&#x00fc;"))
+      then "&#x00dc;" +  (.[8:] |ascii_downcase) 
       else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
       end
       )
@@ -843,17 +865,17 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#[Xx]00[Ee]4;"))
+      elif (.|test("^(?i)&#x00e4;"))
       then "ae" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Cc]4;"))
+      elif (.|test("^(?i)&#x00c4;"))
       then "AE" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff]6;"))
+      elif (.|test("^(?i)&#x00f6;"))
       then "oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd]6;"))
+      elif (.|test("^(?i)&#x00d6;"))
       then "Oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff][Cc];"))
+      elif (.|test("^(?i)&#x00fc;"))
       then "ue" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd][Cc];"))
+      elif (.|test("^(?i)&#x00dc;"))
       then "UE" +  (.[8:] |ascii_downcase) 
       else . 
       end
@@ -871,17 +893,17 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
   | .[] 
 | if ($mit_woerterliste_regex|length) == 0
       then .
-      elif (.wort|test("\($mit_woerterliste_regex)"))
+      elif (.wort|test($mit_woerterliste_regex))
       then .
-      elif (.Wort|test("\($mit_woerterliste_regex)"))
+      elif (.Wort|test($mit_woerterliste_regex))
       then .
       else empty
       end
 | if ($ohne_woerterliste_regex|length) == 0
       then .
-      elif (.wort|test("\($ohne_woerterliste_regex)"))
+      elif (.wort|test($ohne_woerterliste_regex))
       then empty
-      elif (.Wort|test("\($ohne_woerterliste_regex)"))
+      elif (.Wort|test($ohne_woerterliste_regex))
       then empty
       else .
       end
@@ -951,8 +973,8 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
 # cat "${json_speicher_datei}" | jq "${dieser_jq_filter_code}" | sed -r 's@"@@g; ' | uniq > "${datei_utf8_text_zwischenablage_gram}"
 
 cat "${json_speicher_datei}" | jq -r  \
-    --arg mit_woerterliste_regex "${mit_woerterliste_regex}" \
-    --arg ohne_woerterliste_regex "${ohne_woerterliste_regex}" \
+    --arg mit_woerterliste_regex "${mit_woerterliste_regex_xml}" \
+    --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
   "${dieser_jq_filter_code}" > "${datei_utf8_text_zwischenablage_gram}" \
   && printf "%s\n\n%s\n\n" "${titel_text}" "${zusatzbemerkungen_textdatei}" > "${datei_utf8_reiner_text_gram}" \
   && pandoc -f html -t plain "${datei_utf8_text_zwischenablage_gram}" >> "${datei_utf8_reiner_text_gram}"
@@ -992,12 +1014,12 @@ case $stufe_formatierung in
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#x00e4;"))
-      then "&#x00C4;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00f6;"))
-      then "&#x00D6;" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#x00fc;"))
-      then "&#x00DC;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^(?i)&#x00e4;"))
+      then "&#x00c4;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^(?i)&#x00f6;"))
+      then "&#x00d6;" +  (.[8:] |ascii_downcase) 
+      elif (.|test("^(?i)&#x00fc;"))
+      then "&#x00dc;" +  (.[8:] |ascii_downcase) 
       else (.[:1]|ascii_upcase) + (.[1:] |ascii_downcase) 
       end
       )
@@ -1009,17 +1031,17 @@ case $stufe_formatierung in
     | map(
       if $wort_behalten[.] 
       then . 
-      elif (.|test("^&#[Xx]00[Ee]4;"))
+      elif (.|test("^(?i)&#x00e4;"))
       then "ae" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Cc]4;"))
+      elif (.|test("^(?i)&#x00c4;"))
       then "AE" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff]6;"))
+      elif (.|test("^(?i)&#x00f6;"))
       then "oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd]6;"))
+      elif (.|test("^(?i)&#x00d6;"))
       then "Oe" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Ff][Cc];"))
+      elif (.|test("^(?i)&#x00fc;"))
       then "ue" +  (.[8:] |ascii_downcase) 
-      elif (.|test("^&#[Xx]00[Dd][Cc];"))
+      elif (.|test("^(?i)&#x00dc;"))
       then "UE" +  (.[8:] |ascii_downcase) 
       else . 
       end
