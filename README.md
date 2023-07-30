@@ -14,4 +14,5 @@ Netzseiten, die vermittels dieser Sammlung verarbeitet werden können, sind:
 ## Übersicht Befehlsvorschriften dieser Sammlung
 
 - siehe Ordner ☞ [`./DWB1`](./DWB1) ~ für das Grimm-Wörterbuch (z.B. verschiedene Wortabfragen mit Befilterung der Ergebnisse)
+- siehe Ordner ☞ [`./DWDS`](./DWDS) ~ für das Digitale Wörterbuch Deutscher Sprache (z.B. Wortverlaufskurven selbsttätig beschriften)
 - siehe Ordner ☞ [`./corpora.uni-leipzig.de`](./corpora.uni-leipzig.de) ~ für Wortschatz Uni Leipzig (z.B. Dornseiff-Bedeutungsgruppen auflisten)
