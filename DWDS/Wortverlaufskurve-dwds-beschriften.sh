@@ -208,14 +208,20 @@ do
        --output-document="${dwds_datei}" \
       "https://www.dwds.de/r/plot/image/?v=hist&q=${wort_abfrage}" 
 
+    if [[ ${#wort_abfrage} -gt 14 ]];then
+      y_splice=110; text_beschriftung="${wort_abfrage}\n(Wortverlaufskurve dwds.de)";
+    else
+      y_splice=55; text_beschriftung="${wort_abfrage} (Wortverlaufskurve dwds.de)"
+    fi
+      
     convert -density 300 "${dwds_datei}" \
     -bordercolor '#0084C0' \
     -border 5 \
     -gravity South \
-    -splice 0x55 \
+    -splice 0x${y_splice} \
     -gravity southwest \
     -font 'Liberation-Serif' \
-    -annotate +10+0 "${wort_abfrage} (Wortverlaufskurve dwds.de)"  "${speicher_datei}";
+    -annotate +10+0 "${text_beschriftung}"  "${speicher_datei}";
     
     rm "${dwds_datei}";
   fi
