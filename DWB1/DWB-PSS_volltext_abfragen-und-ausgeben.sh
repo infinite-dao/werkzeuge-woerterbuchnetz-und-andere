@@ -228,18 +228,18 @@ dateivariablen_filter_bereitstellen() {
 parameter_abarbeiten() {
   # default values of variables set from params
   case $(date '+%m') in
-  01|1) datum_heute_lang=$(date '+%_d. Wintermonat (%b.) %Y' | sed 's@^ *@@;');;
-  02|2) datum_heute_lang=$(date '+%_d. Hornung (%b.) %Y'     | sed 's@^ *@@;') ;;
-  03|3) datum_heute_lang=$(date '+%_d. Lenzmonat (%b.) %Y'   | sed 's@^ *@@;') ;;
-  04|4) datum_heute_lang=$(date '+%_d. Ostermonat (%b.) %Y'  | sed 's@^ *@@;') ;;
-  05|5) datum_heute_lang=$(date '+%_d. Wonnemonat (%b.) %Y'  | sed 's@^ *@@;') ;;
-  06|6) datum_heute_lang=$(date '+%_d. Brachmonat (%b.) %Y'  | sed 's@^ *@@;') ;;
-  07|7) datum_heute_lang=$(date '+%_d. Heumonat (%b.) %Y'    | sed 's@^ *@@;') ;;
-  08|8) datum_heute_lang=$(date '+%_d. Erntemonat (%b.) %Y'  | sed 's@^ *@@;') ;;
-  09|9) datum_heute_lang=$(date '+%_d. Herbstmonat (%b.) %Y' | sed 's@^ *@@;') ;;
-    10) datum_heute_lang=$(date '+%_d. Weinmonat (%b.) %Y'   | sed 's@^ *@@;') ;;
-    11) datum_heute_lang=$(date '+%_d. Nebelmonat (%b.) %Y'  | sed 's@^ *@@;') ;;
-    12) datum_heute_lang=$(date '+%_d. Weihemonat (%b.) %Y'  | sed 's@^ *@@;') ;;
+  01|1) datum_heute_lang=$(date '+%_d. Wintermonat (%B) %Y' | sed 's@^ *@@; s@Januar@& ~ röm: Gott Janus@;') ;;
+  02|2) datum_heute_lang=$(date '+%_d. Hornung (%B) %Y'     | sed 's@^ *@@; s@Februar@& ~ lat: februare „reinigen"@; ') ;;
+  03|3) datum_heute_lang=$(date '+%_d. Lenzmonat (%B) %Y'   | sed 's@^ *@@; s@März@& ~ röm: Gott Mars@; ') ;;
+  04|4) datum_heute_lang=$(date '+%_d. Ostermonat (%B) %Y'  | sed 's@^ *@@; s@April@& ~ lat: Aprilis@;') ;;
+  05|5) datum_heute_lang=$(date '+%_d. Wonnemonat (%B) %Y'  | sed 's@^ *@@; s@Mai@& ~ röm: Maius o. Göttin Maia@;') ;;
+  06|6) datum_heute_lang=$(date '+%_d. Brachmonat (%B) %Y'  | sed 's@^ *@@; s@Juni@& ~ röm: Göttin Juno@; ') ;;
+  07|7) datum_heute_lang=$(date '+%_d. Heumonat (%B) %Y'    | sed 's@^ *@@; s@Juli@& ~ röm: Julius (Caesar)@; ') ;;
+  08|8) datum_heute_lang=$(date '+%_d. Erntemonat (%B) %Y'  | sed 's@^ *@@; s@August@& ~ röm: Kaiser Augustus@; ') ;;
+  09|9) datum_heute_lang=$(date '+%_d. Herbstmonat (%B) %Y' | sed 's@^ *@@; s@September@& ~ lat: Septimus@; ') ;;
+    10) datum_heute_lang=$(date '+%_d. Weinmonat (%B) %Y'   | sed 's@^ *@@; s@Oktober@& ~ lat: Octavus@; ') ;;
+    11) datum_heute_lang=$(date '+%_d. Nebelmonat (%B) %Y'  | sed 's@^ *@@; s@November@& ~ lat: Nonus@; ') ;;
+    12) datum_heute_lang=$(date '+%_d. Weihemonat (%B) %Y'  | sed 's@^ *@@; s@Dezember@& ~ lat: Decimus@; ') ;;
   esac
   ANWEISUNG_FORMAT_FREI=''
   stufe_verausgaben=1
@@ -1069,7 +1069,7 @@ case $stufe_formatierung in
 
   elif (.gram|test("^ *adj[ectiv]*[_.,;]* +u[nd.]* +adv[erb]*[_.,;]* *$|^ *adj[ectiv]*[_.,;]* +adv[erb]*[_.,;]* *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Eigenschaftswort, Beiwort und Umstandswort, Zuwort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
-  elif  (.gram|test("^ *adv[erb]*[_.,;] *$"))
+  elif  (.gram|test("^ *adv[erb]*[_.,;]+ *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Umstandswort, Zuwort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif  (.gram|test("^ *[kc]onj[unction]*[.,;] *$"))
@@ -1180,6 +1180,9 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Tunwort auf wen/was beziehend (transitiv)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"  
   elif (.gram|test("^ *intr[ans]*[.] *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Tunwort ohne wen/was Bezug (intransitiv)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  
+  elif (.gram|test("^ *zahlw[ort]*[.;] *$"))
+  then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Zahlwort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   
   else "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ ?</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
