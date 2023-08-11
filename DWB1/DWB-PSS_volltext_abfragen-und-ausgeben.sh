@@ -60,6 +60,7 @@ Verwendbare Wahlmöglichkeiten:
 -H,    --HTML              HTML Datei erzeugen
 -O,    --ODT               ODT Datei (für LibreOffice) erzeugen
 -T,    --Telegrammarkdown  MD  Datei (für Text in Markdown bei Telegram) erzeugen
+       --Einzeltabelle     die Wörtertabelle allein in eine gesonderte Datei speichern
 -b,    --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
 -s,    --stillschweigend   Kaum Meldungen ausgeben
        --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
@@ -215,6 +216,8 @@ dateivariablen_filter_bereitstellen() {
   datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html"
   datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html.log"
   datei_utf8_html_gram_tidy_markdown_telegram="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy_(Telegram).md"
+  datei_utf8_html_gram_tidy_worttabelle_odt="${datei_utf8_html_gram_tidy%.*}_einzeltabelle.odt"
+  
 
   datei_utf8_odt_gram="${diese_json_speicher_datei%.*}_Wortliste+gram.odt"
   json_speicher_all_query_datei="${diese_json_speicher_datei%.*}.allquery.json"
@@ -245,6 +248,7 @@ parameter_abarbeiten() {
   stufe_verausgaben=1
   stufe_formatierung=0
   stufe_markdown_telegram=0
+  stufe_einzeltabelle_odt=0
   stufe_aufraeumen_aufhalten=0
   stufe_dateienbehalten=0
   stufe_stichwortabfrage=0
@@ -364,6 +368,10 @@ parameter_abarbeiten() {
       2|3) stufe_formatierung=$stufe_formatierung ;;
       *) stufe_formatierung=2 ;;
       esac
+    ;;
+    --[Ee][Ii][Nn][Zz][Ee][Ll][Tt][Aa][Bb][Ee][Ll][Ll][Ee])
+      # Stufe: 0 oder 1
+      stufe_einzeltabelle_odt=1;
     ;;
     -T | --[Tt][Ee][Ll][Ee][Gg][Rr][Aa][Mm][Mm][Aa][Rr][Cc][Dd][Oo][Ww][Nn])
       # Stufe: 1 oder 3
@@ -1165,9 +1173,16 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   elif (.gram|test("^ *v. +u. +subst. +n. *$"))
   then "<tr><td>\(.wort); \(.Wort), das</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Tunwort und Nennwort sächlich (Tunwort: auch Zeitwort, Tätigkeitswort; Nennwort: auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
-  elif (.gram|test("^ *schwaches +verbum *$|^ *sw[_.,;]* +vb[_.,;]* *$"))
+  elif (.gram|test("^ *st[arkes][.]* +v[erbum]*[.,; ]*$"))
+  then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Tunwort stark (auch Zeitwort, Tätigkeitswort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *schw[aches][.]* +v[erbum]*[.,; ]*$|^ *sw[_.,;]* +vb[.,;]* *$|^ *swv[.,; ]*$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Tunwort schwach (auch Zeitwort, Tätigkeitswort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
+  elif (.gram|test("^ *untrennbares +v[erbum]*[_.,;]* *$"))
+  then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Tunwort untrennbar (auch Zeitwort, Tätigkeitswort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *trennb[ares]*[.]* +v[erbum]*[.,;]* *$"))
+  then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Tunwort trennbar (auch Zeitwort, Tätigkeitswort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  
   elif (.gram|test("^ *v[_.,;]* *$|^ *vb[_.,;]* *$|^ *verb[_.,;]* *$|^ *verbum[_.,;]* *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Tunwort (auch Zeitwort, Tätigkeitswort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
@@ -1384,6 +1399,18 @@ case $stufe_formatierung in
   else
     pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
   fi
+  
+  if [[ $stufe_einzeltabelle_odt -gt 0 ]];then 
+    if [[ -e "${datei_utf8_html_gram_tidy}" ]];then    
+      meldung "${GRUEN}Weiterverarbeitung: HTML → ODT (Einzeltabelle)${FORMAT_FREI} (${datei_utf8_html_gram_tidy_worttabelle_odt})"
+      
+      sed --regexp-extended --silent '/<table +id="Wortliste-Tabelle"/,/<\/table>/p' "${datei_utf8_html_gram_tidy}" \
+        | pandoc -f html -t odt -o "${datei_utf8_html_gram_tidy_worttabelle_odt}"
+    else
+    meldung  "${ORANGE}Kann ${datei_utf8_html_gram_tidy_worttabelle_odt} nicht erstellen, da ${datei_utf8_html_gram_tidy} nicht zu findene war ...${FORMAT_FREI}"
+    fi
+  fi
+  
   if [[ $stufe_markdown_telegram -gt 0 ]];then 
     case $stufe_verausgaben in
     0)  ;;
