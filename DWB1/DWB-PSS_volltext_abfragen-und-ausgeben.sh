@@ -1083,6 +1083,9 @@ case $stufe_formatierung in
   elif  (.gram|test("^ *[kc]onj[unction]*[.,;] *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Fügewort, Bindewort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
+  elif  (.gram|test("^ *dim[inutiv]*[.,;] *$"))
+  then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Verniedlichung, Verkleinerung</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  
   elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
   then "<tr><td>\(.Wort), die</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Nennwort, weiblich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.Wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]*\\? *$"))
@@ -1164,6 +1167,9 @@ elif (.gram|test("^ *n[_.,;]* *$"))
 
   elif  (.gram|test("^ *pron[omen]*[_.,;]* *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Vornennwort, Fürwort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+
+  elif  (.gram|test("^ *refl[.,;]* *$"))
+  then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ sich-bezogenes Tunwort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif (.gram|test("^ *subst. *$"))
   then "<tr><td>\(.Wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Nennwort (auch Dingwort, Hauptwort, Namenwort, Eigenwort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.Wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
