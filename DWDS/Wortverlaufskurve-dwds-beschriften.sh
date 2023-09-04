@@ -34,7 +34,9 @@ Wortverlaufskurve eines gegebenen Worts beschriften und als PNG abspeichern.
 Verwendbare Wahlmöglichkeiten:
 -h,    --Hilfe             Hilfetext dieses Programms ausgeben.
 -j,    --JPEG              Bild als JPEG ausgeben anstatt PNG.
-
+       --Suchcodeliste     Suchencode, der tatsächlich abgefragt wird, z.B. "{'behände','behende','behänd','behend'}"
+                           Falls mehrere Wortabfragen, dann Trennung durch Strichpünktlein ; (Semikolon)
+  
 -e,    --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
        --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
        --farb-frei         Meldungen ohne Farben ausgeben
@@ -114,6 +116,8 @@ parameter_abarbeiten() {
   
   stufe_verausgaben=0
   stufe_fehler_abschlussarbeiten=1
+  suchcodeliste=""
+  
   # To be able to pass two flags as -ab, instead of -a -b, some additional code would be needed.
   # echo "jpeg" | sed "s@.@[\U\0\L\0]@g"
   while :; do
@@ -123,7 +127,7 @@ parameter_abarbeiten() {
     -e | --Entwicklung) stufe_verausgaben=1 ;;
     --farb-frei) ANWEISUNG_FORMAT_FREI=1 ;;
     -[jJ] | --[Jj][Pp][Ee][Gg]) ausgabe_bild_format="jpeg"; ;;
-
+    --Suchcodeliste) suchcodeliste="${2-}"; shift; ;;
     #-p | --param) # example named parameter
     #  param="${2-}"
     #  shift
@@ -150,6 +154,13 @@ parameter_abarbeiten() {
   else
     meldung_abbruch "${ROT}Argumente nicht verstanden: ${ARGUMENTE[@]} (Abbruch).${FORMAT_FREI}"  
   fi
+  if [[ ${#suchcodeliste} -gt 0 ]];then  
+    IFS=$';' # überschreibe for-Trenner → Zeilenumbruch oder ;
+    read -a SUCHCODELISTE <<< "${suchcodeliste}"
+    unset IFS # alten for-Trenner zurück
+  else
+    SUCHCODELISTE=()
+  fi
   return 0
 }
 
@@ -165,6 +176,7 @@ case $stufe_verausgaben in
  1)
   meldung  "${ORANGE}ENTWICKLUNG - datum_heute_lang:     ${datum_heute_lang} ${FORMAT_FREI}"
   meldung  "${ORANGE}ENTWICKLUNG - WORTLISTEN_EINGABE:   ${WORTLISTEN_EINGABE[*]} ${FORMAT_FREI}"
+  meldung  "${ORANGE}ENTWICKLUNG - SUCHCODELISTE:        ${SUCHCODELISTE[*]} ${FORMAT_FREI}"
   meldung  "${ORANGE}ENTWICKLUNG - ausgabe_bild_format:  $ausgabe_bild_format ${FORMAT_FREI}"
   meldung  "${ORANGE}ENTWICKLUNG - stufe_verausgaben:    $stufe_verausgaben ${FORMAT_FREI}"
   ;;
@@ -179,7 +191,6 @@ esac
 # 
 # wget --user-agent="Mozilla" --quiet --show-progress --output-document="${dwds_datei}" \
 #   "https://www.dwds.de/r/plot/image/?v=hist&q=${wort_abfrage}" 
-# ZUTUN {'behände','behende','behänd','behend'} https://www.dwds.de/r/plot/image/?v=hist&q={%27behände%27,%27behende%27,%27behänd%27,%27behend%27}
 # 
 # convert -density 300 "${dwds_datei}" \
 #  -bordercolor '#0084C0' \
@@ -190,9 +201,16 @@ esac
 #  -font 'Liberation-Serif' \
 #  -annotate +10+0 "${wort_abfrage} (Wortverlaufskurve dwds.de)"  "${speicher_datei}"
 
-for wort_abfrage in "${WORTLISTEN_EINGABE[@]}"
+# for wort_abfrage in "${WORTLISTEN_EINGABE[@]}"
+for wort_index in "${!WORTLISTEN_EINGABE[@]}"
 do
-  wort_abfrage=$( echo "${wort_abfrage}" | xargs ) # Leerzeichen entfernen
+  wort_abfrage=$( echo "${WORTLISTEN_EINGABE[$wort_index]}" | xargs ) # Leerzeichen entfernen
+  
+  if [[ ${#SUCHCODELISTE[$wort_index]} -gt 0  ]];then
+    abfrage_code=$( echo "${SUCHCODELISTE[$wort_index]}" | xargs ) # Leerzeichen entfernen
+  else
+    abfrage_code=$wort_abfrage
+  fi
   if [[ "${wort_abfrage}" == "" ]];then
     meldung "Überspringen leere Worteingabe (${wort_abfrage}) …"  
     continue
@@ -207,7 +225,7 @@ do
 
     wget --user-agent="Mozilla" --quiet --show-progress \
        --output-document="${dwds_datei}" \
-      "https://www.dwds.de/r/plot/image/?v=hist&q=${wort_abfrage}" 
+      "https://www.dwds.de/r/plot/image/?v=hist&q=${abfrage_code}" 
 
     if [[ ${#wort_abfrage} -gt 14 ]];then
       y_splice=110; text_beschriftung="${wort_abfrage}\n(Wortverlaufskurve dwds.de)";
