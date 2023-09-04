@@ -179,6 +179,7 @@ esac
 # 
 # wget --user-agent="Mozilla" --quiet --show-progress --output-document="${dwds_datei}" \
 #   "https://www.dwds.de/r/plot/image/?v=hist&q=${wort_abfrage}" 
+# ZUTUN {'behände','behende','behänd','behend'} https://www.dwds.de/r/plot/image/?v=hist&q={%27behände%27,%27behende%27,%27behänd%27,%27behend%27}
 # 
 # convert -density 300 "${dwds_datei}" \
 #  -bordercolor '#0084C0' \
