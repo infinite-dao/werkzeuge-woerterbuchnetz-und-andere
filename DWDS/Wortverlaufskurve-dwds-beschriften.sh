@@ -34,7 +34,7 @@ Wortverlaufskurve eines gegebenen Worts beschriften und als PNG abspeichern.
 Verwendbare Wahlmöglichkeiten:
 -h,    --Hilfe             Hilfetext dieses Programms ausgeben.
 -j,    --JPEG              Bild als JPEG ausgeben anstatt PNG.
-       --Suchcodeliste     Suchencode, der tatsächlich abgefragt wird, z.B. "{'behände','behende','behänd','behend'}"
+       --Suchcode          Suchencode, der tatsächlich abgefragt wird, z.B. "{'behände','behende','behänd','behend'}"
                            Falls mehrere Wortabfragen, dann Trennung durch Strichpünktlein ; (Semikolon)
   
 -e,    --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
@@ -127,7 +127,7 @@ parameter_abarbeiten() {
     -e | --Entwicklung) stufe_verausgaben=1 ;;
     --farb-frei) ANWEISUNG_FORMAT_FREI=1 ;;
     -[jJ] | --[Jj][Pp][Ee][Gg]) ausgabe_bild_format="jpeg"; ;;
-    --Suchcodeliste) suchcodeliste="${2-}"; shift; ;;
+    --Suchcode) suchcodeliste="${2-}"; shift; ;;
     #-p | --param) # example named parameter
     #  param="${2-}"
     #  shift
