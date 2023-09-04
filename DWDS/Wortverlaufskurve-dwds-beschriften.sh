@@ -36,7 +36,7 @@ Verwendbare Wahlmöglichkeiten:
 -j,    --JPEG              Bild als JPEG ausgeben anstatt PNG.
        --Suchcode          Suchencode, der tatsächlich abgefragt wird, z.B. "{'behände','behende','behänd','behend'}"
                            Falls mehrere Wortabfragen, dann Trennung durch Strichpünktlein ; (Semikolon)
-  
+       --seit_1945
 -e,    --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
        --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
        --farb-frei         Meldungen ohne Farben ausgeben
@@ -115,6 +115,7 @@ parameter_abarbeiten() {
   abbruch_code_nummer=0
   
   stufe_verausgaben=0
+  stufe_seit_1945_suchen=0
   stufe_fehler_abschlussarbeiten=1
   suchcodeliste=""
   
@@ -127,6 +128,7 @@ parameter_abarbeiten() {
     -e | --Entwicklung) stufe_verausgaben=1 ;;
     --farb-frei) ANWEISUNG_FORMAT_FREI=1 ;;
     -[jJ] | --[Jj][Pp][Ee][Gg]) ausgabe_bild_format="jpeg"; ;;
+    --seit_1945) stufe_seit_1945_suchen=1 ;;
     --Suchcode) suchcodeliste="${2-}"; shift; ;;
     #-p | --param) # example named parameter
     #  param="${2-}"
@@ -215,18 +217,28 @@ do
     meldung "Überspringen leere Worteingabe (${wort_abfrage}) …"  
     continue
   else
-    # meldung "${GRUEN}Hole Wortverlaufskurve für „${wort_abfrage}“ …${FORMAT_FREI}"  
-    dwds_datei="${wort_abfrage} - Wortverlaufskurve DWDS.svg";
+    # meldung "${GRUEN}Hole Wortverlaufskurve für „${wort_abfrage}“ …${FORMAT_FREI}"
+  
+    if [[ $stufe_seit_1945_suchen -gt 0 ]];then
+    dwds_datei="${wort_abfrage} - Wortverlaufskurve DWDS seit 1945.svg";
+    else
+    dwds_datei="${wort_abfrage} - Wortverlaufskurve DWDS seit 1600.svg";
+    fi
     case $ausgabe_bild_format in 
       [Pp][Nn][Gg]) speicher_datei="${dwds_datei}.png"; ;;
       [Jj][Pp][Gg]|[Jj][Pp][Ee][Gg]) speicher_datei="${dwds_datei}.jpg"; ;;
       *) speicher_datei="${dwds_datei}.png"; ;;
     esac
 
-    wget --user-agent="Mozilla" --quiet --show-progress \
-       --output-document="${dwds_datei}" \
-      "https://www.dwds.de/r/plot/image/?v=hist&q=${abfrage_code}" 
-
+    if [[ $stufe_seit_1945_suchen -gt 0 ]];then
+      wget --user-agent="Mozilla" --quiet --show-progress \
+        --output-document="${dwds_datei}" \
+        "https://www.dwds.de/r/plot/image/?v=pres&q=${abfrage_code}" 
+    else
+      wget --user-agent="Mozilla" --quiet --show-progress \
+        --output-document="${dwds_datei}" \
+        "https://www.dwds.de/r/plot/image/?v=hist&q=${abfrage_code}" 
+    fi
     if [[ ${#wort_abfrage} -gt 14 ]];then
       y_splice=110; text_beschriftung="${wort_abfrage}\n(Wortverlaufskurve dwds.de)";
     else
