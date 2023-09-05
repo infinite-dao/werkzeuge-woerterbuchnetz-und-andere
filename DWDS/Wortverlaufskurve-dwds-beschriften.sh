@@ -62,9 +62,9 @@ abschlussarbeiten() {
   case "${stufe_fehler_abschlussarbeiten-0}" in 
   0) meldung "------------------------------${FORMAT_FREI}" ; ;;
   1)   
-    if [[ $(ls -A *Wortverlaufskurve*.svg* 2>/dev/null | head -c1 | wc -c) -gt 0 ]];then
+    if [[ $(ls -A *DWDS-Wortverlauf*.svg* 2>/dev/null | head -c1 | wc -c) -gt 0 ]];then
       echo -e "${GRUEN}Ende: Siehe Wortverlaufskurve(n) … ${FORMAT_FREI}"
-      ls -lA *Wortverlaufskurve*.svg*
+      ls -lA *DWDS-Wortverlauf*.svg* | grep --color=always --context=3 "${speicher_datei}"
     else
       echo -e "${ORANGE}Ende: Keine Wortverlaufskurven gefunden … ${FORMAT_FREI}"
     fi
@@ -118,6 +118,7 @@ parameter_abarbeiten() {
   stufe_seit_1945_suchen=0
   stufe_fehler_abschlussarbeiten=1
   suchcodeliste=""
+  abgefragte_zusatz_woerter=""
   
   # To be able to pass two flags as -ab, instead of -a -b, some additional code would be needed.
   # echo "jpeg" | sed "s@.@[\U\0\L\0]@g"
@@ -204,11 +205,18 @@ esac
 #  -annotate +10+0 "${wort_abfrage} (Wortverlaufskurve dwds.de)"  "${speicher_datei}"
 
 # for wort_abfrage in "${WORTLISTEN_EINGABE[@]}"
+n_woerter=${#WORTLISTEN_EINGABE[@]}
+i_wort=1
+
 for wort_index in "${!WORTLISTEN_EINGABE[@]}"
 do
+  if [[ $n_woerter -gt 1 ]];then
+  meldung "${i_wort} von ${n_woerter} Wörtern abfragen …"
+  fi
   wort_abfrage=$( echo "${WORTLISTEN_EINGABE[$wort_index]}" | xargs ) # Leerzeichen entfernen
+  hat_such_code_abfrage=$([ ${#SUCHCODELISTE[$wort_index]} -gt 0 ] && echo 1 || echo 0 )
   
-  if [[ ${#SUCHCODELISTE[$wort_index]} -gt 0  ]];then
+  if [[ ${hat_such_code_abfrage} -gt 0  ]];then
     abfrage_code=$( echo "${SUCHCODELISTE[$wort_index]}" | xargs ) # Leerzeichen entfernen
   else
     abfrage_code=$wort_abfrage
@@ -219,10 +227,13 @@ do
   else
     # meldung "${GRUEN}Hole Wortverlaufskurve für „${wort_abfrage}“ …${FORMAT_FREI}"
   
+    if [[ ${hat_such_code_abfrage} -gt 0 ]]; then
+      abgefragte_zusatz_woerter=$( echo "$abfrage_code" | sed --regexp-extended  "y@{}@()@; s@' *, *'@, @g; s@[']@@g; s@^@ @" )
+    fi
     if [[ $stufe_seit_1945_suchen -gt 0 ]];then
-    dwds_datei="${wort_abfrage} - Wortverlaufskurve DWDS seit 1945.svg";
+    dwds_datei="${wort_abfrage}${abgefragte_zusatz_woerter} - DWDS-Wortverlauf seit 1946 (Zeitungen).svg";
     else
-    dwds_datei="${wort_abfrage} - Wortverlaufskurve DWDS seit 1600.svg";
+    dwds_datei="${wort_abfrage}${abgefragte_zusatz_woerter} - DWDS-Wortverlauf seit 1600 (DTA,DWDS).svg";
     fi
     case $ausgabe_bild_format in 
       [Pp][Nn][Gg]) speicher_datei="${dwds_datei}.png"; ;;
@@ -239,22 +250,28 @@ do
         --output-document="${dwds_datei}" \
         "https://www.dwds.de/r/plot/image/?v=hist&q=${abfrage_code}" 
     fi
-    if [[ ${#wort_abfrage} -gt 14 ]];then
-      y_splice=110; text_beschriftung="${wort_abfrage}\n(Wortverlaufskurve dwds.de)";
+    if [[ $stufe_seit_1945_suchen -gt 0 ]];then
+      text_beschriftung="${wort_abfrage} (Wortverlauf dwds.de: Zeitungen 1946…)";
     else
-      y_splice=55; text_beschriftung="${wort_abfrage} (Wortverlaufskurve dwds.de)"
+      text_beschriftung="${wort_abfrage} (Wortverlauf dwds.de: DTA+DWDS)"
     fi
-      
-    convert -density 300 "${dwds_datei}" \
+    if [[ ${#abgefragte_zusatz_woerter} -gt 0 ]];then
+      text_beschriftung="${text_beschriftung}\n${abgefragte_zusatz_woerter//,/+}"
+    fi    
+    magick \
+      -density 300 \
+      "${dwds_datei}" \
+      -size %wx \
     -bordercolor '#0084C0' \
     -border 5 \
-    -gravity South \
-    -splice 0x${y_splice} \
-    -gravity southwest \
     -font 'Liberation-Serif' \
-    -annotate +10+0 "${text_beschriftung}"  "${speicher_datei}";
+    -pointsize 10 \
+      caption:"$text_beschriftung" \
+          -gravity southwest -append \
+    "${speicher_datei}";
     
     rm "${dwds_datei}";
+    i_wort=$(( i_wort + 1 ))
   fi
 done
 
