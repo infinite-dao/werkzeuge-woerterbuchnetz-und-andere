@@ -53,7 +53,8 @@ Verwendbare Wahlmöglichkeiten:
 
 -H,    --HTML             HTML Datei erzeugen
 -O,    --ODT              ODT Datei (für LibreOffice) erzeugen
-       --Einzeltabelle    die Wörtertabelle allein in eine gesonderte Datei speichern
+       --Liste_Einzelabschnitte
+                          Wörtertabelle als Wörterliste in Einzelabschnitte umschreiben (als Markdown-Text)
 -b,    --behalte_Dateien  Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
 -s,    --stillschweigend  Kaum Meldungen ausgeben
        --ohne             ohne Wörter (Wortliste z.B. --ohne 'aufstand, verstand' bei --Lemmaabfrage '*stand*')
@@ -106,6 +107,10 @@ aufraeumen() {
       case $stufe_fundstellen in 1)
         if [[ -e "${datei_diese_wbnetzkwiclink-}" ]];then                      rm -- "${datei_diese_wbnetzkwiclink}"; fi
       esac
+      case $stufe_einzeltabelle_in_einzelabschtitte in 1)
+        if [[ -e "${datei_utf8_html_gram_tidy_worttabelle_odt-}" ]];then rm -- "${datei_utf8_html_gram_tidy_worttabelle_odt}"; fi
+      esac
+      
     fi
     case ${stufe_verausgaben:-0} in
     0)  ;;
@@ -157,7 +162,8 @@ dateivariablen_bereitstellen() {
   datei_utf8_html_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8_Zwischenablage_Wortliste+gram.html"
   datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html"
     datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8_Wortliste+gram_tidy.html.log"
-  datei_utf8_html_gram_tidy_worttabelle_odt="${datei_utf8_html_gram_tidy%.*}_einzeltabelle.odt"
+  datei_utf8_html_gram_tidy_worttabelle_odt="${datei_utf8_html_gram_tidy%.*}_Einzeltabelle.odt"
+  datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte="${datei_utf8_html_gram_tidy%.*}_Einzelabschnitte.md"
   datei_utf8_odt_gram="${diese_json_speicher_datei%.*}_Wortliste+gram.odt"
     datei_diese_wbnetzkwiclink="${datei_utf8_html_zwischenablage_gram}.wbnetzkwiclink.txt"
 
@@ -166,18 +172,18 @@ dateivariablen_bereitstellen() {
 parameter_abarbeiten() {
   # default values of variables set from params
   case $(date '+%m') in
-  01|1) datum_heute_lang=$(date '+%_d. Wintermonat (%B) %Y' | sed 's@^ *@@; s@Januar@& ~ röm: Gott Janus@;') ;;
-  02|2) datum_heute_lang=$(date '+%_d. Hornung (%B) %Y'     | sed 's@^ *@@; s@Februar@& ~ lat: februare „reinigen"@; ') ;;
-  03|3) datum_heute_lang=$(date '+%_d. Lenzmonat (%B) %Y'   | sed 's@^ *@@; s@März@& ~ röm: Gott Mars@; ') ;;
-  04|4) datum_heute_lang=$(date '+%_d. Ostermonat (%B) %Y'  | sed 's@^ *@@; s@April@& ~ lat: Aprilis@;') ;;
-  05|5) datum_heute_lang=$(date '+%_d. Wonnemonat (%B) %Y'  | sed 's@^ *@@; s@Mai@& ~ röm: Maius o. Göttin Maia@;') ;;
-  06|6) datum_heute_lang=$(date '+%_d. Brachmonat (%B) %Y'  | sed 's@^ *@@; s@Juni@& ~ röm: Göttin Juno@; ') ;;
-  07|7) datum_heute_lang=$(date '+%_d. Heumonat (%B) %Y'    | sed 's@^ *@@; s@Juli@& ~ röm: Julius (Caesar)@; ') ;;
-  08|8) datum_heute_lang=$(date '+%_d. Erntemonat (%B) %Y'  | sed 's@^ *@@; s@August@& ~ röm: Kaiser Augustus@; ') ;;
-  09|9) datum_heute_lang=$(date '+%_d. Herbstmonat (%B) %Y' | sed 's@^ *@@; s@September@& ~ lat: Septimus@; ') ;;
-    10) datum_heute_lang=$(date '+%_d. Weinmonat (%B) %Y'   | sed 's@^ *@@; s@Oktober@& ~ lat: Octavus@; ') ;;
-    11) datum_heute_lang=$(date '+%_d. Nebelmonat (%B) %Y'  | sed 's@^ *@@; s@November@& ~ lat: Nonus@; ') ;;
-    12) datum_heute_lang=$(date '+%_d. Weihemonat (%B) %Y'  | sed 's@^ *@@; s@Dezember@& ~ lat: Decimus@; ') ;;
+  01|1) datum_heute_lang=$(date '+%_d. im Wintermonat (%B) %Y' | sed 's@^ *@@; s@Januar@& ~ röm: Gott Janus@;') ;;
+  02|2) datum_heute_lang=$(date '+%_d. im Hornung (%B) %Y'     | sed 's@^ *@@; s@Februar@& ~ lat: februare „reinigen"@; ') ;;
+  03|3) datum_heute_lang=$(date '+%_d. im Lenzmonat (%B) %Y'   | sed 's@^ *@@; s@März@& ~ röm: Gott Mars@; ') ;;
+  04|4) datum_heute_lang=$(date '+%_d. im Ostermonat (%B) %Y'  | sed 's@^ *@@; s@April@& ~ lat: Aprilis@;') ;;
+  05|5) datum_heute_lang=$(date '+%_d. im Wonnemonat (%B) %Y'  | sed 's@^ *@@; s@Mai@& ~ röm: Maius o. Göttin Maia@;') ;;
+  06|6) datum_heute_lang=$(date '+%_d. im Brachmonat (%B) %Y'  | sed 's@^ *@@; s@Juni@& ~ röm: Göttin Juno@; ') ;;
+  07|7) datum_heute_lang=$(date '+%_d. im Heumonat (%B) %Y'    | sed 's@^ *@@; s@Juli@& ~ röm: Julius (Caesar)@; ') ;;
+  08|8) datum_heute_lang=$(date '+%_d. im Erntemonat (%B) %Y'  | sed 's@^ *@@; s@August@& ~ röm: Kaiser Augustus@; ') ;;
+  09|9) datum_heute_lang=$(date '+%_d. im Herbstmonat (%B) %Y' | sed 's@^ *@@; s@September@& ~ lat: Septimus, 7@; ') ;;
+    10) datum_heute_lang=$(date '+%_d. im Weinmonat (%B) %Y'   | sed 's@^ *@@; s@Oktober@& ~ lat: Octavus, 8@; ') ;;
+    11) datum_heute_lang=$(date '+%_d. im Nebelmonat (%B) %Y'  | sed 's@^ *@@; s@November@& ~ lat: Nonus, 9@; ') ;;
+    12) datum_heute_lang=$(date '+%_d. im Weihemonat (%B) %Y'  | sed 's@^ *@@; s@Dezember@& ~ lat: Decimus, 10@; ') ;;
   esac
   ANWEISUNG_FORMAT_FREI=''
   abbruch_code_nummer=0
@@ -186,7 +192,8 @@ parameter_abarbeiten() {
   stufe_formatierung=0
   stufe_fundstellen=0
   stufe_textauszug=0
-  stufe_einzeltabelle_odt=0
+  # VERALTET: stufe_einzeltabelle_odt=0 # wird ersetzt mit $stufe_einzeltabelle_in_einzelabschtitte
+  stufe_einzeltabelle_in_einzelabschtitte=0
   stufe_verausgaben=1
   # Grundlage: rein Text, und mit Grammatik
   # zusätzlich
@@ -210,11 +217,11 @@ parameter_abarbeiten() {
   # To be able to pass two flags as -ab, instead of -a -b, some additional code would be needed.
   while :; do
     case "${1-}" in
-    -h | --[Hh]ilfe) stufe_aufraeumen_aufhalten=1; nutzung ;;
+    -h | --[Hh][Ii][Ll][Ff][Ee]) stufe_aufraeumen_aufhalten=1; nutzung ;;
     --debug|--entwickeln) set -x ;;
-    -b | --behalte_Dateien) stufe_dateienbehalten=1 ;;
+    -b | --behalte_[Dd]ateien) stufe_dateienbehalten=1 ;;
     --farb-frei) ANWEISUNG_FORMAT_FREI=1 ;;
-    -F | --Fundstellen) stufe_fundstellen=1 ;;
+    -F | --[Ff]undstellen) stufe_fundstellen=1 ;;
     -s | --stillschweigend) stufe_verausgaben=0 ;;
     -[lL] | --[lL]emmaabfrage)  # Parameter
       lemmaabfrage=$( echo "${2-}" | sed --regexp-extended ' s@^[[:blank:]]+@@; s@[[:blank:]]+$@@; ' )
@@ -309,8 +316,11 @@ parameter_abarbeiten() {
       esac
     ;;
     --[Ee][Ii][Nn][Zz][Ee][Ll][Tt][Aa][Bb][Ee][Ll][Ll][Ee])
+      stufe_einzeltabelle_in_einzelabschtitte=1;
+    ;;
+    --[Ll][Ii][Ss][Tt][Ee]_[Ee][Ii][Nn][Zz][Ee][Ll][Aa][Bb][Ss][Cc][Hh][Nn][Ii][Tt][Tt][Ee])
       # Stufe: 0 oder 1
-      stufe_einzeltabelle_odt=1;
+      stufe_einzeltabelle_in_einzelabschtitte=1;
     ;;
 
     #-p | --param) # example named parameter
@@ -779,6 +789,13 @@ case $stufe_formatierung in
   elif (.gram|test("^ *adj[ectiv]*[_.,;]* *$|^ *adj[ectiv]*[_.,;]* adj[ectiv]*[_.,;]* *$"))
   then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
+  elif (.gram|test("^ *adj[ectiv]*[_.,;]* f[.,;]*$"))
+  then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Eigenschaftswort, Beiwort (mit Beispiel-Nennwort weiblich)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *adj[ectiv]*[_.,;]* m[.,;]*$"))
+  then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Eigenschaftswort, Beiwort (mit Beispiel-Nennwort männlich)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  elif (.gram|test("^ *adj[ectiv]*[_.,;]* n[.,;]*$"))
+  then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Eigenschaftswort, Beiwort (mit Beispiel-Nennwort sächlich)</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  
   elif (.gram|test("^ *adj[ectiv]*[_.,;]*\\?[_.,;]* *$"))
   then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ ?Eigenschaftswort, Beiwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
@@ -786,6 +803,7 @@ case $stufe_formatierung in
   then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Eigenschaftswort, Beiwort und Umstandswort, Zuwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif  (.gram|test("^ *adv[erb]*[_.,;]+ *$"))
   then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Umstandswort, Zuwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+
 
   elif  (.gram|test("^ *[kc]onj[unction]*[.,;] *$"))
   then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Fügewort, Bindewort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
@@ -808,6 +826,8 @@ case $stufe_formatierung in
   elif (.gram|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
   then "<tr><td>\(.Wort), die (o./u.a.: der, das)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort, weiblich vermutlich – o./u.a. männlich, sächlich – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
+  elif (.gram|test("^ *f[_.,;]* *subst. *$"))
+  then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort, weiblich – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +nomen +actionis[.]* *$"))
   then "<tr><td>\(.Wort), die</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort einer Handlung, weiblich – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]* +nomen +agentis[.]* *$"))
@@ -1086,12 +1106,12 @@ case $stufe_formatierung in
     case $janein in
       [jJ]|[jJ][aA])
         echo "  überschreibe ODT …"
-        pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}" # siehe ~/.pandoc/reference.odt
+        pandoc --from html --to odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}" # siehe ~/.pandoc/reference.odt
       ;;
       [nN]|[nN][eE][iI][nN])
         echo " sichere ${datei_sicherung} …";
         mv "${datei_utf8_odt_gram}" "${datei_sicherung}"
-        pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
+        pandoc --from html --to odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
       ;;
       *)
         if [[ -z ${janein// /} ]];then
@@ -1103,16 +1123,38 @@ case $stufe_formatierung in
       ;;
     esac
   else
-    pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
+    pandoc --from html --to odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
   fi
-  if [[ $stufe_einzeltabelle_odt -gt 0 ]];then 
+  if [[ $stufe_einzeltabelle_in_einzelabschtitte -gt 0 ]];then 
     if [[ -e "${datei_utf8_html_gram_tidy}" ]];then    
-      meldung "${GRUEN}Weiterverarbeitung: HTML → ODT (Einzeltabelle)${FORMAT_FREI} (${datei_utf8_html_gram_tidy_worttabelle_odt})"
+            meldung "${GRUEN}Weiterverarbeitung: HTML → ODT → MD (Einzeltabelle → Einzelabschnitte)${FORMAT_FREI} (${datei_utf8_html_gram_tidy_worttabelle_odt})"
       
       sed --regexp-extended --silent '/<table +id="Wortliste-Tabelle"/,/<\/table>/p' "${datei_utf8_html_gram_tidy}" \
-        | pandoc -f html -t odt -o "${datei_utf8_html_gram_tidy_worttabelle_odt}"
+        | pandoc --from html --to odt --output "${datei_utf8_html_gram_tidy_worttabelle_odt}" \
+        && pandoc --to gfm "${datei_utf8_html_gram_tidy_worttabelle_odt}" \
+          | awk --field-separator='|' 'BEGIN { 
+          # OFS="|"; 
+          sprachkunst=""; 
+        } 
+        function ltrim(s) { sub(/^[ \t\r\n]+/, "", s); return s };
+        function rtrim(s) { sub(/[ \t\r\n]+$/, "", s); return s };
+        function trim(s) { return rtrim(ltrim(s)); };
+        FNR > 2 {
+          if (sprachkunst == $4) { print trim($2)
+          } else { 
+            if (length(sprachkunst) > 0 ) {
+              print "\n# " trim($4) "\n\n" trim($2) 
+            } else {
+              print "\n# keine Angabe der Sprachkunst " trim($4) "\n\n" trim($2) 
+            }
+          } ;
+        
+        sprachkunst=$4; 
+        } 
+        ' > "${datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte}"
+
     else
-    meldung  "${ORANGE}Kann ${datei_utf8_html_gram_tidy_worttabelle_odt} nicht erstellen, da ${datei_utf8_html_gram_tidy} nicht zu findene war ...${FORMAT_FREI}"
+    meldung  "${ORANGE}Kann ${datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte} nicht erstellen, da ${datei_utf8_html_gram_tidy} nicht zu finden war ...${FORMAT_FREI}"
     fi
   fi
 ;;
