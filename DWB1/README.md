@@ -57,7 +57,7 @@ Eine einfache Abfrage durchführen, alle Wörter die in-zwischen „…wohl…�
 # -rw-r--r-- 1 andreas users 23965 19. Sep 11:51 …wohl…_Lemmata-Abfrage-DWB1_20230919-utf8_nur-Wörter+gram.txt
 # -rw-r--r-- 1 andreas users 16877 19. Sep 11:51 …wohl…_Lemmata-Abfrage-DWB1_20230919-utf8_nur-Wörter.txt
 ```
-Es ergeben sich bei `--Lemmaabfrage "*wohl*"` also Wortlisten in denen _wohl_ mittendrinn steht, Beispiele:
+Es ergeben sich bei `--Lemmaabfrage "*wohl*"` also Wortlisten in denen _wohl_ inmitten steht, Beispiele:
 
 - hoch*wohl*ehrwürdig; … Grade*wohl*, das; … Volks*wohl*leben, das; *wohl*beschaffen; … *wohl*lauten;
 
