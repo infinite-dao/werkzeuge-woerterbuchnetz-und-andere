@@ -35,7 +35,7 @@ nutzung() {
 
   diese_nutzung=$( cat <<NUTZUNG
 Nutzung:
-  ./$(basename "${BASH_SOURCE[0]}") [-h] [-s] [-H] [-O] -l "*fahren*"
+  ./$(basename "${BASH_SOURCE[0]}") [-h] [-s] [-H] [-O] -l "*wohl*"
 
 Ein Wort aus der Programm-Schnitt-Stelle (PSS, engl. API) des Grimm-Wörterbuchs
 DWB abfragen und daraus Listen-Textdokumente erstellen. Im Normalfall werden erzeugt:
@@ -1140,16 +1140,16 @@ case $stufe_formatierung in
         function rtrim(s) { sub(/[ \t\r\n]+$/, "", s); return s };
         function trim(s) { return rtrim(ltrim(s)); };
         FNR > 2 {
-          if (sprachkunst == $4) { print trim($2)
+          if (sprachkunst == $3) { print trim($2)
           } else { 
             if (length(sprachkunst) > 0 ) {
-              print "\n# " trim($4) "\n\n" trim($2) 
+              print "\n# " trim($3) "\n\n" trim($2) 
             } else {
-              print "\n# keine Angabe der Sprachkunst " trim($4) "\n\n" trim($2) 
+              print "\n# keine Angabe der Sprachkunst " trim($3) "\n\n" trim($2) 
             }
           } ;
         
-        sprachkunst=$4; 
+        sprachkunst=$3; 
         } 
         ' > "${datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte}"
 
