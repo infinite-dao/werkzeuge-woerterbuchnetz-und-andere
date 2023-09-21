@@ -1128,30 +1128,55 @@ case $stufe_formatierung in
   if [[ $stufe_einzeltabelle_in_einzelabschtitte -gt 0 ]];then 
     if [[ -e "${datei_utf8_html_gram_tidy}" ]];then    
             meldung "${GRUEN}Weiterverarbeitung: HTML → ODT → MD (Einzeltabelle → Einzelabschnitte)${FORMAT_FREI} (${datei_utf8_html_gram_tidy_worttabelle_odt})"
-      
-      sed --regexp-extended --silent '/<table +id="Wortliste-Tabelle"/,/<\/table>/p' "${datei_utf8_html_gram_tidy}" \
-        | pandoc --from html --to odt --output "${datei_utf8_html_gram_tidy_worttabelle_odt}" \
-        && pandoc --to gfm "${datei_utf8_html_gram_tidy_worttabelle_odt}" \
-          | awk --field-separator='|' 'BEGIN { 
-          # OFS="|"; 
-          sprachkunst=""; 
-        } 
-        function ltrim(s) { sub(/^[ \t\r\n]+/, "", s); return s };
-        function rtrim(s) { sub(/[ \t\r\n]+$/, "", s); return s };
-        function trim(s) { return rtrim(ltrim(s)); };
-        FNR > 2 {
-          if (sprachkunst == $3) { print trim($2)
-          } else { 
-            if (length(sprachkunst) > 0 ) {
-              print "\n# " trim($3) "\n\n" trim($2) 
-            } else {
-              print "\n# keine Angabe der Sprachkunst " trim($3) "\n\n" trim($2) 
-            }
-          } ;
-        
-        sprachkunst=$3; 
-        } 
-        ' > "${datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte}"
+      if [[ ${stufe_fundstellen} -gt 0 ]];then
+        sed --regexp-extended --silent '/<table +id="Wortliste-Tabelle"/,/<\/table>/p' "${datei_utf8_html_gram_tidy}" \
+          | pandoc --from html --to odt --output "${datei_utf8_html_gram_tidy_worttabelle_odt}" \
+          && pandoc --to gfm "${datei_utf8_html_gram_tidy_worttabelle_odt}" \
+            | awk --field-separator='|' 'BEGIN { 
+            # OFS="|"; 
+            sprachkunst=""; 
+          } 
+          function ltrim(s) { sub(/^[ \t\r\n]+/, "", s); return s };
+          function rtrim(s) { sub(/[ \t\r\n]+$/, "", s); return s };
+          function trim(s) { return rtrim(ltrim(s)); };
+          FNR > 2 {
+            if (sprachkunst == $4) { print trim($2)
+            } else { 
+              if (length(sprachkunst) > 0 ) {
+                print "\n# " trim($4) "\n\n" trim($2) 
+              } else {
+                print "\n# keine Angabe der Sprachkunst " trim($4) "\n\n" trim($2) 
+              }
+            } ;
+          
+          sprachkunst=$4; 
+          } 
+          ' > "${datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte}"
+      else 
+        sed --regexp-extended --silent '/<table +id="Wortliste-Tabelle"/,/<\/table>/p' "${datei_utf8_html_gram_tidy}" \
+          | pandoc --from html --to odt --output "${datei_utf8_html_gram_tidy_worttabelle_odt}" \
+          && pandoc --to gfm "${datei_utf8_html_gram_tidy_worttabelle_odt}" \
+            | awk --field-separator='|' 'BEGIN { 
+            # OFS="|"; 
+            sprachkunst=""; 
+          } 
+          function ltrim(s) { sub(/^[ \t\r\n]+/, "", s); return s };
+          function rtrim(s) { sub(/[ \t\r\n]+$/, "", s); return s };
+          function trim(s) { return rtrim(ltrim(s)); };
+          FNR > 2 {
+            if (sprachkunst == $3) { print trim($2)
+            } else { 
+              if (length(sprachkunst) > 0 ) {
+                print "\n# " trim($3) "\n\n" trim($2) 
+              } else {
+                print "\n# keine Angabe der Sprachkunst " trim($3) "\n\n" trim($2) 
+              }
+            } ;
+          
+          sprachkunst=$3; 
+          } 
+          ' > "${datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte}"
+      fi
 
     else
     meldung  "${ORANGE}Kann ${datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte} nicht erstellen, da ${datei_utf8_html_gram_tidy} nicht zu finden war ...${FORMAT_FREI}"
