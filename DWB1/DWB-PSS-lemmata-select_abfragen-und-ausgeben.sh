@@ -544,6 +544,8 @@ if [[ -e "${json_speicher_datei}" ]];then
     then "?das \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
     then "das (o./u.a. der) \(.Wort);"
+    elif (.gram|test("^ *n[_.,;]* +n[_.,;]* *$"))
+    then "das (o./u.a. das) \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
     then "das (o./u.a. die) \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
@@ -675,6 +677,8 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   then "?das \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]* +m[_.,;]* *$"))
   then "das (o./u.a. der) \(.Wort) (\(.gram));"
+  elif (.gram|test("^ *n[_.,;]* +n[_.,;]* *$"))
+  then "das (o./u.a. das) \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]* +f[_.,;]* *$"))
   then "das (o./u.a. die) \(.Wort) (\(.gram));"
   elif (.gram|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
@@ -708,7 +712,7 @@ esac
 
 
 
-html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-und-andere/tree/main/DWB1#dwb-pss_lemmata-select_abfragen-und-ausgebensh\"><code>DWB-PSS_lemmata-select_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
+html_technischer_hinweis_zur_verarbeitung="<p>Für die Techniker: Die Abfrage wurde mit <a href=\"https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-und-andere/tree/main/DWB1#stichwörter-abfragen\"><code>DWB-PSS_lemmata-select_abfragen-und-ausgeben.sh</code> (siehe GitHub)</a> duchgeführt.</p>\n";
 case $stufe_formatierung in
  0)  ;;
  1|2|3)
