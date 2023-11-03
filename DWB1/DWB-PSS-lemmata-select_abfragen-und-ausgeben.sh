@@ -187,6 +187,8 @@ parameter_abarbeiten() {
   esac
   ANWEISUNG_FORMAT_FREI=''
   abbruch_code_nummer=0
+  anzahl_verarbeitete_eintraege=0
+  anzahl_alle_eintraege=0
   stufe_aufraeumen_aufhalten=0
   stufe_dateienbehalten=0
   stufe_formatierung=0
@@ -355,9 +357,9 @@ parameter_abarbeiten() {
 
   zusatzbemerkungen_htmldatei=$([[ "${ohne_woerterliste_regex}" == "" ]] && printf "" || printf "; in der Liste wurden folgende Wortverbindungen bewußt entfernt, mit „${ohne_woerterliste}“.")
   
-  zusatzbemerkungen_textdatei="Die Liste ist vorgruppiert geordnet nach den Grammatik-Angaben von Grimm,\nd.h. die Wörter sind nach Wortarten gruppiert: ohne Grammatik-Angabe, Eigenschaftswörter (Adjektive),\nNennwörter (Substantive), Tunwörter usw.."
-  zusatzbemerkungen_textdatei=$([[ "${ohne_woerterliste_regex}" == "" ]] && printf "${zusatzbemerkungen_textdatei}" || printf "${zusatzbemerkungen_textdatei}\n\nIn der Liste wurden folgende Wortverbindungen bewußt entfernt, mit\n„${ohne_woerterliste_text}“\n.")
-  
+  zusatzbemerkungen_textdatei="Die Liste ist vorgruppiert geordnet nach den Grammatik-Angaben von Grimm, d.h. die Wörter sind nach Wortarten gruppiert: ohne Grammatik-Angabe, Eigenschaftswörter (Adjektive), Nennwörter (Substantive), Tunwörter usw.."
+  zusatzbemerkungen_textdatei=$([[ "${ohne_woerterliste_regex}" == "" ]] && printf "${zusatzbemerkungen_textdatei}" || printf "${zusatzbemerkungen_textdatei}\n\nIn der Liste wurden folgende Wortverbindungen bewußt entfernt, mit\n„${ohne_woerterliste_text}“.")
+  zusatzbemerkungen_textdatei=$(echo "${zusatzbemerkungen_textdatei}" | fold --spaces)
   
   return 0
 }
@@ -429,15 +431,17 @@ case $stufe_verausgaben in
 esac
 
 
-case $stufe_verausgaben in
- 0)  ;;
- 1) 
-  printf "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} %s Ergebnisse …\n" $(jq '.|length' "${json_speicher_datei}")
-  meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text})" 
- ;;
-esac
 
 if [[ -e "${json_speicher_datei}" ]];then
+    anzahl_alle_eintraege=$(jq '.|length' "${json_speicher_datei}")
+    case $stufe_verausgaben in
+    0)  ;;
+    1) 
+      printf "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} %s Ergebnisse …\n" ${anzahl_alle_eintraege}
+      meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text})" 
+    ;;
+    esac
+    
     cat "${json_speicher_datei}" | jq  --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
     -r '
   def woerterbehalten: ["DWB1", "DWB2"];
@@ -575,7 +579,9 @@ fi
 # als reine Textausgabe (sortiert nach Grammatik, Wort)
 case $stufe_verausgaben in
  0)  ;;
- 1) meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text_gram})" ;;
+ 1) 
+ meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} (${datei_utf8_reiner_text_gram})" 
+ ;;
 esac
 
 cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
@@ -710,6 +716,7 @@ end
   ' | sed -r 's@"@@g; ' | uniq > "${datei_utf8_text_zwischenablage_gram}"
 
 if [[ -e "${datei_utf8_text_zwischenablage_gram}" ]];then
+  anzahl_verarbeitete_eintraege=$(grep --count --invert-match '^\s*$' "${datei_utf8_text_zwischenablage_gram}")
   # (3.1.) Sonderzeichen, Umlaute dekodieren in lesbare Zeichen als UTF8
   printf "%s\n\n%s\n\n" "${titel_text}" "${zusatzbemerkungen_textdatei}" > "${datei_utf8_reiner_text_gram}" \
   && pandoc --from html --to plain --wrap=preserve "${datei_utf8_text_zwischenablage_gram}" >> "${datei_utf8_reiner_text_gram}"
@@ -717,12 +724,39 @@ else
   meldung_abbruch "${ORANGE}Textdatei '${datei_utf8_reiner_text_gram}' fehlt oder konnte nicht erstellt werden (Abbruch)${FORMAT_FREI}"
 fi
 
+case $stufe_verausgaben in
+ 0)  ;;
+ 1) 
+ meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} ${anzahl_verarbeitete_eintraege} Wörter aus ${anzahl_alle_eintraege} Ergebnissen" 
+ ;;
+esac
 
 case $lemma_text in
-…*…) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Abfrage <i>${lemma_text}</i> zu tun haben)${zusatzbemerkungen_htmldatei-.}" ;;
-…*)  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch Wörter enthalten sein, die nichts mit der Endung <i>$lemma_text</i> gemein haben)${zusatzbemerkungen_htmldatei-.}" ;;
-*…)  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang <i>${lemma_text}</i> gemein haben)${zusatzbemerkungen_htmldatei-.}" ;;
-*) bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Abfrage <i>${lemma_text}</i> zu tun haben)${zusatzbemerkungen_htmldatei-.}" ;;
+…*…) if [[ -z "${ohne_woerterliste_regex-}" ]];then
+  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Abfrage <i>${lemma_text}</i> zu tun haben)${zusatzbemerkungen_htmldatei-.}"
+  else
+  bearbeitungstext_html="Liste leicht überarbeitet (es können dennoch Wörter enthalten sein, die nichts mit der Abfrage <i>${lemma_text}</i> zu tun haben)${zusatzbemerkungen_htmldatei-.}"
+  fi
+  ;;
+…*)  if [[ -z "${ohne_woerterliste_regex-}" ]];then
+  bearbeitungstext_html="Liste noch nicht übearbeitet (es können auch Wörter enthalten sein, die nichts mit der Endung <i>$lemma_text</i> gemein haben)${zusatzbemerkungen_htmldatei-.}" 
+  else
+  bearbeitungstext_html="Liste leicht übearbeitet (es können dennoch Wörter enthalten sein, die nichts mit der Endung <i>$lemma_text</i> gemein haben)${zusatzbemerkungen_htmldatei-.}" 
+  fi
+  ;;
+*…)  if [[ -z "${ohne_woerterliste_regex-}" ]];then
+  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit dem Wortanfang <i>${lemma_text}</i> gemein haben)${zusatzbemerkungen_htmldatei-.}" 
+  else
+  bearbeitungstext_html="Liste leicht überarbeitet (es können dennoch Wörter enthalten sein, die nichts mit dem Wortanfang <i>${lemma_text}</i> gemein haben)${zusatzbemerkungen_htmldatei-.}" 
+  fi
+  ;;
+  
+*)  if [[ -z "${ohne_woerterliste_regex-}" ]];then
+  bearbeitungstext_html="Liste noch nicht überarbeitet (es können auch Wörter enthalten sein, die nichts mit der Abfrage <i>${lemma_text}</i> zu tun haben)${zusatzbemerkungen_htmldatei-.}" 
+  else
+  bearbeitungstext_html="Liste leicht überarbeitet (es können dennoch Wörter enthalten sein, die nichts mit der Abfrage <i>${lemma_text}</i> zu tun haben)${zusatzbemerkungen_htmldatei-.}" 
+  fi
+;;
 esac
 
 
