@@ -1100,7 +1100,7 @@ $ a\</tbody><tfoot><tr><td colspan=\"5\" style=\"border-top:2px solid gray;borde
       esac
       # echo "ENTWICKLUNG ${wbnetzkwiclink_regex_suchadresse}"
       echo "»${fundstelle_text}«" | sed --regexp-extended 's@»([ ;.:]+)@»…\1@g; s@«@…«@' > "${datei_diese_fundstelle}"
-      # sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
+      # sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB1-und-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
       sed --in-place "/${wbnetzkwiclink_regex_suchadresse}/r ${datei_diese_fundstelle}" "${datei_utf8_html_zwischenablage_gram}"
       sed --in-place "/${wbnetzkwiclink_regex_suchadresse}/d" "${datei_utf8_html_zwischenablage_gram}"
       rm -- "${datei_diese_fundstelle}"
@@ -1108,8 +1108,8 @@ $ a\</tbody><tfoot><tr><td colspan=\"5\" style=\"border-top:2px solid gray;borde
       i_textverknuepfung=$(( $i_textverknuepfung + 1 ))
     done
     # Falls HTML-Datei mit Tabelle vorhanden ist
-    if [[ -e "Abkürzungen-GRIMM-Tabelle-DWB2.html"  ]];then
-    sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
+    if [[ -e "Abkürzungen-GRIMM-Tabelle-DWB1-und-DWB2.html"  ]];then
+    sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB1-und-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
 
     sed --in-place 's@<!-- *hierher Abkürzungsverzeichnis einfügen *-->@<p>Siehe auch das <a class="local" href="#sec-GRIMM_Abkuerzungen">Abkürzungsverzeichnis</a>.</p>\n@' "${datei_utf8_html_zwischenablage_gram}"
     fi

@@ -1,6 +1,6 @@
 ## Werkzeuge für das `woerterbuchnetz.de` und verwandte Netzseiten
 
-Einige Werkzeuge und Abfrageprogramme um aus dem ☞ [woerterbuchnetz.de](https://woerterbuchnetz.de) Wörter abzufragen, z.B. über die Programm-Schnitt-Stelle (PSS oder engl. API) für Linux und MaC.
+Einige Werkzeuge und Abfragevorschriften, um aus dem ☞ [woerterbuchnetz.de](https://woerterbuchnetz.de) gezielt Wörter abzufragen, z.B. über die Programm-Schnitt-Stelle (PSS oder engl. API) für Linux und MaC.
 
 ## Verwandte Netzseiten
 
@@ -13,6 +13,8 @@ Netzseiten, die vermittels dieser Sammlung verarbeitet werden können, sind:
 
 ## Übersicht Befehlsvorschriften dieser Sammlung
 
-- siehe Ordner ☞ [`./DWB1`](./DWB1) ~ für das Grimm-Wörterbuch (z.B. verschiedene Wortabfragen mit Befilterung der Ergebnisse)
-- siehe Ordner ☞ [`./DWDS`](./DWDS) ~ für das Digitale Wörterbuch Deutscher Sprache (z.B. Wortverlaufskurven selbsttätig beschriften)
-- siehe Ordner ☞ [`./corpora.uni-leipzig.de`](./corpora.uni-leipzig.de) ~ für Wortschatz Uni Leipzig (z.B. Dornseiff-Bedeutungsgruppen auflisten)
+Siehe Ordner:
+
+- ☞ [`./DWB1`](./DWB1) ~ für das Grimm-Wörterbuch (z.B. verschiedene Wortabfragen mit Befilterung der Ergebnisse)
+- ☞ [`./DWDS`](./DWDS) ~ für das Digitale Wörterbuch Deutscher Sprache (z.B. Wortverlaufskurven selbsttätig beschriften)
+- ☞ [`./corpora.uni-leipzig.de`](./corpora.uni-leipzig.de) ~ für Wortschatz Uni Leipzig (z.B. Dornseiff-Bedeutungsgruppen auflisten)
