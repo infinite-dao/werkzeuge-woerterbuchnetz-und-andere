@@ -15,8 +15,23 @@ abhaengigkeiten_pruefen() {
   if ! [[ -x "$(command -v wget)" ]]; then
     printf "${ORANGE}Kommando${FORMAT_FREI} wget ${ORANGE} zum Abspeichern von Netzdateien nicht gefunden: Bitte${FORMAT_FREI} wget ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
-  if ! [[ -x "$(command -v magick)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} magick ${ORANGE}nicht gefunden: Bitte magick (von ImageMagick) über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+  if ! [[ -x "$(command -v inkscape)" ]]; then
+    printf "${ORANGE}Kommando${FORMAT_FREI} inkscape ${ORANGE}nicht gefunden: Bitte Inkscape über die Programm-Verwaltung installieren, zur Umwandlung SVG → PDF.${FORMAT_FREI}\n"; stufe_abbruch=1;
+  fi
+  if ! [[ -x "$(command -v gs)" ]]; then
+    printf "${ORANGE}Kommando${FORMAT_FREI} gs ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+  fi
+  if ! [[ -x "$(command -v ps2pdf)" ]]; then
+    printf "${ORANGE}Kommando${FORMAT_FREI} ps2pdf ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+  fi
+  if ! [[ -x "$(command -v pdftk)" ]]; then
+    printf "${ORANGE}Kommando${FORMAT_FREI} pdftk ${ORANGE}nicht gefunden: Bitte pdftk über die Programm-Verwaltung installieren oder vom Netz: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/${FORMAT_FREI}\n"; stufe_abbruch=1;
+  fi
+  if ! [[ -x "$(command -v enscript)" ]]; then
+    printf "${ORANGE}Kommando${FORMAT_FREI} enscript ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Texte oder Textdateien in PostScript, HTML, u.a. umwandeln).${FORMAT_FREI}\n"; stufe_abbruch=1;
+  fi
+  if ! [[ -x "$(command -v sed)" ]]; then
+    printf "${ORANGE}Kommando${FORMAT_FREI} sed ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Zeichenketten suchen und ersetzen).${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   case $stufe_abbruch in [1-9]) printf "${ORANGE}(Abbruch)${FORMAT_FREI}\n"; exit 1;; esac
 }
@@ -29,14 +44,13 @@ Nutzung:
   ./$(basename "${BASH_SOURCE[0]}") [-h] [-s] "Wort"
   ./$(basename "${BASH_SOURCE[0]}") "Wort1; Wort2; Wort3"
 
-Wortverlaufskurve eines gegebenen Worts beschriften und als PNG abspeichern.
+Wortverlaufskurve eines gegebenen Worts beschriften und als PDF abspeichern.
 
 Verwendbare Wahlmöglichkeiten:
 -h,    --Hilfe             Hilfetext dieses Programms ausgeben.
--j,    --JPEG              Bild als JPEG ausgeben anstatt PNG.
        --Suchcode          Suchencode, der tatsächlich abgefragt wird, z.B. "{'behände','behende','behänd','behend'}"
                            Falls mehrere Wortabfragen, dann Trennung durch Strichpünktlein ; (Semikolon)
-       --seit_1945
+       --seit_1946
 -b,    --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
 -e,    --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
        --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
@@ -45,7 +59,11 @@ Verwendbare Wahlmöglichkeiten:
 Technische Anmerkungen:
 
 - abhängig von Befehl ${BLAU}wget${FORMAT_FREI} (Anfragen ins Netz)
-- abhängig von Befehl ${BLAU}magick${FORMAT_FREI} (Bildverarbeitung)
+- abhängig von Befehl ${BLAU}inkscape${FORMAT_FREI} (SVG → PDF Umwandlung)
+- abhängig von Befehl ${BLAU}gs${FORMAT_FREI} (Ghostscript, PDF Verarbeitung)
+- abhängig von Befehl ${BLAU}ps2pdf${FORMAT_FREI} (Ghostscript, PDF Verarbeitung)
+- abhängig von Befehl ${BLAU}pdftk${FORMAT_FREI} (PDF Überlagerung)
+- abhängig von Befehl ${BLAU}enscript${FORMAT_FREI} (Text in PDF verwandeln)
 
 NUTZUNG
 )
@@ -112,11 +130,10 @@ parameter_abarbeiten() {
     11) datum_heute_lang=$(date '+%_d. im Nebelmonat (%B) %Y'  | sed 's@^ *@@; s@November@& ~ lat.: Nonus, 9@; ') ;;
     12) datum_heute_lang=$(date '+%_d. im Weihemonat (%B) %Y'  | sed 's@^ *@@; s@Dezember@& ~ lat.: Decimus, 10@; ') ;;
   esac
-  ausgabe_bild_format="png"
   abbruch_code_nummer=0
   stufe_dateienbehalten=0
   stufe_verausgaben=0
-  stufe_seit_1945_suchen=0
+  stufe_seit_1946_suchen=0
   stufe_fehler_abschlussarbeiten=1
   suchcodeliste=""
   abgefragte_zusatz_woerter=""
@@ -130,9 +147,7 @@ parameter_abarbeiten() {
     -b | --behalte_[Dd]ateien) stufe_dateienbehalten=1 ;;
     -e | --Entwicklung) stufe_verausgaben=1 ;;
     --farb-frei) ANWEISUNG_FORMAT_FREI=1 ;;
-    -[jJ] | --[Jj][Pp][Ee][Gg]) ausgabe_bild_format="jpeg"; ;;
-    -[sS] | --[Ss][Vv][Gg])     ausgabe_bild_format="svg"; ;;
-    --seit_1945) stufe_seit_1945_suchen=1 ;;
+    --seit_194[56]) stufe_seit_1946_suchen=1 ;;
     --Suchcode) suchcodeliste="${2-}"; shift; ;;
     #-p | --param) # example named parameter
     #  param="${2-}"
@@ -183,7 +198,6 @@ case $stufe_verausgaben in
   meldung  "${ORANGE}ENTWICKLUNG - datum_heute_lang:     ${datum_heute_lang} ${FORMAT_FREI}"
   meldung  "${ORANGE}ENTWICKLUNG - WORTLISTEN_EINGABE:   ${WORTLISTEN_EINGABE[*]} ${FORMAT_FREI}"
   meldung  "${ORANGE}ENTWICKLUNG - SUCHCODELISTE:        ${SUCHCODELISTE[*]} ${FORMAT_FREI}"
-  meldung  "${ORANGE}ENTWICKLUNG - ausgabe_bild_format:  $ausgabe_bild_format ${FORMAT_FREI}"
   meldung  "${ORANGE}ENTWICKLUNG - stufe_verausgaben:    $stufe_verausgaben ${FORMAT_FREI}"
   ;;
 esac
@@ -233,18 +247,17 @@ do
     if [[ ${hat_such_code_abfrage} -gt 0 ]]; then
       abgefragte_zusatz_woerter=$( echo "$abfrage_code" | sed --regexp-extended  "y@{}@()@; s@' *, *'@, @g; s@[']@@g; s@^@ @" )
     fi
-    if [[ $stufe_seit_1945_suchen -gt 0 ]];then
+    if [[ $stufe_seit_1946_suchen -gt 0 ]];then
     dwds_datei="${wort_abfrage}${abgefragte_zusatz_woerter} - DWDS-Wortverlauf seit 1946 (Zeitungen).svg";
     else
     dwds_datei="${wort_abfrage}${abgefragte_zusatz_woerter} - DWDS-Wortverlauf seit 1600 (DTA,DWDS).svg";
     fi
-    case $ausgabe_bild_format in 
-      [Pp][Nn][Gg]) speicher_datei="${dwds_datei}.png"; ;;
-      [Jj][Pp][Gg]|[Jj][Pp][Ee][Gg]) speicher_datei="${dwds_datei}.jpg"; ;;
-      *) speicher_datei="${dwds_datei}.png"; ;;
-    esac
+    
+    speicher_datei="${dwds_datei}.pdf";
+    zwischenspeicher_datei_1="${dwds_datei}.inkscape.pdf"; # inkscape Ausgabe
+    zwischenspeicher_datei_2="${dwds_datei}.mit-Rand.pdf"; # mit Rand
 
-    if [[ $stufe_seit_1945_suchen -gt 0 ]];then
+    if [[ $stufe_seit_1946_suchen -gt 0 ]];then
       wget --user-agent="Mozilla" --quiet --show-progress \
         --output-document="${dwds_datei}" \
         "https://www.dwds.de/r/plot/image/?v=pres&q=${abfrage_code}" 
@@ -253,36 +266,49 @@ do
         --output-document="${dwds_datei}" \
         "https://www.dwds.de/r/plot/image/?v=hist&q=${abfrage_code}" 
     fi
-    if [[ $stufe_seit_1945_suchen -gt 0 ]];then
+    if [[ $stufe_seit_1946_suchen -gt 0 ]];then
       text_beschriftung="${wort_abfrage} (Wortverlauf dwds.de: Zeitungen 1946…)";
     else
       text_beschriftung="${wort_abfrage} (Wortverlauf dwds.de: DTA+DWDS)"
     fi
     if [[ ${#abgefragte_zusatz_woerter} -gt 0 ]];then
-      text_beschriftung="${text_beschriftung}\n${abgefragte_zusatz_woerter//,/+}"
+      text_beschriftung=$( echo -e "${text_beschriftung}\n${abgefragte_zusatz_woerter//,/+}" )
     fi    
-    magick \
-      -density 300 \
-      "${dwds_datei}" \
-      -size %wx \
-    -bordercolor '#0084C0' \
-    -border 5 \
-    -font 'Liberation-Serif' \
-    -pointsize 10 \
-      caption:"$text_beschriftung" \
-          -gravity southwest -append \
-    "${speicher_datei}";
+    
+    inkscape --export-filename="${zwischenspeicher_datei_1}" "${dwds_datei}"
+    # pdftk datei.pdf dump_data → z.B. PageMediaDimensions: 225 155
+    ursprungs_breite_hoehe_punkte=$( pdftk "${zwischenspeicher_datei_1}" dump_data \
+      | sed --silent --regexp-extended "/PageMediaDimensions:/ { s@PageMediaDimensions: *([0-9]+) ([0-9]+)@\1×\2@p }" )
+    ursprungs_breite_punkte=$( echo "${ursprungs_breite_hoehe_punkte%×*}" )
+    ursprungs_hoehe_punkte=$( echo "${ursprungs_breite_hoehe_punkte##*×}" )
+    randzusatz_punkte=20
+
+    # Diagramm-PDF+Unterrand hinzufügen && Text-PDF schreiben && Text-PDF + Diagramm-PDF überlagern und abspeichern
+     gs -q -sDEVICE=pdfwrite -dBATCH -dNOPAUSE \
+          -sOutputFile="${zwischenspeicher_datei_2}" \
+          -dDEVICEWIDTHPOINTS="${ursprungs_breite_punkte}" \
+          -dDEVICEHEIGHTPOINTS="$(( ursprungs_hoehe_punkte + randzusatz_punkte ))" \
+          -dFIXEDMEDIA -c \
+          "<< /CurrPageNum 1 def /Install {0 $randzusatz_punkte translate} bind  >> setpagedevice" \
+          -f "${zwischenspeicher_datei_1}" \
+      && echo "${text_beschriftung}" | \
+        enscript --no-header --media=a6 --landscape --word-wrap --font="Times-Roman18" \
+        --margins=250:0:0:0 -o- | \
+        ps2pdf - | \
+        pdftk "${zwischenspeicher_datei_2}" stamp - output "${speicher_datei}"
     
     if [[ ${stufe_dateienbehalten:-0} -eq 0 ]];then
       case ${stufe_verausgaben:-0} in
       0)  ;;
-      1) meldung "${ORANGE}Entferne${FORMAT_FREI} ${dwds_datei}" ;;
+      1) meldung "${ORANGE}Entferne${FORMAT_FREI} ${dwds_datei}, ${zwischenspeicher_datei_1}, ${zwischenspeicher_datei_2}" ;;
       esac
       rm "${dwds_datei}";
+      if [[ -e "${zwischenspeicher_datei_1}" ]];then rm "${zwischenspeicher_datei_1}"; fi
+      if [[ -e "${zwischenspeicher_datei_2}" ]];then rm "${zwischenspeicher_datei_2}"; fi
     else
       case ${stufe_verausgaben:-0} in
       0)  ;;
-      1) meldung "${ORANGE}Behalte${FORMAT_FREI} ${dwds_datei}" ;;
+      1) meldung "${ORANGE}Behalte${FORMAT_FREI} ${dwds_datei}, ${zwischenspeicher_datei_1}, ${zwischenspeicher_datei_2}" ;;
       esac
     fi    
     i_wort=$(( i_wort + 1 ))
@@ -290,10 +316,3 @@ do
 done
 
 # Programm Logik hier Ende
-
-# inkscape --file="gleichviel - DWDS-Wortverlauf seit 1946 (Zeitungen).svg" --without-gui --export-pdf="gleichviel - DWDS-Wortverlauf seit 1946 (Zeitungen).svg.pdf"
-
-# 
-# # inkscape --export-filename="gleichviel - DWDS-Wortverlauf seit 1946 (Zeitungen).svg.pdf" \
-# #   "gleichviel - DWDS-Wortverlauf seit 1946 (Zeitungen).svg" 
-# --export-filename=
