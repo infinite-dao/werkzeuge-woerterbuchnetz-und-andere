@@ -47,14 +47,14 @@ Nutzung:
 Wortverlaufskurve eines gegebenen Worts beschriften und als PDF abspeichern.
 
 Verwendbare Wahlmöglichkeiten:
--h,    --Hilfe             Hilfetext dieses Programms ausgeben.
-       --Suchcode          Suchencode, der tatsächlich abgefragt wird, z.B. "{'behände','behende','behänd','behend'}"
-                           Falls mehrere Wortabfragen, dann Trennung durch Strichpünktlein ; (Semikolon)
-       --seit_1946
--b,    --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
--e,    --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
-       --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
-       --farb-frei         Meldungen ohne Farben ausgeben
+-h,   --Hilfe             Hilfetext dieses Programms ausgeben.
+      --Suchcode          Suchencode, der tatsächlich abgefragt wird, z.B. "{'behände','behende','behänd','behend'}"
+                          Falls mehrere Wortabfragen, dann Trennung durch Strichpünktlein ; (Semikolon)
+      --seit_1946         Verlaufskurfe aus dem Wortkorpus „Zeitungen seit 1945/46“ erstellen
+-b,   --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
+-e,   --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
+      --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
+      --farb-frei         Meldungen ohne Farben ausgeben
 
 Technische Anmerkungen:
 
@@ -83,7 +83,8 @@ abschlussarbeiten() {
   1)   
     if [[ $(ls -A *DWDS-Wortverlauf*.svg* 2>/dev/null | head -c1 | wc -c) -gt 0 ]];then
       echo -e "${GRUEN}Ende: Siehe Wortverlaufskurve(n) … ${FORMAT_FREI}"
-      ls -lA *DWDS-Wortverlauf*.svg* | grep --color=always --context=3 "${speicher_datei}"
+      datei_als_regex=$( echo "${speicher_datei}" | sed --regexp-extended ' s@([()])@\\\1@g; ' )
+      ls -lA *DWDS-Wortverlauf*.svg* | grep --color=always --context=3 "^${datei_als_regex}"
     else
       echo -e "${ORANGE}Ende: Keine Wortverlaufskurven gefunden … ${FORMAT_FREI}"
     fi
@@ -135,6 +136,7 @@ parameter_abarbeiten() {
   stufe_verausgaben=0
   stufe_seit_1946_suchen=0
   stufe_fehler_abschlussarbeiten=1
+  stufe_belasse_alte_verlaufskurve=0
   suchcodeliste=""
   abgefragte_zusatz_woerter=""
   
@@ -145,6 +147,7 @@ parameter_abarbeiten() {
     -h | --[Hh]ilfe) stufe_fehler_abschlussarbeiten=0; nutzung ;;
     --debug) set -x ;;
     -b | --behalte_[Dd]ateien) stufe_dateienbehalten=1 ;;
+    --belasse_alte_Verlaufskurve) stufe_belasse_alte_verlaufskurve=1 ;;
     -e | --Entwicklung) stufe_verausgaben=1 ;;
     --farb-frei) ANWEISUNG_FORMAT_FREI=1 ;;
     --seit_194[56]) stufe_seit_1946_suchen=1 ;;
@@ -257,6 +260,13 @@ do
     zwischenspeicher_datei_1="${dwds_datei}.inkscape.pdf"; # inkscape Ausgabe
     zwischenspeicher_datei_2="${dwds_datei}.mit-Rand.pdf"; # mit Rand
 
+    if [[ ${stufe_belasse_alte_verlaufskurve} -gt 0 ]];then    
+      if [[ -e "${speicher_datei}" ]];then
+      meldung "${GRUEN}Belasse alte vorhandene Datei${FORMAT_FREI} ${speicher_datei} …"
+      continue
+      fi
+    fi
+    
     if [[ $stufe_seit_1946_suchen -gt 0 ]];then
       wget --user-agent="Mozilla" --quiet --show-progress \
         --output-document="${dwds_datei}" \

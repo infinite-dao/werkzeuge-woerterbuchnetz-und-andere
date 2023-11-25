@@ -32,15 +32,15 @@ Nutzung:
 Wortverlaufskurve eines gegebenen Worts beschriften und als PNG abspeichern.
 
 Verwendbare Wahlmöglichkeiten:
--h,    --Hilfe             Hilfetext dieses Programms ausgeben.
--j,    --JPEG              Bild als JPEG ausgeben anstatt PNG.
-       --Suchcode          Suchencode, der tatsächlich abgefragt wird, z.B. "{'behände','behende','behänd','behend'}"
+-h,   --Hilfe             Hilfetext dieses Programms ausgeben.
+-j,   --JPEG              Bild als JPEG ausgeben anstatt PNG.
+      --Suchcode          Suchencode, der tatsächlich abgefragt wird, z.B. "{'behände','behende','behänd','behend'}"
                            Falls mehrere Wortabfragen, dann Trennung durch Strichpünktlein ; (Semikolon)
-       --seit_1945
--b,    --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
--e,    --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
-       --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
-       --farb-frei         Meldungen ohne Farben ausgeben
+      --seit_1946         Verlaufskurfe aus dem Wortkorpus „Zeitungen seit 1945/46“ erstellen
+-b,   --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
+-e,   --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
+      --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
+      --farb-frei         Meldungen ohne Farben ausgeben
 
 Technische Anmerkungen:
 
@@ -116,7 +116,7 @@ parameter_abarbeiten() {
   abbruch_code_nummer=0
   stufe_dateienbehalten=0
   stufe_verausgaben=0
-  stufe_seit_1945_suchen=0
+  stufe_seit_1946_suchen=0
   stufe_fehler_abschlussarbeiten=1
   suchcodeliste=""
   abgefragte_zusatz_woerter=""
@@ -132,7 +132,7 @@ parameter_abarbeiten() {
     --farb-frei) ANWEISUNG_FORMAT_FREI=1 ;;
     -[jJ] | --[Jj][Pp][Ee][Gg]) ausgabe_bild_format="jpeg"; ;;
     -[sS] | --[Ss][Vv][Gg])     ausgabe_bild_format="svg"; ;;
-    --seit_1945) stufe_seit_1945_suchen=1 ;;
+    --seit_194[56]) stufe_seit_1946_suchen=1 ;;
     --Suchcode) suchcodeliste="${2-}"; shift; ;;
     #-p | --param) # example named parameter
     #  param="${2-}"
@@ -233,7 +233,7 @@ do
     if [[ ${hat_such_code_abfrage} -gt 0 ]]; then
       abgefragte_zusatz_woerter=$( echo "$abfrage_code" | sed --regexp-extended  "y@{}@()@; s@' *, *'@, @g; s@[']@@g; s@^@ @" )
     fi
-    if [[ $stufe_seit_1945_suchen -gt 0 ]];then
+    if [[ $stufe_seit_1946_suchen -gt 0 ]];then
     dwds_datei="${wort_abfrage}${abgefragte_zusatz_woerter} - DWDS-Wortverlauf seit 1946 (Zeitungen).svg";
     else
     dwds_datei="${wort_abfrage}${abgefragte_zusatz_woerter} - DWDS-Wortverlauf seit 1600 (DTA,DWDS).svg";
@@ -244,7 +244,7 @@ do
       *) speicher_datei="${dwds_datei}.png"; ;;
     esac
 
-    if [[ $stufe_seit_1945_suchen -gt 0 ]];then
+    if [[ $stufe_seit_1946_suchen -gt 0 ]];then
       wget --user-agent="Mozilla" --quiet --show-progress \
         --output-document="${dwds_datei}" \
         "https://www.dwds.de/r/plot/image/?v=pres&q=${abfrage_code}" 
@@ -253,7 +253,7 @@ do
         --output-document="${dwds_datei}" \
         "https://www.dwds.de/r/plot/image/?v=hist&q=${abfrage_code}" 
     fi
-    if [[ $stufe_seit_1945_suchen -gt 0 ]];then
+    if [[ $stufe_seit_1946_suchen -gt 0 ]];then
       text_beschriftung="${wort_abfrage} (Wortverlauf dwds.de: Zeitungen 1946…)";
     else
       text_beschriftung="${wort_abfrage} (Wortverlauf dwds.de: DTA+DWDS)"

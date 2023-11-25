@@ -159,7 +159,7 @@ echo '#!/bin/bash' > "${pdf_erstellen_sh_programm}"
 echo '' >> "${pdf_erstellen_sh_programm}"
 echo 'pdfjam --quiet \' >> "${pdf_erstellen_sh_programm}"
 # ls -Q *DWDS-Wor*seit*.svg.pdf | sort | sed 's@$@ \\@; s@^@  @'
-ls -Q *DWDS-Wor*seit*.svg.pdf | sort | sed 's@$@ \\@; s@^@  @' >> "${pdf_erstellen_sh_programm}"
+ls -Q *DWDS-Wor*seit*1946*.svg.pdf | sort | sed 's@$@ \\@; s@^@  @' >> "${pdf_erstellen_sh_programm}"
 
 echo " --pdfauthor '${info_urheber}' \\"  >> "${pdf_erstellen_sh_programm}"
 echo " --pdfkeywords \"${info_schluesselwoerter}\" --pdftitle \"${info_titel}\" \\"      >> "${pdf_erstellen_sh_programm}"
