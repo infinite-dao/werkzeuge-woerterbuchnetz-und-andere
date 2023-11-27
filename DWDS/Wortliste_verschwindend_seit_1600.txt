@@ -1,3 +1,4 @@
+- Abendsegen
 - abermals
 - Abkomme
 - ablohnen
@@ -31,6 +32,7 @@
 - ehrenfest
 - Eidam
 - eilfertig
+- Einsiedler
 - Eltern (Ältern,Eltern)
 - Englein (Englein,Engelein)
 - entraten
@@ -75,6 +77,8 @@
 - Nachkomme
 - Odem
 - offenbaren
+- Pfühl
+- Pfuhl
 - Rat
 - Reich
 - richten
