@@ -42,6 +42,7 @@
 - Nachsicht
 - nachsichtig
 - Oheim
+- Pfühl
 - recken
 - reinlich
 - seihen
@@ -58,6 +59,8 @@
 - Werk
 - Wesen
 - Wesensart
+- Wetterleuchten
+- wetterleuchtend
 - wunderhübsch
 - zart
 - zartfühlend
