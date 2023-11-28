@@ -262,6 +262,7 @@ parameter_abarbeiten() {
   # 2^1: 2-1 = 1 nur mit HTML
   #      3-1 = 2 nur mit ODT
   # 2^2: 4-1 = 3 mit HTML, mit ODT
+  anzahl_alle_eintraege=0
   abbruch_code_nummer=0
   n_suchergebnisse_volltext=0
   n_suchergebnisse_volltext_mit_stichwort=0
@@ -666,6 +667,13 @@ if [[ -e "${json_speicher_datei}" ]];then
     -f "${json_speicher_filter_ueber_textid_verknuepfen}" > "${json_speicher_vereinte_abfragen_zwischenablage}"  
 #   fi
   
+  #   anzahl_alle_eintraege=$(jq '.|length' "${json_speicher_vereinte_abfragen_zwischenablage}")
+  #   case $stufe_verausgaben in
+  #   0)  ;;
+  #   1) 
+  #     meldung "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} %s Ergebnisse gesamt …" ${anzahl_alle_eintraege}
+  #   ;;
+  #   esac
   case $stufe_stichworte_eineinzig in 1)
     jq --slurp \
     --arg stufe_stichworte_eineinzig $stufe_stichworte_eineinzig \
@@ -699,10 +707,12 @@ if [[ -e "${json_speicher_datei}" ]];then
   ;; 
   esac
   
-  n_suchergebnisse_volltext_mit_stichwort=$( jq '.|length' -s "${json_speicher_vereinte_abfragen_zwischenablage}" );
+  n_suchergebnisse_volltext_mit_stichwort=$( jq --slurp '.' "${json_speicher_vereinte_abfragen_zwischenablage}" | jq '.|length' );
   
   if [[ ${n_suchergebnisse_volltext-0} -eq 0 ]];then
     meldung_abbruch "${ORANGE}Datei '${json_speicher_datei}' enthält $n_suchergebnisse_volltext Volltext-Suchergebnisse, $n_suchergebnisse_volltext_mit_stichwort Stichwort-Suchergebnisse (Abbruch)${FORMAT_FREI}"
+  elif [[ ${n_suchergebnisse_volltext-0} -gt 0 ]];then
+    printf "${GRUEN}Weiterverarbeitung → JSON${FORMAT_FREI} %s Ergebnisse gesamt …\n" ${n_suchergebnisse_volltext}
   fi
   
   dieser_jq_filter_code='

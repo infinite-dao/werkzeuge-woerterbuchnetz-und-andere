@@ -13,6 +13,8 @@
 - beachtenswert
 - beachtlich
 - Begebnis
+- begreifen
+- begreiflich
 - daselbst
 - ehrenfest
 - ehrlich
@@ -20,7 +22,9 @@
 - eilen
 - einfühlen
 - einwandfrei
+- Empfindung
 - entrüsten
+- erblicken
 - Ergriffenheit
 - erzeigen
 - fähig
@@ -28,6 +32,7 @@
 - fürwahr
 - geruhsam
 - Gesinnung
+- gewahr
 - geziemen
 - gleichviel
 - heischen
@@ -37,6 +42,8 @@
 - Lauterkeit
 - lebhaft
 - Leib
+- leutselig
+- Leutseligkeit
 - liebkosen
 - minnen
 - Nachsicht
@@ -46,6 +53,7 @@
 - recken
 - reinlich
 - seihen
+- stäupen
 - spitzfindig
 - tüchtig
 - Vaterland

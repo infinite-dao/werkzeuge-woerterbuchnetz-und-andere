@@ -15,6 +15,7 @@
 - ansehen
 - aufwarten
 - ausbündig
+- begreifen
 - behände (behände,behende,behänd,behend)
 - beriechen
 - Brünnlein
@@ -50,6 +51,7 @@
 - geloben
 - gemach
 - geschwind (geschwind,geschwinde)
+- gewahr
 - geziemen
 - girren
 - gläubig
@@ -68,6 +70,8 @@
 - Labsal
 - Lämplein
 - Leib
+- leutselig
+- Leutseligkeit
 - Lichtlein
 - lieblich
 - Liedlein
@@ -92,6 +96,7 @@
 - Söhnlein
 - spitzfindig
 - Sprüchlein
+- stäupen
 - stracks
 - Stündlein
 - tauglich
@@ -100,6 +105,7 @@
 - unsertwegen
 - Vater
 - vergeben
+- verspüren
 - weise
 - Weltmensch
 - Werk
