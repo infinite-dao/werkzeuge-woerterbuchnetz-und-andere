@@ -2,6 +2,7 @@
 - abmachen
 - Abmachung
 - abscheiden
+- Ahn
 - allerseits
 - andachtsvoll
 - angängig
@@ -13,6 +14,8 @@
 - arbeitsam
 - beachtenswert
 - beachtlich
+- begabt
+- Begabung
 - Begebnis
 - begreifen
 - begreiflich
@@ -69,6 +72,8 @@
 - stäupen
 - tüchtig
 - Tünche
+- Ulk
+- Unfug
 - Vaterland
 - vermöge
 - Volk
