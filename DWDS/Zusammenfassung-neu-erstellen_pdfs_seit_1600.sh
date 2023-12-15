@@ -7,6 +7,7 @@ trap aufraeumen SIGINT SIGTERM ERR EXIT
 progr_verz=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 
 stufe_aufraeumen_aufhalten=0
+abbruch_code_nummer=0
 
 pdf_datei_zwischenablage="Zusammenfassung_Woerter_seit_1600_ruecklaeufig_Zwischenablage_$(date '+%Y%m%d').pdf"
 pdf_datei_endfassung="Zusammenfassung - Wörter seit 1600 rückläufig (DTA u. DWDS, $(date '+%Y%m%d')).pdf"
@@ -32,9 +33,10 @@ abhaengigkeiten_pruefen() {
   if ! [[ -x "$(command -v xelatex)" ]]; then
     printf "${ORANGE}Kommando${FORMAT_FREI} xelatex ${ORANGE} zum Verarbeiten von XeLaTeX in PDF-Seiten (TeX-Live) nicht gefunden: Bitte${FORMAT_FREI} xelatex ${ORANGE} aus TeX-Live o.ä. installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
-  if ! [[ -x "$(command -v pdftk)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} pdftk ${ORANGE} zum Verarbeiten von PDF-Informationen nicht gefunden: Bitte${FORMAT_FREI} pdftk ${ORANGE} vermittels der Programmverwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
-  fi
+  # pdftk als Notlösung um PDF Seitenanzahl zu erfassen, falls pdfjam Probleme macht
+  # if ! [[ -x "$(command -v pdftk)" ]]; then
+  #   printf "${ORANGE}Kommando${FORMAT_FREI} pdftk ${ORANGE} zum Verarbeiten von PDF-Informationen nicht gefunden: Bitte${FORMAT_FREI} pdftk ${ORANGE} vermittels der Programmverwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+  # fi
 
   case $stufe_abbruch in [1-9]) printf "${ORANGE}(Abbruch)${FORMAT_FREI}\n"; exit 1;; esac
 }
@@ -81,6 +83,12 @@ meldung_abbruch() {
 vorlage_pdflatex() {
   local diese_vorlage=''
 
+  # % Falls sonderbarerweise unter XeLaTeX pages=- er nur die erste PDF-Seite, 
+  # % kann man mit pdftk die genaue Seitenanzahl \$pdfseite_letzte vorausberechnen lassen und dann mit der folgenden 
+  # % Anweisung einschließlich der von-bis-Seitenangabe dennoch die Einzelseiten einbinden, dies
+  # % ist nur eine Notlösung
+  # %    \\\includepdf[pages={1-${pdfseite_letzte}}]{\\\detokenize{"${pdf_datei_zwischenablage%.*}".pdf}} 
+
   diese_vorlage=$( cat <<VORLAGE
 \\documentclass[12pt]{scrartcl}
 \\usepackage{fontspec}
@@ -125,9 +133,8 @@ Dies ist eine Beispiel-Auswahl an Wörtern die vielleicht langsam ins Vergessen 
 ${info_schluesselwoerter_latex_href}
 \\\end{multicols}
 
-% , pagecommand=\\\section{Diagramme der Einzelwörter}
-% sonderbarerweise unter XeLaTeX pages=- lädt nur die erste PDF-Seite, daher wird die Seitenangabe nötig
-\\\includepdf[pages={1-${pdfseite_letzte}}]{\\\detokenize{"${pdf_datei_zwischenablage%.*}".pdf}} 
+\\\includepdf[pages=-]{${pdf_datei_zwischenablage%.*}.pdf} 
+
 \\\end{document}
 
 VORLAGE
@@ -176,8 +183,10 @@ meldung "${GRUEN}Zusammenfassung PDF selbst erstellen (pdfjam)${FORMAT_FREI}…"
 ./"${pdf_erstellen_sh_programm}"
 
 
-pdfseite_letzte=$( pdftk "${pdf_datei_zwischenablage}" dump_data \
-      | sed --silent --regexp-extended "/NumberOfPages:/ { s@NumberOfPages: *([0-9]+)@\1@p }" )
+# Notlösung $pdfseite_letzte für $vorlage_pdflatex und bestimmte Seitenangabe pages={1-$pdfseite_letzte}
+# pdfseite_letzte=$( pdftk "${pdf_datei_zwischenablage}" dump_data \
+#       | sed --silent --regexp-extended "/NumberOfPages:/ { s@NumberOfPages: *([0-9]+)@\1@p }" )
+
 # pdfjam  \
 #   "Abkomme - DWDS-Wortverlauf seit 1600 (DTA,DWDS).svg.pdf" \
 #   "ablohnen - DWDS-Wortverlauf seit 1600 (DTA,DWDS).svg.pdf" \
@@ -205,7 +214,11 @@ pdfseite_letzte=$( pdftk "${pdf_datei_zwischenablage}" dump_data \
 vorlage_pdflatex > "${latex_datei_endfassung}"
 
 # pdflatex -synctex=1 -interaction=nonstopmode "${latex_datei_endfassung}"
-xelatex -synctex=1 -interaction=nonstopmode "${latex_datei_endfassung}"
+xelatex -synctex=1 -interaction=nonstopmode "${latex_datei_endfassung}" && abbruch_code_nummer=$?
+
+case $abbruch_code_nummer in [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+  meldung "${ORANGE}Irgendwas lief schief mit xelatex. Abbruch Code: ${abbruch_code_nummer} $(kill -l $abbruch_code_nummer)${FORMAT_FREI}" ;;
+esac
 
 # pdflatex
 

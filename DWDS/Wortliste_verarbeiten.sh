@@ -50,6 +50,9 @@ abhaengigkeiten_pruefen() {
 nutzung_und_ende() {
   local diese_nutzung=''
 
+# ZUTUN
+#   -b,   --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
+
   diese_nutzung=$( cat <<NUTZUNG
 Nutzung:
   ./$(basename "${BASH_SOURCE[0]}") "Wortliste_verschwindend_seit_1600.txt"
@@ -60,7 +63,6 @@ Es wird versucht eine Zusammenfassung aller Wortkurven zu erstellen.
 Verwendbare Wahlmöglichkeiten:
 -h,   --Hilfe             Hilfetext dieses Programms ausgeben.
       --seit_1946         Verlaufskurfe aus dem Wortkorpus „Zeitungen seit 1945/46“ erstellen
--b,   --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
 
 -e,   --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
       --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
@@ -77,7 +79,9 @@ Technische Anmerkungen:
 
 NUTZUNG
 )
-  echo -e "${diese_nutzung}" # mit Farbausgabe 
+
+
+echo -e "${diese_nutzung}" # mit Farbausgabe 
 
   abhaengigkeiten_pruefen
   exit
@@ -214,6 +218,11 @@ meldung "${GRUEN}Erstelle Zusammenfassung für Korpus DWDS + DTA ${FORMAT_FREI}"
     ./Zusammenfassung-neu-erstellen_pdfs_seit_1600.sh
   fi
 fi
+
+case $stufe_dateienbehalten in [1-9])
+  meldung "${ORANGE}Warnung: die Wahl --behalte_Dateien ist noch nicht eingebaut, damit es dennoch funktioniert, kann man derzeit nur in den Vorschriften Zusammenfassung-neu-erstellen….sh den Wandelwert dort händisch auf \$stufe_aufraeumen_aufhalten=1 setzen." ;;
+esac
+
 meldung "${GRUEN}Ende${FORMAT_FREI}"
 
 

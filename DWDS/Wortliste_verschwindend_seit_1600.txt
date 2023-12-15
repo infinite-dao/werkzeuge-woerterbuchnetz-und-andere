@@ -8,6 +8,7 @@
 - allenthalben
 - allerliebst
 - allgemach
+- allerseits
 - also
 - andächtig
 - Ankunft
@@ -17,6 +18,8 @@
 - ausbündig
 - begreifen
 - behände (behände,behende,behänd,behend)
+- Behelf
+- behelfen
 - beriechen
 - Brünnlein
 - Büchlein
@@ -48,8 +51,10 @@
 - Geduld
 - gedulden
 - Geist
+- gelehrt
 - geloben
 - gemach
+- gerecht
 - geschwind (geschwind,geschwinde)
 - gewahr
 - geziemen
@@ -84,6 +89,7 @@
 - Pfühl
 - Pfuhl
 - Rat
+- recht
 - Reich
 - richten
 - Ringlein
@@ -106,6 +112,7 @@
 - Vater
 - vergeben
 - verspüren
+- wahrhaftig
 - weise
 - Weltmensch
 - Werk

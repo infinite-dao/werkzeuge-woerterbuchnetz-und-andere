@@ -2,6 +2,7 @@
 - abmachen
 - Abmachung
 - abscheiden
+- allerseits
 - andachtsvoll
 - angängig
 - Anmut
@@ -15,6 +16,8 @@
 - Begebnis
 - begreifen
 - begreiflich
+- Behelf
+- Behuf
 - daselbst
 - ehrenfest
 - ehrlich
@@ -23,13 +26,15 @@
 - einfühlen
 - einwandfrei
 - Empfindung
+- enthalten
 - entrüsten
 - erblicken
 - Ergriffenheit
 - erzeigen
-- fähig
 - Fräulein (Fräulein,Frl.)
+- fähig
 - fürwahr
+- gelehrt
 - geruhsam
 - Gesinnung
 - gewahr
@@ -45,6 +50,7 @@
 - leutselig
 - Leutseligkeit
 - liebkosen
+- Mannigfaltigkeit
 - minnen
 - Nachsicht
 - nachsichtig
@@ -53,15 +59,17 @@
 - recken
 - reinlich
 - seihen
-- stäupen
 - spitzfindig
+- stäupen
 - tüchtig
+- Tünche
 - Vaterland
 - vermöge
 - Volk
 - Volkslied
 - wahr
 - wahrhaft
+- wahrhaftig
 - Ware
 - Weib
 - Werk
