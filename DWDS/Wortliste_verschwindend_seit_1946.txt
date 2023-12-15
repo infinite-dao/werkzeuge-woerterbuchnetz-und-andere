@@ -28,6 +28,7 @@
 - Empfindung
 - enthalten
 - entrüsten
+- entseelt
 - erblicken
 - Ergriffenheit
 - erzeigen
@@ -54,10 +55,15 @@
 - minnen
 - Nachsicht
 - nachsichtig
+- Niedertracht
+- niederträchtig
 - Oheim
 - Pfühl
 - recken
+- reich
 - reinlich
+- Schuft
+- Schurke
 - seihen
 - spitzfindig
 - stäupen

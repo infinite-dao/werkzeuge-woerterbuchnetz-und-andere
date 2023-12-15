@@ -3,6 +3,7 @@
 - Abkomme
 - ablohnen
 - abwesen
+- Acht
 - achten
 - allda
 - allenthalben
@@ -22,6 +23,7 @@
 - behelfen
 - beriechen
 - Brünnlein
+- Bube
 - Büchlein
 - buhlerisch
 - Buhlschaft
@@ -40,6 +42,7 @@
 - Eltern (Ältern,Eltern)
 - Englein (Englein,Engelein)
 - entraten
+- entseelt
 - erzeigen
 - Fähnlein
 - feil
@@ -70,6 +73,7 @@
 - herzlich
 - irdisch
 - jähling
+- Jungfer
 - Kästlein
 - Kindlein
 - Labsal
@@ -84,6 +88,7 @@
 - Mägdlein (Mägdlein,Mägdelein)
 - Mündlein
 - Nachkomme
+- Obacht
 - Odem
 - offenbaren
 - Pfühl
