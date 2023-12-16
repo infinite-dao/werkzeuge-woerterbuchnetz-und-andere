@@ -64,6 +64,8 @@
 - fünferlei
 - Fünklein
 - fürwahr
+- gar
+- Garaus
 - Geduld
 - gedulden
 - Geist
@@ -116,6 +118,8 @@
 - Pfühl
 - Rat
 - recht
+- rechtschaffen
+- redlich
 - Reich
 - richten
 - Ringlein
@@ -144,10 +148,12 @@
 - übel
 - unserethalben (unserethalben,unserthalben)
 - unsertwegen
+- unwahrhaftig
 - Vater
 - vergeben
 - verspüren
 - viererlei
+- wacker
 - wahrhaftig
 - weise
 - welcherlei
@@ -163,7 +169,7 @@
 - Wörtlein
 - zehnerlei
 - zehren
-- zeitlang
+- Zeitlang
 - Zeugnis
 - zureden
 - zurichten

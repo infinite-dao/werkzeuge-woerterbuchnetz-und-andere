@@ -36,17 +36,20 @@
 - eilen
 - einfühlen
 - einwandfrei
+- empfinden
 - Empfindung
 - enthalten
 - entrüsten
 - entseelt
 - erblicken
 - Ergriffenheit
+- erhaben
 - Ermunterung
 - erzeigen
 - Faselei
 - Fräulein (Fräulein,Frl.)
 - fähig
+- fühlbar
 - fürwahr
 - gelehrt
 - gelinde
@@ -84,7 +87,9 @@
 - niederträchtig
 - Oheim
 - Pfühl
+- rechtschaffen
 - recken
+- redlich
 - reich
 - reinlich
 - Schande
@@ -106,6 +111,7 @@
 - Unfug
 - Vaterland
 - vermöge
+- verspüren
 - viererlei
 - Volk
 - Volkslied
@@ -130,7 +136,7 @@
 - zart
 - zartfühlend
 - Zartgefühl
-- zeitlang
+- Zeitlang
 - ziemen
 - zureden
 - zurichten
