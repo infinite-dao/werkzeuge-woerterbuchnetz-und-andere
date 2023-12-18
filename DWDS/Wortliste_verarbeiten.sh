@@ -158,47 +158,47 @@ farben_bereitstellen
 parameter_abarbeiten "$@"
 
 IFS=$'\n'
-for diese_zeile in $( \
+for diese_zeile_ohne_suchcode in $( \
   grep --ignore-case --invert-match '[)]' "${datei_wortliste}" \
   | grep --ignore-case --extended-regexp '^[-—*]\s+\w+' \
   | sort );do
-  # meldung "$diese_zeile"
-  dieses_wort=$( echo "${diese_zeile}" \
+  # meldung "$diese_zeile_ohne_suchcode"
+  dieses_wort_einzeln=$( echo "${diese_zeile_ohne_suchcode}" \
     | sed --regexp-extended "
       s@^[-—*]\s+(\w+.*)\$@\1@; 
       s@^\s*@@; s@\s*\$@@;
       s@\s*[(][^()]+[)]\s*@@;
       "  )
-  meldung "${GRUEN}Verarbeite${FORMAT_FREI} ${dieses_wort} …";
+  meldung "${GRUEN}Verarbeite${FORMAT_FREI} ${dieses_wort_einzeln} …";
   if [[ ${stufe_seit_1946_suchen} -gt 0 ]];then
-    Wortverlaufskurve-dwds-beschriften_inkscape-pdf-Werkzeuge.sh --belasse_alte_Verlaufskurve --seit_1946 "${dieses_wort}"
+    Wortverlaufskurve-dwds-beschriften_inkscape-pdf-Werkzeuge.sh --belasse_alte_Verlaufskurve --seit_1946 "${dieses_wort_einzeln}"
   else
-    Wortverlaufskurve-dwds-beschriften_inkscape-pdf-Werkzeuge.sh --belasse_alte_Verlaufskurve "${dieses_wort}"
+    Wortverlaufskurve-dwds-beschriften_inkscape-pdf-Werkzeuge.sh --belasse_alte_Verlaufskurve "${dieses_wort_einzeln}"
   fi
 done
 unset IFS
 
 IFS=$'\n'
-for diese_zeile in $( \
+for diese_zeile_mit_suchcode in $( \
   grep --ignore-case '[)]' "${datei_wortliste}" \
   | grep --ignore-case --extended-regexp '^[-—*]\s+\w+' \
   | sort \
   );do
-  dieses_wort=$( echo "${diese_zeile}" \
+  dieses_wort_mit_suchcode=$( echo "${diese_zeile_mit_suchcode}" \
     | sed --regexp-extended "
       s@^[-—*]\s+(\w+.*)\$@\1@;
       s@[(].*@@;
       s@^\s*@@; s@\s*\$@@;
       "  )
-  dieser_suchcode=$( echo "${diese_zeile}" | sed --silent --regexp-extended "s@^[-—*]\s+(\w+)\b +\(([^()]+)\).*\$@\2@; s@^@{'@; s@\$@'}@; s@,@','@p" )
-  meldung "${GRUEN}Verarbeite${FORMAT_FREI} ${dieses_wort} mit Suchcode ${dieser_suchcode} …";
+  dieser_suchcode=$( echo "${diese_zeile_mit_suchcode}" | sed --silent --regexp-extended "s@^[-—*]\s+(\w+)\b +\(([^()]+)\).*\$@\2@; s@^@{'@; s@\$@'}@; s@,@','@p" )
+  meldung "${GRUEN}Verarbeite${FORMAT_FREI} ${dieses_wort_mit_suchcode} mit Suchcode ${dieser_suchcode} …";
   if [[ ${stufe_seit_1946_suchen} -gt 0 ]];then
     
     Wortverlaufskurve-dwds-beschriften_inkscape-pdf-Werkzeuge.sh --belasse_alte_Verlaufskurve \
-    --Suchcode "${dieser_suchcode}" --seit_1946 "${dieses_wort}"
+    --Suchcode "${dieser_suchcode}" --seit_1946 "${dieses_wort_mit_suchcode}"
   else
     Wortverlaufskurve-dwds-beschriften_inkscape-pdf-Werkzeuge.sh --belasse_alte_Verlaufskurve \
-    --Suchcode "${dieser_suchcode}" "${dieses_wort}"
+    --Suchcode "${dieser_suchcode}" "${dieses_wort_mit_suchcode}"
   fi
 
 done
