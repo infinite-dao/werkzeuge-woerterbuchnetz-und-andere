@@ -59,6 +59,7 @@
 - Einsiedler
 - eitel
 - Eltern (Ältern,Eltern)
+- emsig
 - Englein (Englein,Engelein)
 - entraten
 - entseelt
@@ -137,11 +138,11 @@
 - Ringlein
 - Röslein
 - Sattler
-- schelten
-- Scherge
 - Schäflein
 - Schande
 - Schätzlein
+- schelten
+- Scherge
 - Schifflein
 - Schimpf
 - schinden
@@ -150,6 +151,7 @@
 - selig
 - siebenerlei
 - Söhnlein
+- sonst
 - spitzfindig
 - Sprüchlein
 - stäupen
@@ -161,6 +163,7 @@
 - töricht
 - Trübsal
 - übel
+- umsonst
 - unserethalben (unserethalben,unserthalben)
 - unsertwegen
 - unwahrhaftig
@@ -168,6 +171,7 @@
 - vergeben
 - verspüren
 - viererlei
+- wachen
 - wacker
 - wahrhaftig
 - weise
@@ -190,11 +194,11 @@
 - Zeitlang
 - Zeugnis
 - zierlich
-- zutragen
 - zukommen
 - zureden
 - zurichten
 - zürnen
+- zutragen
 - zuvorderst
 - zweierlei
 - zwölferlei

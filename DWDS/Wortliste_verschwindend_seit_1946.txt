@@ -29,6 +29,8 @@
 - beiderlei
 - beipflichten
 - bekümmert
+- beliebig
+- Bestimmung
 - besudeln
 - Bursche
 - Busen
@@ -46,6 +48,7 @@
 - eitel
 - empfinden
 - Empfindung
+- emsig
 - enthalten
 - entrüsten
 - entseelt
@@ -57,6 +60,8 @@
 - fähig
 - Faselei
 - fein
+- ferner
+- fernerhin
 - Fräulein (Fräulein,Frl.)
 - fühlbar
 - fürwahr
@@ -84,6 +89,7 @@
 - Knabe
 - kräuseln
 - Laffe
+- Länderei
 - Lauterkeit
 - lebhaft
 - Leib
@@ -107,10 +113,12 @@
 - redlich
 - reich
 - reinlich
+- rührig
 - Schande
 - schelten
 - Scherge
 - schinden
+- Schmock
 - Schuft
 - Schund
 - Schurke
@@ -128,11 +136,14 @@
 - unbekümmert
 - Unfug
 - Vaterland
+- vermindern
 - vermöge
 - verspüren
 - viererlei
 - Volk
 - Volkslied
+- vorhanden
+- wachen
 - wahr
 - wahrhaft
 - wahrhaftig
