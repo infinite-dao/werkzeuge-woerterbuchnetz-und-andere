@@ -1,7 +1,9 @@
+
 - Abendsegen
 - abermals
 - Abkomme
 - ablohnen
+- abreden
 - abwesen
 - Ach
 - Acht
@@ -40,6 +42,7 @@
 - Büchlein
 - buhlerisch
 - Buhlschaft
+- bürden
 - Bütte
 - da
 - danken
@@ -106,6 +109,7 @@
 - Jungfer
 - Kästlein
 - Kindlein
+- Kunft
 - Labsal
 - Laffe
 - Lämplein
@@ -119,6 +123,7 @@
 - Lob
 - Mägdlein (Mägdlein,Mägdelein)
 - mancherlei
+- mären
 - matt
 - mehrerlei
 - Mündlein
@@ -170,6 +175,7 @@
 - Vater
 - vergeben
 - verspüren
+- vielerlei
 - viererlei
 - wachen
 - wacker
@@ -187,6 +193,7 @@
 - Wunder
 - wunderlich
 - würdig
+- zagen
 - zähmen
 - zart
 - zehnerlei

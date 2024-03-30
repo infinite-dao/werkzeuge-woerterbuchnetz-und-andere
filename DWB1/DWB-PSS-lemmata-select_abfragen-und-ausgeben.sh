@@ -534,6 +534,8 @@ if [[ -e "${json_speicher_datei}" ]];then
     then "der (o./u.a. die) \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +und +f[_.,;]* *$"))
     then "der u. die \(.Wort);"
+    elif (.gram|test("^ *m[_.,;]* +m[_.,;]* *$"))
+    then "der \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
     then "der (o./u.a. das) \(.Wort);"
     elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
@@ -677,6 +679,8 @@ elif (.gram|test("^ *m[_.,;]* *$"))
   then "der (o./u.a. die) \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* +und +f[_.,;]* *$"))
   then "der u. die \(.Wort) (\(.gram));"
+  elif (.gram|test("^ *m[_.,;]* +m[_.,;]* *$"))
+  then "der \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
   then "der (o./u.a. das) \(.Wort) (\(.gram));"
   elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
@@ -899,6 +903,8 @@ case $stufe_formatierung in
     then "<tr><td>\(.Wort), der (o./u.a.: die)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort, männlich vermutlich – o./u.a. weiblich – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* +und +f[_.,;]* *$"))
     then "<tr><td>\(.Wort), der u. die</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort, männlich u. weiblich – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    elif (.gram|test("^ *m[_.,;]* +m[_.,;]* *$"))
+    then "<tr><td>\(.Wort), der</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort, männlich – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* +n[_.,;]* *$"))
     then "<tr><td>\(.Wort), der (o./u.a.: das)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort, männlich vermutlich – o./u.a. sächlich – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
     elif (.gram|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
