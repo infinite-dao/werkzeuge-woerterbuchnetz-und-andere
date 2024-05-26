@@ -207,6 +207,19 @@ esac
 #  -font 'Liberation-Serif' \
 #  -annotate +10+0 "${wort_abfrage} (Wortverlaufskurve dwds.de)"  "${speicher_datei}"
 
+
+WORTLISTE_ohne_leere=()
+for i in "${WORTLISTEN_EINGABE[@]}"; do
+   # überspringe leere Einträge
+   if [ -z "$i" ]; then
+     continue
+   fi
+   WORTLISTE_ohne_leere+=("${i}")
+done
+
+# überschreibe 
+WORTLISTEN_EINGABE=(${WORTLISTE_ohne_leere[@]})
+
 # for wort_abfrage in "${WORTLISTEN_EINGABE[@]}"
 n_woerter=${#WORTLISTEN_EINGABE[@]}
 i_wort=1

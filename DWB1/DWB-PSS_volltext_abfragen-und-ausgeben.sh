@@ -374,7 +374,7 @@ parameter_abarbeiten() {
       # Stufe: 0 oder 1
       stufe_einzeltabelle_odt=1;
     ;;
-    -T | --[Tt][Ee][Ll][Ee][Gg][Rr][Aa][Mm][Mm][Aa][Rr][Cc][Dd][Oo][Ww][Nn])
+    -T | --[Tt][Ee][Ll][Ee][Gg][Rr][Aa][Mm][Mm][Aa][Rr][Kk][Dd][Oo][Ww][Nn])
       # Stufe: 1 oder 3
       case $stufe_formatierung in
       0) stufe_formatierung=1 ;;
@@ -460,14 +460,28 @@ parameter_abarbeiten() {
   [[ -z "${volltextabfrage_api-}" ]] && meldung "${ROT}Fehlender Volltext, der abgefragt werden soll (Abbruch).${FORMAT_FREI}" && nutzung
 
   case $stufe_stichwortabfrage in
-  0|1) json_speicher_datei=$(json_speicher_datei "$volltext_text");
+  0|1) 
+    if [[ ${#ohne_woerterliste_text} -gt 1 ]]; then
+      json_speicher_datei=$( json_speicher_datei "${volltext_text} und ohne Wörter" )
+    else
+      json_speicher_datei=$(json_speicher_datei "$volltext_text");      
+    fi
      titel_text="Volltextsuche „$volltext_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"; 
      ;;
   # 1) json_speicher_datei=$(json_speicher_datei "$volltext_text" "${mit_woerterliste_text}");
   #     titel_text="Volltextsuche „$volltext_text“ mit Stichwort „${mit_woerterliste_text}“ aus Grimm-Wörterbuch ($datum_heute_lang)"; 
   #     ;;
-  2) json_speicher_datei=$(json_speicher_datei "$volltext_text" "${mit_woerterliste_text}");
-     titel_text="Volltextsuche „$volltext_text“ mit Stichwort „${mit_woerterliste_text}“ aus Grimm-Wörterbuch ($datum_heute_lang)"; 
+  2)
+    if [[ ${#ohne_woerterliste_text} -gt 1 ]]; then
+      json_speicher_datei=$( json_speicher_datei "${volltext_text} und ohne Wörter" "${mit_woerterliste_text}")
+    else
+      json_speicher_datei=$(json_speicher_datei "$volltext_text" "${mit_woerterliste_text}");
+    fi
+    if [[ ${#mit_woerterliste_text} -gt 1 ]]; then
+      titel_text="Volltextsuche „$volltext_text“ mit Stichwort „${mit_woerterliste_text}“ aus Grimm-Wörterbuch ($datum_heute_lang)"; 
+    else
+      titel_text="Volltextsuche „$volltext_text“ aus Grimm-Wörterbuch ($datum_heute_lang)"; 
+    fi
      ;;
   esac
   
@@ -490,7 +504,7 @@ parameter_abarbeiten() {
   zusatzbemerkungen_textdatei=$([[ "${ohne_woerterliste_regex}" == "" ]] \
     && printf "${zusatzbemerkungen_textdatei}" \
     || ( [[ ${#zusatzbemerkungen_textdatei} -gt 1 ]] \
-      && printf "${zusatzbemerkungen_textdatei%.*},\n und bewußt ohne die Worte „${ohne_woerterliste_text}“\nweiter eingerenzt." \
+      && printf "${zusatzbemerkungen_textdatei%.*}, und bewußt ohne die Worte „${ohne_woerterliste_text}“ weiter eingerenzt." \
       || printf "${zusatzbemerkungen_textdatei}" ) )
   
   case $stufe_stichworte_eineinzig in 1) 
@@ -499,6 +513,8 @@ parameter_abarbeiten() {
       || printf "${zusatzbemerkungen_textdatei}" )
   ;; 
   esac
+  
+  zusatzbemerkungen_textdatei=$(echo "${zusatzbemerkungen_textdatei}" | fold --spaces)
   
   case $stufe_stichwortabfrage in 
   1) 
