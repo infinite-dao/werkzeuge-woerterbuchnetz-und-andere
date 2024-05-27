@@ -6,7 +6,7 @@ https://woerterbuchnetz.de/DWB/
 
 `DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh` – Dieses Programm fragt Lemmata (Hauptwörter-Einträge) ab über eine Programm-Schnitt-Stelle (PSS, enl. API), und es werden verschiedene Dateien erzeugt, in denen reinweg die nur gefundenen Wörter stehen, oder eine ausführliche Wortlisten-Tabelle:
 - Textdatei nur aus Wörtern und mit Sprachkunst-Angabe (Grammatik) – diese werden immer erstellt
-- hinzufügbar (ODT): Offenes Dokument Textvormat als Wortlisten-Tabelle 
+- hinzufügbar (<abbr title="Offenkundiges Dokument Textformat">ODT</abbr>): Offenkundiges Dokument Textformat als Wortlisten-Tabelle 
 - hinzufügbar (HTML): Netzseite als Wortlisten-Tabelle
 - uvam.
 
