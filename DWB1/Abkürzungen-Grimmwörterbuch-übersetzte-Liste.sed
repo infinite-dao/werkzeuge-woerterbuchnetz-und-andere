@@ -46,7 +46,7 @@ s@\b(laut[.] warh[.])@die lauter warheit (laut warh)@g;
 s@\b(OPITZ) ([<em>]*)t[.] poemata@\1 \2teutsche poemata (t poemata)@g;
 s@\b(OTTOKAR) ([<em>]*)östr[.] reimchron[.]@\1 \2österreichische reimchronik (östr reimchron)@g;
 # östr. reimchron.
-s@\b(OTTOKAR) ([<em>]*)östr[.] reimchr[.]@\1 \2österreichische reimchronik (östr reimchron)@g;
+s@\b(OTTOKAR) ([<em>]*)östr[.] reimchr[.]@\1 \2österreichische reimchronik (östr reimchr)@g;
 # östr. reimchr
 s@\b(ÖLINGER) ([<em>]*)gramm[.]@\1 \2(gramm: vnderricht der hoch teutschen spraach: grammatica sev institvtio verae germanicae linguae)@g;
 #  gramm.
