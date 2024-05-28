@@ -25,6 +25,7 @@
 - anmutig
 - anrichten
 - ansehen
+- Antlitz
 - arg
 - aufwarten
 - ausbündig
@@ -75,6 +76,7 @@
 - erlaben
 - erzeigen
 - Fähnlein
+- falb
 - Fänn
 - feil
 - fein
@@ -95,6 +97,8 @@
 - gerecht
 - geschwind (geschwind,geschwinde)
 - gewahr
+- gewogen
+- Gewogenheit
 - geziemen
 - girren
 - gläubig
@@ -102,6 +106,7 @@
 - glimpflich
 - Grimm
 - grimmig
+- Gunst
 - Hag
 - Händlein
 - heischen
@@ -111,6 +116,7 @@
 - herzlich
 - Hochmut
 - Hoffart
+- Huld
 - irdisch
 - jach
 - jähling
@@ -123,6 +129,7 @@
 - Laffe
 - Lämplein
 - Leib
+- letzen
 - leutselig
 - Leutseligkeit
 - Lichtlein
@@ -143,6 +150,8 @@
 - offenbaren
 - Pfuhl
 - Pfühl
+- Pracht
+- prangen
 - Rat
 - recht
 - rechtschaffen
@@ -151,10 +160,12 @@
 - richten
 - Ringlein
 - Röslein
+- sanft
 - Sattler
 - Schäflein
 - Schande
 - Schätzlein
+- Schelle
 - schelten
 - Scherge
 - Schifflein
@@ -162,6 +173,7 @@
 - schinden
 - schleunig
 - schmähen
+- Schwang
 - sechserlei
 - selig
 - siebenerlei
@@ -208,6 +220,8 @@
 - würdig
 - zagen
 - zähmen
+- Zank
+- zanken
 - zart
 - zehnerlei
 - zehren
@@ -216,7 +230,9 @@
 - Zeugnis
 - Zierde
 - zierlich
+- Zorn
 - zukommen
+- Zuneigung
 - zureden
 - zurichten
 - zürnen

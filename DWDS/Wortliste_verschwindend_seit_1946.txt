@@ -28,7 +28,7 @@
 - Begebnis
 - begreifen
 - begreiflich
-- behänd
+- behänd (behände,behende,behänd,behend)
 - Behelf
 - Behuf
 - beiderlei
@@ -69,6 +69,8 @@
 - Ermunterung
 - erzeigen
 - fähig
+- fahl
+- falb
 - Faselei
 - fein
 - ferner
@@ -86,6 +88,7 @@
 - gleicherweise
 - gleichviel
 - grimmig
+- grollen
 - Heft
 - heischen
 - heiter
@@ -95,6 +98,7 @@
 - hochmütig
 - Hoffart
 - hold
+- Huld
 - hunderterlei
 - jach
 - jäh
@@ -113,6 +117,7 @@
 - Lauterkeit
 - lebhaft
 - Leib
+- letzen
 - leutselig
 - Leutseligkeit
 - liebkosen
@@ -145,6 +150,7 @@
 - Schuft
 - Schund
 - Schurke
+- Schwang
 - seihen
 - spitzfindig
 - stäupen
@@ -179,6 +185,8 @@
 - Wetterleuchten
 - wetterleuchtend
 - Willkür
+- Woge
+- wogen
 - wohlan
 - wohltun
 - woraus
@@ -189,15 +197,19 @@
 - würdig
 - wurzeln
 - zagen
+- Zank
+- zanken
 - zart
 - zartfühlend
 - Zartgefühl
 - Zeitlang
+- zerschellen
 - Zeter
 - Zetergeschrei
 - zetern
 - ziemen
 - zierlich
+- Zorn
 - zuleide
 - zureden
 - zurichten

@@ -35,6 +35,7 @@ abhaengigkeiten_pruefen() {
 
   case $stufe_abbruch in [1-9]) printf "${ORANGE}(Abbruch)${FORMAT_FREI}\n"; exit 1;; esac
 }
+abhaengigkeiten_pruefen
 
 aufraeumen() {
   trap - SIGINT SIGTERM ERR EXIT
@@ -87,15 +88,15 @@ vorlage_pdflatex() {
 \\usepackage{xcolor}
 \\\definecolor{darkblue}{rgb}{0,0,.5}
 
-\\usepackage{multicol}
-\\setlength{\\\columnsep}{1cm}
+% \\usepackage{multicol}
+% \\setlength{\\\columnsep}{1cm}
 
 \\usepackage{hyperref}
 \\hypersetup
 {%
   pdftitle = {${info_titel}},
   pdfsubject = {Wörter seit 1946 verschwindend oder rückläufig},
-  pdfauthor = {${info_urheber}; andreas aus dem Hause [p l a n k]},
+  pdfauthor = {${info_urheber}; ANDREAS aus dem Hause PLANK},
   pdfkeywords = {${info_schluesselwoerter}},
   urlcolor=blue!30!black,%,
   breaklinks=true,
@@ -108,22 +109,22 @@ vorlage_pdflatex() {
 \\\titlehead{${info_titel}}
 \\\title{Seit 1946 verschwindende Wörter}
 \\\subtitle{Korpus Zeitungen}
-\\\author{${info_urheber} \\\and andreas aus dem Hause [p l a n k]}
+\\\author{${info_urheber} \\\and ANDREAS aus dem Hause PLANK}
 \\\date{${datum_heute_lang// (/\\\\\\ (}}
 \\\begin{document}
 \\maketitle
-\\\begin{multicols}{2}
-[
+% \\\begin{multicols}{2}
+% [
 \\\section{Wörter langsam verschwindend}
 Dies ist eine Beispiel-Auswahl an Wörtern die vielleicht langsam ins Vergessen geraten, oder aus dem Alltag verschwinden, sie ist zwar willkürlich gewählt, dennoch hoffentlich aufschlußreich ;-). Die folgenden ${n_schluesselwoerter} Wörter wurden vom Digitalen Wörterbuch der Deutschen Sprache (\\href{https://dwds.de}{dwds.de}) abgefragt, und daraus die anschließenden abnehmenden Wortverlaufskurven dargestellt:
-]
+% ]
 
 \\\hyphenpenalty=10000 \\\exhyphenpenalty=10000 \\\sloppy
 ${info_schluesselwoerter_latex_href}
-\\\end{multicols}
+% \\\end{multicols}
 
 % , pagecommand=\\\section{Diagramme der Einzelwörter}
-\\\includepdf[pages=-]{${pdf_datei_zwischenablage%.*}.pdf} 
+\\\includepdf[pages=-,addtotoc={1,section,1,Wortverlaufskurven,wortverlaufskurven1}]{${pdf_datei_zwischenablage%.*}.pdf} 
 \\\end{document}
 
 VORLAGE

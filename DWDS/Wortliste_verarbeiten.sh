@@ -46,6 +46,7 @@ abhaengigkeiten_pruefen() {
   fi
   case $stufe_abbruch in [1-9]) printf "${ORANGE}(Abbruch)${FORMAT_FREI}\n"; exit 1;; esac
 }
+abhaengigkeiten_pruefen
 
 nutzung_und_ende() {
   local diese_nutzung=''
