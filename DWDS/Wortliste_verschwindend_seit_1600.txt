@@ -104,6 +104,7 @@
 - gläubig
 - Glimpf
 - glimpflich
+- gönnen
 - Grimm
 - grimmig
 - Gunst
@@ -197,6 +198,7 @@
 - unwahrhaftig
 - Vater
 - vergeben
+- vergönnen
 - verspüren
 - Vetter
 - vielerlei
