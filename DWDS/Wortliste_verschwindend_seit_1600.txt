@@ -29,14 +29,18 @@
 - arg
 - aufwarten
 - ausbündig
+- Balsam
 - begaben
 - begreifen
 - behände (behände,behende,behänd,behend)
 - Behelf
 - behelfen
+- beherzigen
+- beherzt
 - beiderlei
 - beipflichten
 - bekümmert
+- belieben
 - beriechen
 - besudeln
 - bisweilen
@@ -161,6 +165,7 @@
 - richten
 - Ringlein
 - Röslein
+- rühren
 - sanft
 - Sattler
 - Schäflein
@@ -182,6 +187,7 @@
 - sonst
 - spitzfindig
 - Sprüchlein
+- Staffel
 - stäupen
 - stet
 - stracks
@@ -191,6 +197,7 @@
 - Töchterlein
 - töricht
 - Trübsal
+- Tugend
 - übel
 - umsonst
 - unserethalben (unserethalben,unserthalben)

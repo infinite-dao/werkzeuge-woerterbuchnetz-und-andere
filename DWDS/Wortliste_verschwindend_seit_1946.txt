@@ -23,6 +23,7 @@
 - Barbarei
 - beachtenswert
 - beachtlich
+- bedächtig
 - begabt
 - Begabung
 - Begebnis
@@ -30,11 +31,14 @@
 - begreiflich
 - behänd (behände,behende,behänd,behend)
 - Behelf
+- beherzigen
 - Behuf
 - beiderlei
 - beipflichten
+- beklommen
 - bekümmert
 - beliebig
+- bersten
 - Bestimmung
 - besudeln
 - bloß
@@ -140,6 +144,7 @@
 - redlich
 - reich
 - reinlich
+- rühren
 - rührig
 - Schande
 - schelten
@@ -159,6 +164,7 @@
 - töricht
 - trüb
 - tüchtig
+- Tugend
 - Tünche
 - übel
 - Ulk
