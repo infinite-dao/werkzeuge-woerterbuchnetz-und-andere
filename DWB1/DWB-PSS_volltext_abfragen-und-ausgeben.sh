@@ -856,6 +856,8 @@ if [[ -e "${json_speicher_datei}" ]];then
     then "das \(.Wort);"
     elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
     then "das \(.Wort);"
+    elif (.gram|test("^ *nomen *$"))
+    then "\(.Wort);"
   else "\(.wort);"
   end
   '
@@ -1003,6 +1005,9 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
     then "das \(.Wort) (\(.gram));"
     elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
     then "das \(.Wort) (\(.gram));"
+    
+    elif (.gram|test("^ *nomen *$"))
+    then "\(.Wort) (\(.gram));"
 
   else "\(.wort) (\(.gram));"
   end
@@ -1187,6 +1192,8 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   then "<tr><td>\(.Wort), das</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Nennwort einer Handlung, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.Wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
   elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
   then "<tr><td>\(.Wort), das</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Nennwort-Machendes, sächlich (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.Wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
+  elif (.gram|test("^ *nomen *$"))
+  then "<tr><td>\(.Wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Nennwort (auch Dingwort, Hauptwort, Namenwort, ?Eigenwort)</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.Wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"
 
   elif  (.gram|test("^ *part[icz]*[.;]? *$"))
   then "<tr><td>\(.wort)</td><td><wbnetzkwiclink>\(.wbnetzkwiclink_all_result)</wbnetzkwiclink></td><td>\(.gram) ~ Mittelwort</td><td><small><a href=“https://woerterbuchnetz.de/?sigle=DWB&lemid=\(.wbnetzid)”>https://woerterbuchnetz.de/DWB/\(.wort)</a></small></td><td><small><a href=“\(.wbnetzlink)”>\(.wbnetzlink)</a></small></td></tr>"

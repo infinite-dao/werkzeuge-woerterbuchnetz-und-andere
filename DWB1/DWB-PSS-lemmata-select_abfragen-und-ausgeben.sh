@@ -504,7 +504,7 @@ if [[ -e "${json_speicher_datei}" ]];then
       end
   | if .gram == null or .gram == ""
   then "\(.wort);"
-  elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
+  elif (.gram|test("^ *f[_.,;]* *$|^ *f[_.,;]* *f[_.,;]* *$|^ *fem[_.,;]* *$"))
   then "die \(.Wort);"
     elif (.gram|test("^ *f[_.,;]*\\? *$"))
     then "?die \(.Wort);"
@@ -570,6 +570,8 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
     then "das \(.Wort);"
     
+  elif (.gram|test("^ *nomen *$"))
+    then "\(.Wort);"
   elif (.gram|test("^ *subst[. _.,;]*$"))
     then "\(.Wort);"
 
@@ -652,7 +654,7 @@ cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterl
       end
 | if .gram == null or .gram == ""
 then "\(.wort);"
-elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
+elif (.gram|test("^ *f[_.,;]* *$|^ *f[_.,;]* *f[_.,;]* *$|^ *fem[_.,;]* *$"))
 then "die \(.Wort) (\(.gram));"
   elif (.gram|test("^ *f[_.,;]*\\? *$"))
   then "?die \(.Wort) (\(.gram));"
@@ -719,6 +721,8 @@ elif (.gram|test("^ *n[_.,;]* *$"))
   elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
   then "das \(.Wort) (\(.gram));"
 
+elif (.gram|test("^ *nomen *$"))
+    then "\(.Wort) (\(.gram);"
 elif (.gram|test("^ *subst[. _.,;]*$"))
   then "\(.Wort) (\(.gram));"
 
@@ -875,7 +879,7 @@ case $stufe_formatierung in
   elif  (.gram|test("^ *dim[inutiv]*[.,;] *$"))
   then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Verniedlichung, Verkleinerung</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   
-  elif (.gram|test("^ *f[_.,;]* *$|^ *fem[_.,;]* *$"))
+  elif (.gram|test("^ *f[_.,;]* *$|^ *f[_.,;]* *f[_.,;]* *$|^ *fem[_.,;]* *$"))
   then "<tr><td>\(.Wort), die</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort, weiblich – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *f[_.,;]*\\? *$"))
   then "<tr><td>\(.Wort), die?</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort, ?weiblich – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
@@ -948,6 +952,10 @@ case $stufe_formatierung in
     elif (.gram|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
     then "<tr><td>\(.Wort), das</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort-Machendes – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
+    elif (.gram|test("^ *nomen *$"))
+    then "<tr><td>\(.Wort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+    
+
   elif  (.gram|test("^ *part[icz]*[.;]? *$"))
   then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Mittelwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
@@ -973,7 +981,7 @@ case $stufe_formatierung in
   then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ sich-bezogenes Zeitwort, Tuwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 
   elif (.gram|test("^ *subst. *$"))
-  then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
+  then "<tr><td>\(.Wort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ Nennwort – Dingwort, Hauptwort, Namenwort, ?Eigenwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
   elif (.gram|test("^ *subst. *inf[.]?$|^ *subst. *v[er]?b[.]?$"))
   then "<tr><td>\(.label)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.gram) ~ nennwörtliches Zeitwort, Tuwort</td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>www.woerterbuchnetz.de/DWB/\(.label)</a></small></td><td><small><a href=“https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)”>https://www.woerterbuchnetz.de?sigle=DWB&amp;lemid=\(.value)</a></small></td></tr>"
 

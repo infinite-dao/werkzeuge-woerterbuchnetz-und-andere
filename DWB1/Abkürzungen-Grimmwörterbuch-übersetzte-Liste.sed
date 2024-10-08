@@ -1,4 +1,5 @@
 # sed --regexp-extended --file ~/Programme/werkzeuge-woerterbuchnetz-und-andere/DWB1/Abkürzungen-Grimmwörterbuch-übersetzte-Liste.sed  "${datei}" > "${datei%.*}_ausgeschrieben.txt" && cat "${datei%.*}_ausgeschrieben.txt" | tr " " "\n" | sort | uniq -c | grep "[0-9]\+ [a-z]\+[.]"  | sort -k2
+# sed --regexp-extended --file ~/Programme/werkzeuge-woerterbuchnetz-und-andere/DWB1/Abkürzungen-Grimmwörterbuch-übersetzte-Liste.sed  "${datei}.txt" | fold --spaces > "${datei%.*}.ersetzt.txt"
 
 # zuerst übersetzen
 
@@ -144,7 +145,8 @@ s@\b(Liliencrons) volksl[.]@\1 (volksl: die historischen volkslieder der Deutsch
 # longob
 s@\b(langob)[.]@langobardisch (\1)@g;
 s@\b(lat)[.]@lateinisch (\1)@g;
-s@\b(lit)[.]@litauisch (\1)@g;
+# s@\b(lit)[.]@litauisch (\1)@g;
+s@\b(litt)[.]@littauisch (\1)@g;
 
 s@\b(md)[.]@mitteldeutsch (\1)@g;
 s@\b(mengl)[.]@mittelenglisch (\1)@g;

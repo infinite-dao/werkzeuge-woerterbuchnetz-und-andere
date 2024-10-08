@@ -89,7 +89,7 @@ echo -e "${diese_nutzung}" # mit Farbausgabe
 }
 
 
-parameter_abarbeiten() {
+beiwerte_abarbeiten() {
   # default values of variables set from params
   case $(date '+%m') in
   01|1) datum_heute_lang=$(date '+%_d. im Wintermonat (%B) %Y' | sed 's@^ *@@; s@Januar@& ~ röm. Gott Janus@;') ;;
@@ -156,7 +156,7 @@ parameter_abarbeiten() {
 }
 
 farben_bereitstellen
-parameter_abarbeiten "$@"
+beiwerte_abarbeiten "$@"
 
 IFS=$'\n'
 for diese_zeile_ohne_suchcode in $( \
@@ -187,11 +187,22 @@ for diese_zeile_mit_suchcode in $( \
   );do
   dieses_wort_mit_suchcode=$( echo "${diese_zeile_mit_suchcode}" \
     | sed --regexp-extended "
-      s@^[-—*]\s+(\w+.*)\$@\1@;
+      s@^[-—*][[:blank:]]+(\w+.*)\$@\1@;
       s@[(].*@@;
-      s@^\s*@@; s@\s*\$@@;
+      s@^[[:blank:]]*@@; s@[[:blank:]]*\$@@;
       "  )
-  dieser_suchcode=$( echo "${diese_zeile_mit_suchcode}" | sed --silent --regexp-extended "s@^[-—*]\s+(\w+)\b +\(([^()]+)\).*\$@\2@; s@^@{'@; s@\$@'}@; s@,@','@p" )
+  dieser_suchcode=$( echo "${diese_zeile_mit_suchcode}" | \
+    sed --silent --regexp-extended "
+    /\w+[[:blank:]]*,[[:blank:]]*\w+/{
+      s@^[-—*][[:blank:]]+(\w+)\b[[:blank:]]+\(([^()]+)\).*\$@\2@; 
+      s@^[[:blank:]]+@@; s@[[:blank:]]+\$@@; 
+      s@^@{'@; 
+      s@\$@'}@; 
+      s@[[:blank:]]*,[[:blank:]]*@','@g;
+      s@[[:blank:]]*@@g;
+      p;
+    }
+  " );
   meldung "${GRUEN}Verarbeite${FORMAT_FREI} ${dieses_wort_mit_suchcode} mit Suchcode ${dieser_suchcode} …";
   if [[ ${stufe_seit_1946_suchen} -gt 0 ]];then
     
