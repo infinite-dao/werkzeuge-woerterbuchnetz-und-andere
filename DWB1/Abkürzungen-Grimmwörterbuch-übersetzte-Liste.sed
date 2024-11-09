@@ -4,6 +4,9 @@
 # zuerst übersetzen
 
 # Literatur
+
+s@\b([A-Z]+) ([<em>]*)Ssp[.]@\1 \2Sachsenspiegel (Ssp)@g;
+
 s@\b([A-Z]+) ([<em>]*)ged[.]@\1 \2gedichte (ged)@g;
 
 s@\b(arch[.] f[.] culturgesch[.])@archiv für culturgeschichte (arch f culturgesch)@g;
