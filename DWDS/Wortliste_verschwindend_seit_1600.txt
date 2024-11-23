@@ -59,8 +59,11 @@
 - belieben
 - beriechen
 - beseelen
+- besichtigen
 - besudeln
 - bewahren
+- bezeugen
+- Bezeugung
 - bezwingen
 - bisweilen
 - boshaft,boshaftig
@@ -133,6 +136,7 @@
 - gerecht
 - geschwind (geschwind,geschwinde)
 - Gestade
+- Gestirn
 - gewahr
 - gewogen
 - Gewogenheit
@@ -149,9 +153,11 @@
 - grimmig
 - Gunst
 - Hag
+- Hamen
 - Händlein
 - harren
 - heften
+- heillos
 - heischen
 - Herz
 - Herzeleid
@@ -160,9 +166,14 @@
 - herzlich
 - hienieden
 - hinnen
+- Hinterlist
 - Hochmut
 - Hoffart
 - Huld
+- hurtig
+- Hurtigkeit
+- Imme
+- irden
 - irdisch
 - jach
 - jähling
@@ -183,6 +194,7 @@
 - Lämplein
 - Lebzeit
 - Leib
+- ledig
 - letzen
 - leutselig
 - Leutseligkeit
@@ -193,10 +205,12 @@
 - lind
 - Lob
 - Mägdlein (Mägdlein,Mägdelein)
+- mählich
 - mancherlei
 - mären
 - matt
 - mehrerlei
+- Meisterhand
 - Mündlein
 - Nachkomme
 - neunerlei
@@ -245,6 +259,7 @@
 - selig
 - seufzen
 - Seufzer
+- sichtig
 - siebenerlei
 - Söhnlein
 - sonst
@@ -264,6 +279,7 @@
 - töricht
 - Trübsal
 - trunken
+- Tücke
 - Tugend
 - tünchen
 - tunken
@@ -282,6 +298,7 @@
 - Vetter
 - vielerlei
 - viererlei
+- Vorsatz
 - wachen
 - wacker
 - Wagehals
@@ -312,6 +329,7 @@
 - zehren
 - Zeitlang
 - Zetergeschrei
+- zeugen
 - Zeugnis
 - Zierde
 - zierlich
