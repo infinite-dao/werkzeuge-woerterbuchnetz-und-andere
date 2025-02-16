@@ -3,9 +3,21 @@
 - anstaunen: 1800-1830
 - aufbieten: 1820-1870
 - bloß: 1700
+- entschlummern: 1780-1809
+- Gefild, Gefilde: 1755-1809
+- Getöse (Getöse): 1750-1819
+- huldigen : 1810-1889
 - Lebewohl (Lebewohl,Lebwohl): 1800-1890
 - Meisterhand: 1770-1819
+- minder: 1820-1859
 - Napf: 1860-1880
+- schicklich: 1780-1809
+- schlummern: 1780-1809
 - Schoppen: 1800-1880
 - Schwank: 1880-1909
-- Weistum: 1860-1900Wei
+- sinnig: 1830-1869
+- Tadel: 1770-1839
+- tadellos: 1890-1949
+- Weistum: 1860-1900
+- Wink: 1750-1820
+
