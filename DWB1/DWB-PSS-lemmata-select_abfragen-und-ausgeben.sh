@@ -678,7 +678,7 @@ if [[ -e "${json_speicher_datei}" ]];then
     # - `verbum`
     # - `verbum.`
     # - `zahlw.`
-    
+
     cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
     '
   def woerterbehalten: ["DWB1", "DWB2"];
@@ -763,26 +763,45 @@ if [[ -e "${json_speicher_datei}" ]];then
     | if $w == null or $w == ""
     then ""
     # Anfangswörter
-    elif ($w|test("^fusz"))   then ($w|sub("^fusz"; "fuß"))
-    elif ($w|test("^Fusz"))   then ($w|sub("^Fusz"; "Fuß"))
-    elif ($w|test("^fuesz"))  then ($w|sub("^fuesz"; "füß"))
-    elif ($w|test("^Fuesz"))  then ($w|sub("^Fuesz"; "Füß"))
-    elif ($w|test("^füsz"))   then ($w|sub("^füsz"; "füß"))
-    elif ($w|test("^Füsz"))   then ($w|sub("^Füsz"; "Füß"))
-    elif ($w|test("^misz"))   then ($w|sub("^misz"; "miß"))
-    elif ($w|test("^Misz"))   then ($w|sub("^Misz"; "Miß"))
-    elif ($w|test("^spasz"))  then ($w|sub("^spasz"; "spaß"))
-    elif ($w|test("^Spasz"))  then ($w|sub("^Spasz"; "Spaß"))
+    elif ($w|test("^auszen"))    then ($w|sub("^auszen"; "außen"))
+    elif ($w|test("^Auszen"))    then ($w|sub("^Auszen"; "Außen"))
+    elif ($w|test("^fusz"))    then ($w|sub("^fusz"; "fuß"))
+    elif ($w|test("^Fusz"))    then ($w|sub("^Fusz"; "Fuß"))
+    elif ($w|test("^fuesz"))   then ($w|sub("^fuesz"; "füß"))
+    elif ($w|test("^Fuesz"))   then ($w|sub("^Fuesz"; "Füß"))
+    elif ($w|test("^füsz"))    then ($w|sub("^füsz"; "füß"))
+    elif ($w|test("^Füsz"))    then ($w|sub("^Füsz"; "Füß"))
+    elif ($w|test("^grosz"))   then ($w|sub("^grosz"; "groß"))
+    elif ($w|test("^Grosz"))   then ($w|sub("^Grosz"; "Groß"))
+    elif ($w|test("^masz"))    then ($w|sub("^masz"; "maß"))
+    elif ($w|test("^Masz"))    then ($w|sub("^Masz"; "Maß"))
+    elif ($w|test("^misz"))    then ($w|sub("^misz"; "miß"))
+    elif ($w|test("^Misz"))    then ($w|sub("^Misz"; "Miß"))
+    elif ($w|test("^spasz"))   then ($w|sub("^spasz"; "spaß"))
+    elif ($w|test("^Spasz"))   then ($w|sub("^Spasz"; "Spaß"))
+    elif ($w|test("^umrisz"))   then ($w|sub("^umrisz"; "umriß"))
+    elif ($w|test("^Umrisz"))   then ($w|sub("^Umrisz"; "Umriß"))
+    # Mittelwörter
+    elif ($w|test("nusz"))   then ($w|sub("nusz"; "nuß"))
+    elif ($w|test("Nusz"))   then ($w|sub("Nusz"; "Nuß"))
+    elif ($w|test("schlusz"))   then ($w|sub("schlusz"; "schluß"))
+    elif ($w|test("Schlusz"))   then ($w|sub("Schlusz"; "Schluß"))
+    elif ($w|test("schusz"))   then ($w|sub("schusz"; "schuß"))
+    elif ($w|test("Schusz"))   then ($w|sub("Schusz"; "Schuß"))
     # Endwörter
-    elif ($w|test("szchen$")) then ($w|sub("szchen$"; "ßchen"))
-    elif ($w|test("sze$"))    then ($w|sub("sze$"; "ße"))
-    elif ($w|test("aesz$"))   then ($w|sub("aesz$"; "äß"))
-    elif ($w|test("äsz$"))    then ($w|sub("äsz$"; "äß"))
-    elif ($w|test("osz$"))    then ($w|sub("osz$"; "oß"))
-    elif ($w|test("ösz$"))    then ($w|sub("ösz$"; "öß"))
-    elif ($w|test("oesz$"))   then ($w|sub("oesz$"; "öß"))
-    elif ($w|test("uesz$"))   then ($w|sub("uesz$"; "üß"))
-    elif ($w|test("üsz$"))    then ($w|sub("üsz$"; "üß"))
+    elif ($w|test("szchen$"))  then ($w|sub("szchen$"; "ßchen"))
+    elif ($w|test("sze$"))     then ($w|sub("sze$"; "ße"))
+    elif ($w|test("szt$"))     then ($w|sub("szt$"; "ßt"))
+    elif ($w|test("szen$"))     then ($w|sub("szen$"; "ßen"))
+    elif ($w|test("szig$"))     then ($w|sub("szig$"; "ßig"))
+    elif ($w|test("aesz$"))    then ($w|sub("aesz$"; "äß"))
+    elif ($w|test("äsz$"))     then ($w|sub("äsz$"; "äß"))
+    elif ($w|test("asz$"))     then ($w|sub("asz$"; "aß"))
+    elif ($w|test("osz$"))     then ($w|sub("osz$"; "oß"))
+    elif ($w|test("ösz$"))     then ($w|sub("ösz$"; "öß"))
+    elif ($w|test("oesz$"))    then ($w|sub("oesz$"; "öß"))
+    elif ($w|test("uesz$"))    then ($w|sub("uesz$"; "üß"))
+    elif ($w|test("üsz$"))     then ($w|sub("üsz$"; "üß"))
     else $w
     end
   ;
@@ -1071,19 +1090,19 @@ if [[ -e "${json_speicher_datei}" ]];then
     # andere Wortarten
     elif ($g|test("^ *adj[ectiv]*[_.,;]* *$|^ *adj[ectiv]*[_.,;]* adj[ectiv]*[_.,;]* *$"))
     then {
-      wort_mit_geschlechtswort: $w, 
+      wort_mit_geschlechtswort: $w,
       geschlechtswort_vorm_wort: $w,
       grammatik_deutung: ($g + " ~ Eigenschaftswort, Beiwort")
     }
     elif ($g|test("^ *adj[ectiv]*[_.,;]*\\?[_.,;]* *$"))
     then {
-      wort_mit_geschlechtswort: $w, 
+      wort_mit_geschlechtswort: $w,
       geschlechtswort_vorm_wort: $w,
       grammatik_deutung: ($g + " ~ ?Eigenschaftswort, Beiwort")
     }
     elif ($g|test("^ *adj[ectiv]*[_.,;]* f[.,;]*$"))
     then {
-      wort_mit_geschlechtswort: $w, 
+      wort_mit_geschlechtswort: $w,
       geschlechtswort_vorm_wort: $w,
       grammatik_deutung: ($g + " ~ Eigenschaftswort, Beiwort (mit Beispiel-Nennwort weiblich)")
     }
@@ -1274,7 +1293,7 @@ if [[ -e "${json_speicher_datei}" ]];then
     | jq  --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
     -r '
   .
-  | unique_by(.Wortdeutung_mit_Grammatik.geschlechtswort_vorm_wort) 
+  | unique_by(.Wortdeutung_mit_Grammatik.geschlechtswort_vorm_wort)
   | sort_by(.gramHautgruppen, .wort_umlaut_geschrieben, .Wortdeutung_mit_Grammatik.geschlechtswort_vorm_wort )
   | .[]
   | if ($ohne_woerterliste_regex|length) == 0
