@@ -765,6 +765,8 @@ if [[ -e "${json_speicher_datei}" ]];then
     # Anfangswörter
     elif ($w|test("^auszen"))    then ($w|sub("^auszen"; "außen"))
     elif ($w|test("^Auszen"))    then ($w|sub("^Auszen"; "Außen"))
+    elif ($w|test("^auszer"))    then ($w|sub("^auszen"; "außer"))
+    elif ($w|test("^Auszer"))    then ($w|sub("^Auszen"; "Außer"))
     elif ($w|test("^busz"))    then ($w|sub("^busz"; "buß"))
     elif ($w|test("^Busz"))    then ($w|sub("^Busz"; "Buß"))
     elif ($w|test("^fusz"))    then ($w|sub("^fusz"; "fuß"))
