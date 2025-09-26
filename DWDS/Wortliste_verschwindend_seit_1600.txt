@@ -325,6 +325,7 @@
 - stracks
 - Stündlein
 - tadeln
+- Tand
 - taugen
 - tauglich
 - tausenderlei
