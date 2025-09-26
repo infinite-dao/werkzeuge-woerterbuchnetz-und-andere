@@ -13,25 +13,54 @@ abhaengigkeiten_pruefen() {
   local stufe_abbruch=0
 
   if ! [[ -x "$(command -v wget)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} wget ${ORANGE} zum Abspeichern von Netzdateien nicht gefunden: Bitte${FORMAT_FREI} wget ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} wget ${ORANGE} zum Abspeichern von Netzdateien nicht gefunden: Bitte${FORMAT_FREI} wget ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v inkscape)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} inkscape ${ORANGE}nicht gefunden: Bitte Inkscape über die Programm-Verwaltung installieren, zur Umwandlung SVG → PDF.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    # flatpak list | grep --ignore-case --only-matching 'org.[^ ]*inkscape'
+    if  [[ -x "$(command -v flatpak)" ]]; then
+      if [[ -z "$(command flatpak list | grep --ignore-case --only-matching 'org.[^ ]*inkscape')" ]]; then
+        printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} inkscape ${ORANGE}auch nicht in flatpak gefunden: Bitte Inkscape über die Programm-Verwaltung installieren, zur Umwandlung SVG → PDF.${FORMAT_FREI}\n"; stufe_abbruch=1;
+      # else
+      #   # flatpak und Inkscape gefunden
+      fi
+    else
+      printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} inkscape ${ORANGE}nicht gefunden (auch nicht als flatpak): Bitte Inkscape über die Programm-Verwaltung installieren, zur Umwandlung SVG → PDF.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    fi
   fi
+
   if ! [[ -x "$(command -v gs)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} gs ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} gs ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v ps2pdf)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} ps2pdf ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} ps2pdf ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v pdftk)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} pdftk ${ORANGE}nicht gefunden: Bitte pdftk über die Programm-Verwaltung installieren oder vom Netz: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} pdftk ${ORANGE}nicht gefunden: Bitte pdftk über die Programm-Verwaltung installieren oder vom Netz: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v enscript)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} enscript ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Texte oder Textdateien in PostScript, HTML, u.a. umwandeln).${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} enscript ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Texte oder Textdateien in PostScript, HTML, u.a. umwandeln).${FORMAT_FREI}\n"; stufe_abbruch=1;
+    # enscript --list-media
+    #   bekannte Medien:
+    #   Name             Weite  H?he    llx     lly     urx     ury
+    #   ------------------------------------------------------------
+    #   Letterdj         612    792     18      40      594     756
+    #   A4dj             595    842     18      50      577     806
+    #   EnvMonarch       279    540     18      36      261     504
+    #   EnvDL            312    624     18      36      294     588
+    #   EnvC5            459    649     18      36      441     613
+    #   Env10            297    684     18      36      279     648
+    #   EnvISOB5         499    709     18      36      463     673
+    #   B5               516    729     18      36      498     693
+    #   A5               421    595     18      36      403     559
+    #   A4               595    842     18      36      577     806
+    #   A3               842    1191    18      36      824     1155
+    #
+    # cat ~/.enscriptrc # Media: A6 nachträglich hinzugefügt
+    #   Media: A6 298 421 18 36 280 385
+
   fi
   if ! [[ -x "$(command -v sed)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} sed ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Zeichenketten suchen und ersetzen).${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} sed ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Zeichenketten suchen und ersetzen).${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   case $stufe_abbruch in [1-9]) printf "${ORANGE}(Abbruch)${FORMAT_FREI}\n"; exit 1;; esac
 }
@@ -53,7 +82,7 @@ Verwendbare Wahlmöglichkeiten:
       --seit_1946         Verlaufskurfe aus dem Wortkorpus „Zeitungen seit 1945/46“ erstellen
 -b,   --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
 -e,   --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
-      --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
+      --debug             Befehlsmeldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
       --farb-frei         Meldungen ohne Farben ausgeben
 
 Technische Anmerkungen:
@@ -84,7 +113,10 @@ abschlussarbeiten() {
     if [[ $(ls -A *DWDS-Wortverlauf*.svg* 2>/dev/null | head -c1 | wc -c) -gt 0 ]];then
       echo -e "${GRUEN}Ende: Siehe Wortverlaufskurve(n) … ${FORMAT_FREI}"
       datei_als_regex=$( echo "${speicher_datei}" | sed --regexp-extended ' s@([()])@\\\1@g; ' )
-      ls -lA *DWDS-Wortverlauf*.svg* | grep --color=always --context=3 "^${datei_als_regex}"
+
+      # echo -e "${GRUEN}Ende: $datei_als_regex … ${FORMAT_FREI}"
+      # ls -lA *DWDS-Wortverlauf*.svg* | grep --color=always --context=3 "^${datei_als_regex}"
+      ls -lA *DWDS-Wortverlauf*.svg* | grep --color=always --context=3 "${speicher_datei}"
     else
       echo -e "${ORANGE}Ende: Keine Wortverlaufskurven gefunden … ${FORMAT_FREI}"
     fi
@@ -139,6 +171,7 @@ parameter_abarbeiten() {
   stufe_belasse_alte_verlaufskurve=0
   suchcodeliste=""
   abgefragte_zusatz_woerter=""
+  inkscape_befehl=""
   
   # To be able to pass two flags as -ab, instead of -a -b, some additional code would be needed.
   # echo "jpeg" | sed "s@.@[\U\0\L\0]@g"
@@ -176,15 +209,48 @@ parameter_abarbeiten() {
     read -ra WORTLISTEN_EINGABE <<< "${ARGUMENTE[@]}"
     unset IFS # alten for-Trenner zurück
   else
-    meldung_abbruch "${ROT}Argumente nicht verstanden: ${ARGUMENTE[@]} (Abbruch).${FORMAT_FREI}"  
+    meldung_abbruch "${ROT}Argumente nicht verstanden: ${ARGUMENTE[@]} (Abbruch).${FORMAT_FREI}"
   fi
-  if [[ ${#suchcodeliste} -gt 0 ]];then  
+  if [[ ${#suchcodeliste} -gt 0 ]];then
     IFS=$';' # überschreibe for-Trenner → Zeilenumbruch oder ;
     read -a SUCHCODELISTE <<< "${suchcodeliste}"
     unset IFS # alten for-Trenner zurück
   else
     SUCHCODELISTE=()
   fi
+
+  if [[ -x "$(command -v inkscape)" ]]; then
+    inkscape_befehl='inkscape';
+  else
+    # flatpak list | grep --ignore-case --only-matching 'org.[^ ]*inkscape'
+    # if  [[ -x "$(command -v flatpak)" ]]; then
+    #   echo "ja flatpak kann befehligt werden";
+    #   befehls_angabe_inkscape_fuer_flatpak="$(command flatpak list | grep --ignore-case --only-matching 'org.[^ ]*inkscape')";
+    #   if  [[ -z "${befehls_angabe_inkscape_fuer_flatpak}" ]]; then
+    #     echo "inkscape nicht befehligbar über flatpak";
+    #   else
+    #     inkscape_befehl="flatpak run ${befehls_angabe_inkscape_fuer_flatpak}"
+    #     echo "ja inkscape kann befehligt werden über: ${inkscape_befehl}";
+    #   fi
+    # else
+    #   echo "flatpak nicht befehligbar";
+    # fi
+    if  [[ -x "$(command -v flatpak)" ]]; then
+      # echo "ja flatpak kann befehligt werden";
+      befehls_angabe_inkscape_fuer_flatpak="$(command flatpak list | grep --ignore-case --only-matching 'org.[^ ]*inkscape')";
+      if  [[ -z "${befehls_angabe_inkscape_fuer_flatpak}" ]]; then
+        # echo "inkscape nicht befehligbar über flatpak";
+        meldung_abbruch "${ROT}Inkscape in flatpak nicht gefunden (Abbruch).${FORMAT_FREI}"
+      else
+        inkscape_befehl="flatpak run ${befehls_angabe_inkscape_fuer_flatpak}"
+        # echo "ja inkscape kann befehligt werden über: ${inkscape_befehl}";
+      fi
+    else
+      meldung_abbruch "${ROT}Inkscape nicht gefunden, auch nicht als flatpak (Abbruch).${FORMAT_FREI}"
+    fi
+  fi # if inkscape_befehl
+
+
   return 0
 }
 
@@ -285,7 +351,7 @@ do
       text_beschriftung=$( echo -e "${text_beschriftung}\n${abgefragte_zusatz_woerter//,/+}" )
     fi    
     
-    inkscape --export-filename="${zwischenspeicher_datei_1}" "${dwds_datei}"
+    $inkscape_befehl --export-filename="${zwischenspeicher_datei_1}" "${dwds_datei}"
     # pdftk datei.pdf dump_data → z.B. PageMediaDimensions: 225 155
     ursprungs_breite_hoehe_punkte=$( pdftk "${zwischenspeicher_datei_1}" dump_data \
       | sed --silent --regexp-extended "/PageMediaDimensions:/ { s@PageMediaDimensions: *([0-9]+) ([0-9]+)@\1×\2@p }" )
@@ -302,10 +368,11 @@ do
           "<< /CurrPageNum 1 def /Install {0 $randzusatz_punkte translate} bind  >> setpagedevice" \
           -f "${zwischenspeicher_datei_1}" \
       && echo "${text_beschriftung}" | \
-        enscript --no-header --media=a6 --landscape --word-wrap --font="Times-Roman18" \
+        enscript --no-header --media='A6' --landscape --word-wrap --font="Times-Roman18" \
         --margins=250:0:0:0 -o- | \
         ps2pdf - | \
         pdftk "${zwischenspeicher_datei_2}" stamp - output "${speicher_datei}"
+        # enscript --no-header --media='A6 298 421 18 36 280 385' --landscape --word-wrap --font="Times-Roman18" \
     
     if [[ ${stufe_dateienbehalten:-0} -eq 0 ]];then
       case ${stufe_verausgaben:-0} in
