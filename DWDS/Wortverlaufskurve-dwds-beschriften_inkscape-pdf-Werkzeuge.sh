@@ -31,6 +31,9 @@ abhaengigkeiten_pruefen() {
   if ! [[ -x "$(command -v gs)" ]]; then
     printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} gs ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
+  if ! [[ -x "$(command -v iconv)" ]]; then
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} iconv ${ORANGE}nicht gefunden: Bitte Iconv über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+  fi
   if ! [[ -x "$(command -v ps2pdf)" ]]; then
     printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} ps2pdf ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
@@ -116,7 +119,7 @@ abschlussarbeiten() {
 
       # echo -e "${GRUEN}Ende: $datei_als_regex … ${FORMAT_FREI}"
       # ls -lA *DWDS-Wortverlauf*.svg* | grep --color=always --context=3 "^${datei_als_regex}"
-      ls -lA *DWDS-Wortverlauf*.svg* | grep --color=always --context=3 "${speicher_datei}"
+      ls -lA *DWDS-Wortverlauf*.svg* | grep --color=always --context=1 "${speicher_datei}"
     else
       echo -e "${ORANGE}Ende: Keine Wortverlaufskurven gefunden … ${FORMAT_FREI}"
     fi
@@ -343,7 +346,7 @@ do
         "https://www.dwds.de/r/plot/image/?v=hist&q=${abfrage_code}" 
     fi
     if [[ $stufe_seit_1946_suchen -gt 0 ]];then
-      text_beschriftung="${wort_abfrage} (Wortverlauf dwds.de: Zeitungen 1946…)";
+      text_beschriftung="${wort_abfrage} (Wortverlauf dwds.de: Zeitungen 1946..)";
     else
       text_beschriftung="${wort_abfrage} (Wortverlauf dwds.de: DTA+DWDS)"
     fi
@@ -368,6 +371,7 @@ do
           "<< /CurrPageNum 1 def /Install {0 $randzusatz_punkte translate} bind  >> setpagedevice" \
           -f "${zwischenspeicher_datei_1}" \
       && echo "${text_beschriftung}" | \
+        iconv --from-code=utf-8 --to-code=latin1 | \
         enscript --no-header --media='A6' --landscape --word-wrap --font="Times-Roman18" \
         --margins=250:0:0:0 -o- | \
         ps2pdf - | \

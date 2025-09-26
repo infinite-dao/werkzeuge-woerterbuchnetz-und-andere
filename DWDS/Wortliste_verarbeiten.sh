@@ -24,25 +24,37 @@ abhaengigkeiten_pruefen() {
   local stufe_abbruch=0
 
   if ! [[ -x "$(command -v wget)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} wget ${ORANGE} zum Abspeichern von Netzdateien nicht gefunden: Bitte${FORMAT_FREI} wget ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} wget ${ORANGE} zum Abspeichern von Netzdateien nicht gefunden: Bitte${FORMAT_FREI} wget ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
+#   if ! [[ -x "$(command -v inkscape)" ]]; then
+#     printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} inkscape ${ORANGE}nicht gefunden: Bitte Inkscape über die Programm-Verwaltung installieren, zur Umwandlung SVG → PDF.${FORMAT_FREI}\n"; stufe_abbruch=1;
+#   fi
   if ! [[ -x "$(command -v inkscape)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} inkscape ${ORANGE}nicht gefunden: Bitte Inkscape über die Programm-Verwaltung installieren, zur Umwandlung SVG → PDF.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    # flatpak list | grep --ignore-case --only-matching 'org.[^ ]*inkscape'
+    if  [[ -x "$(command -v flatpak)" ]]; then
+      if [[ -z "$(command flatpak list | grep --ignore-case --only-matching 'org.[^ ]*inkscape')" ]]; then
+        printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} inkscape ${ORANGE}auch nicht in flatpak gefunden: Bitte Inkscape über die Programm-Verwaltung installieren, zur Umwandlung SVG → PDF.${FORMAT_FREI}\n"; stufe_abbruch=1;
+      # else
+      #   # flatpak und Inkscape gefunden
+      fi
+    else
+      printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} inkscape ${ORANGE}nicht gefunden (auch nicht als flatpak): Bitte Inkscape über die Programm-Verwaltung installieren, zur Umwandlung SVG → PDF.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    fi
   fi
   if ! [[ -x "$(command -v gs)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} gs ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} gs ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v ps2pdf)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} ps2pdf ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} ps2pdf ${ORANGE}nicht gefunden: Bitte Ghostscript über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v pdftk)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} pdftk ${ORANGE}nicht gefunden: Bitte pdftk über die Programm-Verwaltung installieren oder vom Netz: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} pdftk ${ORANGE}nicht gefunden: Bitte pdftk über die Programm-Verwaltung installieren oder vom Netz: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v enscript)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} enscript ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Texte oder Textdateien in PostScript, HTML, u.a. umwandeln).${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} enscript ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Texte oder Textdateien in PostScript, HTML, u.a. umwandeln).${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v sed)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} sed ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Zeichenketten suchen und ersetzen).${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} sed ${ORANGE}nicht gefunden: Bitte über die Programm-Verwaltung installieren (Verwendung: Zeichenketten suchen und ersetzen).${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   case $stufe_abbruch in [1-9]) printf "${ORANGE}(Abbruch)${FORMAT_FREI}\n"; exit 1;; esac
 }
@@ -66,7 +78,7 @@ Verwendbare Wahlmöglichkeiten:
       --seit_1946         Verlaufskurfe aus dem Wortkorpus „Zeitungen seit 1945/46“ erstellen
 
 -e,   --Entwicklung       Zusatz-Meldungen zur Entwicklung ausgeben
-      --debug             Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
+      --debug             Befehlsmeldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
       --farb-frei         Meldungen ohne Farben ausgeben
 
 Technische Anmerkungen:
