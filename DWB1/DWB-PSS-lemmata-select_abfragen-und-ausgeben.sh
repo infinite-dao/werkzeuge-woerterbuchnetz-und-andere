@@ -15,16 +15,16 @@ abhaengigkeiten_pruefen() {
   local stufe_abbruch=0
 
   if ! [[ -x "$(command -v jq)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} jq ${ORANGE} zum Verarbeiten von JSON nicht gefunden: Bitte${FORMAT_FREI} jq ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} jq ${ORANGE} zum Verarbeiten von JSON nicht gefunden: Bitte${FORMAT_FREI} jq ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v pandoc)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} pandoc ${ORANGE} zum Erstellen von Dokumenten in HTML, ODT nicht gefunden: Bitte${FORMAT_FREI} pandoc ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} pandoc ${ORANGE} zum Erstellen von Dokumenten in HTML, ODT nicht gefunden: Bitte${FORMAT_FREI} pandoc ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v sed)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} sed ${ORANGE}nicht gefunden: Bitte sed über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} sed ${ORANGE}nicht gefunden: Bitte sed über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
   if ! [[ -x "$(command -v tidy)" ]]; then
-    printf "${ORANGE}Kommando${FORMAT_FREI} tidy ${ORANGE} zum Aufhübschen und Prüfen von HTML-Dokumenten nicht gefunden: Bitte${FORMAT_FREI} tidy ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
+    printf "${ORANGE}Befehlswerkzeug${FORMAT_FREI} tidy ${ORANGE} zum Aufhübschen und Prüfen von HTML-Dokumenten nicht gefunden: Bitte${FORMAT_FREI} tidy ${ORANGE}über die Programm-Verwaltung installieren.${FORMAT_FREI}\n"; stufe_abbruch=1;
   fi
 
   case $stufe_abbruch in [1-9]) printf "${ORANGE}(Abbruch)${FORMAT_FREI}\n"; exit 1;; esac
@@ -59,7 +59,7 @@ Verwendbare Wahlmöglichkeiten:
 -b,    --behalte_Dateien   Behalte auch die unwichtigen Datein, die normalerweise gelöscht werden
 -s,    --stillschweigend   Kaum Meldungen ausgeben
        --ohne              ohne Wörter (Wortliste z.B. --ohne 'aufstand, verstand' bei --Lemmaabfrage '*stand*')
-       --entwickeln,--debug Kommando-Meldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
+       --entwickeln,--debug Befehlsmeldungen ausgeben, die ausgeführt werden (für Programmier-Entwicklung)
        --farb-frei        Meldungen ohne Farben ausgeben
 
 Technische Anmerkungen:

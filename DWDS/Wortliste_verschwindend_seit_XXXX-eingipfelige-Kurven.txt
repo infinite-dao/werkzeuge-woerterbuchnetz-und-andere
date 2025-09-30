@@ -19,6 +19,7 @@
 - Tadel: 1770-1839
 - tadellos: 1890-1949
 - tändeln: 1750-1870
+- ungemein: 1730-1780
 - Weistum: 1860-1900
 - Wink: 1750-1820
 
