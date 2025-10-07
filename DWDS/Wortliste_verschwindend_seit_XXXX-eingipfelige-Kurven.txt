@@ -3,14 +3,18 @@
 - anstaunen: 1800-1830
 - aufbieten: 1820-1870
 - bloß: 1700
+- darbieten: 1810-1870
+- eigentümlich: 1810-1890
 - entschlummern: 1780-1809
 - Gefild, Gefilde: 1755-1809
 - Getöse (Getöse): 1750-1819
+- hehlen: 1825-1880
 - huldigen : 1810-1889
 - Lebewohl (Lebewohl,Lebwohl): 1800-1890
 - Meisterhand: 1770-1819
 - minder: 1820-1859
 - Napf: 1860-1880
+- nebst: 1710-1760
 - schicklich: 1780-1809
 - schlummern: 1780-1809
 - Schoppen: 1800-1880

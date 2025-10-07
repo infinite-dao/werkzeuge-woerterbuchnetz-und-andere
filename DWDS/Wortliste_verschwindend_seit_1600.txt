@@ -90,6 +90,8 @@
 - dannen
 - darben
 - darob
+- darreichen
+- dartun
 - daselbst
 - dein
 - deinethalben
@@ -255,6 +257,7 @@
 - Mündlein
 - murren
 - Nachkomme
+- nebst
 - neunerlei
 - Nisse
 - Obacht
@@ -362,10 +365,12 @@
 - viererlei
 - Vogtei
 - Vorsatz
+- Vorschein
 - wachen
 - wacker
 - Wagehals
 - wagen
+- wähnen
 - wahrhaftig
 - Wall
 - weise
@@ -413,6 +418,7 @@
 - zürnen
 - zutragen
 - zuvorderst
+- zwar
 - zweierlei
 - Zwetsche
 - Zwietracht
