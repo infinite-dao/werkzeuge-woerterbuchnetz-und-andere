@@ -781,12 +781,16 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif ($w|test("^Grosz"))   then ($w|sub("^Grosz"; "Groß"))
     elif ($w|test("^Gusz"))    then ($w|sub("^Gusz"; "Guß"))
     elif ($w|test("^gusz"))    then ($w|sub("^gusz"; "guß"))
+    elif ($w|test("^heisz"))   then ($w|sub("^heisz"; "heiß"))
+    elif ($w|test("^Heisz"))   then ($w|sub("^Heisz"; "Heiß"))
     elif ($w|test("^masz"))    then ($w|sub("^masz"; "maß"))
     elif ($w|test("^Masz"))    then ($w|sub("^Masz"; "Maß"))
     elif ($w|test("^misz"))    then ($w|sub("^misz"; "miß"))
     elif ($w|test("^Misz"))    then ($w|sub("^Misz"; "Miß"))
     elif ($w|test("^pasz"))   then ($w|sub("^pasz"; "paß"))
     elif ($w|test("^Pasz"))   then ($w|sub("^Pasz"; "Paß"))
+    elif ($w|test("^schweisz"))  then ($w|sub("^schweisz"; "schweiß"))
+    elif ($w|test("^Schweisz"))  then ($w|sub("^Schweisz"; "Schweiß"))
     elif ($w|test("^spasz"))   then ($w|sub("^spasz"; "spaß"))
     elif ($w|test("^Spasz"))   then ($w|sub("^Spasz"; "Spaß"))
     elif ($w|test("^strasz"))   then ($w|sub("^strasz"; "straß"))
@@ -801,11 +805,13 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif ($w|test("Gröszen"))      then ($w|sub("Gröszen"; "Größen"))
     elif ($w|test("gröszer"))      then ($w|sub("gröszer"; "größer"))
     elif ($w|test("Gröszer"))      then ($w|sub("Gröszer"; "Größer"))
+    elif ($w|test("heisz"))      then ($w|sub("heisz"; "heiß"))
     elif ($w|test("mäszig"))      then ($w|sub("mäszig"; "mäßig"))
     elif ($w|test("müszig"))      then ($w|sub("müszig"; "müßig"))
     elif ($w|test("Müszig"))      then ($w|sub("Müszig"; "Müßig"))
     elif ($w|test("nusz"))      then ($w|sub("nusz"; "nuß"))
     elif ($w|test("Nusz"))      then ($w|sub("Nusz"; "Nuß"))
+    elif ($w|test("scheisz"))   then ($w|sub("scheisz"; "scheiß"))
     elif ($w|test("schlusz"))   then ($w|sub("schlusz"; "schluß"))
     elif ($w|test("Schlusz"))   then ($w|sub("Schlusz"; "Schluß"))
     elif ($w|test("schusz"))    then ($w|sub("schusz"; "schuß"))
@@ -813,7 +819,10 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif ($w|test("strasz"))      then ($w|sub("strasz"; "straß"))
     elif ($w|test("süsz"))      then ($w|sub("süsz"; "süß"))
     elif ($w|test("Süsz"))      then ($w|sub("Süsz"; "Süß"))
+    elif ($w|test("verheisz"))      then ($w|sub("verheisz"; "verheiß"))
     # Endwörter
+    elif ($w|test("gieszel$"))   then ($w|sub("gieszel$"; "gießel"))
+    elif ($w|test("heisz$"))   then ($w|sub("heisz$"; "heiß"))
     elif ($w|test("szchen$"))  then ($w|sub("szchen$"; "ßchen"))
     elif ($w|test("sze$"))     then ($w|sub("sze$"; "ße"))
     elif ($w|test("szt$"))     then ($w|sub("szt$"; "ßt"))
@@ -1300,12 +1309,12 @@ if [[ -e "${json_speicher_datei}" ]];then
       value: (.value),
       gram: (.gram),
       gramHautgruppen: GrammatikInHauptgruppen(.gram; (.label|Anfangsgrosz)),
-      Wort: (.label|Anfangsgrosz|htmlSonderzeichenAlsEinzelzeichen|szErsetzen),
-      wort: (.label|htmlSonderzeichenAlsEinzelzeichen|szErsetzen),
+      Wort: (.label|Anfangsgrosz|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen),
+      wort: (.label|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen),
       Wortdeutung_mit_Grammatik: GrammatikDemWortAnhaengen(
         .gram;
-        (.label|htmlSonderzeichenAlsEinzelzeichen|szErsetzen);
-        (.label|Anfangsgrosz|htmlSonderzeichenAlsEinzelzeichen|szErsetzen)
+        (.label|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen);
+        (.label|Anfangsgrosz|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen)
       ),
       wort_umlaut_geschrieben: (.label|htmlSonderzeichenUmlauteAusgeschrieben)
   })
