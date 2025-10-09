@@ -850,7 +850,7 @@ if [[ -e "${json_speicher_datei}" ]];then
       then "tuwörtlich"
       elif ($w|test(".+bar$|.+ig$|.+isch$|.+lich$|.+sam$"))
       then "eigenschaftlich"
-      elif ($w|test(".+heit$|.+keit$|.+ling$|.+thum$|.+tum$|.+ung$"))
+      elif ($w|test(".+heit$|.+keit$|.+ling$|.+schaft$|.+thum$|.+tum$|.+ung$"))
       then "nennwörtlich"
       else "" end
     elif ($g|test("^ *adj.*|^ *adv.*|^ *part.*"))
@@ -935,7 +935,7 @@ if [[ -e "${json_speicher_datei}" ]];then
       then "nennwörtlich"
       elif ($g|test("^ *n[.,;]* +n[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *n[.,;]* +f[.,;]* *$"))
+      elif ($g|test("^ *n[.,;]* +f[.,;]* *$|^ *n[.,;]* +f[.,;]* +f[.,;]* *$"))
       then "nennwörtlich"
       elif ($g|test("^ *n[.,;]* +m[.,;]* +f[.,;]* *$"))
       then "nennwörtlich"
@@ -1085,7 +1085,7 @@ if [[ -e "${json_speicher_datei}" ]];then
       geschlechtswort_vorm_wort: ("das (o./ u.a.: der) " + $W),
       grammatik_deutung: ($g + " ~ Nennwort, sächlich vermutlich – o./ u.a. männlich – Dingwort, Hauptwort, Namenwort, ?Eigenwort")
     }
-    elif ($g|test("^ *n[.,;]* +f[.,;]* *$"))
+    elif ($g|test("^ *n[.,;]* +f[.,;]* *$|^ *n[.,;]* +f[.,;]* +f[.,;]* *$"))
     then {
       wort_mit_geschlechtswort: ($W + ", das (o./ u.a.: die)"),
       geschlechtswort_vorm_wort: ("das (o./ u.a.: die) " + $W),

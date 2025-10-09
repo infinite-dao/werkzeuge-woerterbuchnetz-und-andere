@@ -868,7 +868,7 @@ if [[ -e "${json_speicher_datei}" ]];then
       then "nennwörtlich"
       elif ($g|test("^ *n[_.,;]* +n[_.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *n[_.,;]* +f[_.,;]* *$"))
+      elif ($g|test("^ *n[_.,;]* +f[_.,;]* *$|^ *n[_.,;]* +f[_.,;]* +f[_.,;]* *$"))
       then "nennwörtlich"
       elif ($g|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
       then "nennwörtlich"
@@ -1041,13 +1041,13 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
   # Rückgabewerte "", eigenschaftlich, nennwörtlich, tuwörtlich, unbekannt
   def GrammatikInHauptgruppen($g; $w):
     if $g == null or $g == ""
-    then 
+    then
       # Wörter müßten alle kein sein
-      if ($w|test(".+en$")) 
-      then "tuwörtlich" 
+      if ($w|test(".+en$"))
+      then "tuwörtlich"
       elif ($w|test(".+bar$|.+ig$|.+isch$|.+lich$|.+sam$"))
       then "eigenschaftlich"
-      elif ($w|test(".+heit$|.+keit$|.+ling$|.+thum$|.+tum$|.+ung$"))
+      elif ($w|test(".+heit$|.+keit$|.+ling$|.+schaft$|.+thum$|.+tum$|.+ung$"))
       then "nennwörtlich"
       else "" end
     elif ($g|test("^ *adj.*|^ *adv.*|^ *part.*"))
@@ -1056,7 +1056,7 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
     then "eigenschaftlich"
     elif ($g|test("^ *verb[al]*[ .-]*adj[_.,;]+[ -–—]+adv[_.,;]* *$"))
     then "eigenschaftlich"
-    
+
     elif ($g|test("^ *v[.]*|^ *ver*|^ *part.*"))
     then "tuwörtlich"
     elif ($g|test("^ *v. +u. +subst. +n. *$"))
@@ -1069,85 +1069,83 @@ dieser_jq_filter_code=' def woerterbehalten: ["DWB1", "DWB2"];
     then "tuwörtlich"
     elif ($g|test("^ *trennb[ares]*[.]* +v[erbum]*[.,;]* *$"))
     then "tuwörtlich"
-    elif ($g|test("^ *v[_.,;]* *$|^ *vb[_.,;]* *$|^ *verb[_.,;]* *$|^ *verbum[_.,;]* *$"))
+    elif ($g|test("^ *v[_.,;]* *$|^ *vb[_.,;]* *$|^ *verb[_.,;]* *$|^ *verbum[.,;]* *$"))
     then "tuwörtlich"
     elif ($g|test("^ *tr[ans]*[.] *$"))
     then "tuwörtlich"
     elif ($g|test("^ *intr[ans]*[.] *$"))
     then "tuwörtlich"
 
-    elif ($g|test("^ *f[_.,;]* *$|^ *f[_.,;]* *f[_.,;]* *$|^ *fem[_.,;]* *$"))
+    elif ($g|test("^ *f[.,;]* *$|^ *f[.,;]* *f[.,;]* *$|^ *fem[.,;]* *$"))
     then "nennwörtlich"
       elif ($g|test("^ *f[_.,;]*\\? *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *f[_.,;]* +m[_.,;]* *$"))
+      elif ($g|test("^ *f[.,;]* +m[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *f[_.,;]* +n[_.,;]* *$"))
+      elif ($g|test("^ *f[.,;]* +n[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *f[_.,;]* +n[_.,;]* *$|^ *f[_.,;]* *n[_.,;]* *n[_.,;]* *$"))
+      elif ($g|test("^ *f[.,;]* +n[.,;]* *$|^ *f[.,;]* *n[.,;]* *n[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *f[_.,;]* +n[_.,;]* +m[_.,;]* *$"))
+      elif ($g|test("^ *f[.,;]* +n[.,;]* +m[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *f[_.,;]* +m[_.,;]* +n[_.,;]* *$"))
+      elif ($g|test("^ *f[.,;]* +m[.,;]* +n[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *f[_.,;]* +nomen +actionis[.]* *$"))
+      elif ($g|test("^ *f[.,;]* +nomen +actionis[.]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *f[_.,;]* +nomen +agentis[.]* *$"))
+      elif ($g|test("^ *f[.,;]* +nomen +agentis[.]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *f[_.,;]* +subst[. ]*$"))
+      elif ($g|test("^ *f[.,;]* +subst[. ]*$"))
       then "nennwörtlich"
       elif ($g|test("^ *subst[. ]* +f[_.,;]*$"))
       then "nennwörtlich"
 
-    elif ($g|test("^ *m[_.,;]* *$"))
+    elif ($g|test("^ *m[.,;]* *$"))
       then "nennwörtlich"
       elif ($g|test("^ *m[_.,;]*\\? *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *m[_.,;]* +f[_.,;]* *$"))
+      elif ($g|test("^ *m[.,;]* +f[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *m[_.,;]* +und +f[_.,;]* *$"))
+      elif ($g|test("^ *m[.,;]* +und +f[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *m[_.,;]* +m[_.,;]* *$"))
+      elif ($g|test("^ *m[.,;]* +m[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *m[_.,;]* +n[_.,;]* *$"))
+      elif ($g|test("^ *m[.,;]* +n[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *m[_.,;]* +f[_.,;]* +n[_.,;]* *$"))
+      elif ($g|test("^ *m[.,;]* +f[.,;]* +n[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *m[_.,;]* +n[_.,;]* +f[_.,;]* *$"))
+      elif ($g|test("^ *m[.,;]* +n[.,;]* +f[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *m[_.,;]* +nomen +actionis[.]* *$"))
+      elif ($g|test("^ *m[.,;]* +nomen +actionis[.]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *m[_.,;]* +nomen +agentis[.]* *$"))
+      elif ($g|test("^ *m[.,;]* +nomen +agentis[.]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *m[_.,;]* +subst[. ]*$"))
+      elif ($g|test("^ *m[.,;]* +subst[. ]*$"))
       then "nennwörtlich"
       elif ($g|test("^ *subst[. ]* +m[_.,;]*$"))
       then "nennwörtlich"
 
-    elif ($g|test("^ *n[_.,;]* *$"))
+    elif ($g|test("^ *n[.,;]* *$"))
       then "nennwörtlich"
       elif ($g|test("^ *n[_.,;]*\\? *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *n[_.,;]* +m[_.,;]* *$"))
+      elif ($g|test("^ *n[.,;]* +m[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *n[_.,;]* +n[_.,;]* *$"))
+      elif ($g|test("^ *n[.,;]* +n[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *n[_.,;]* +f[_.,;]* *$"))
+      elif ($g|test("^ *n[.,;]* +f[.,;]* *$|^ *n[.,;]* +f[.,;]* +f[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *n[_.,;]* +m[_.,;]* +f[_.,;]* *$"))
+      elif ($g|test("^ *n[.,;]* +m[.,;]* +f[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *n[_.,;]* +f[_.,;]* +m[_.,;]* *$"))
+      elif ($g|test("^ *n[.,;]* +f[.,;]* +m[.,;]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *n[_.,;]* +nomen +actionis[.]* *$"))
+      elif ($g|test("^ *n[.,;]* +nomen +actionis[.]* *$"))
       then "nennwörtlich"
-      elif ($g|test("^ *n[_.,;]* +nomen +agentis[.]* *$"))
+      elif ($g|test("^ *n[.,;]* +nomen +agentis[.]* *$"))
       then "nennwörtlich"
       elif ($g|test("^ *subst. *$"))
       then "nennwörtlich"
 
-    elif ($g|test("^ *nomen *$"))
-        then "nennwörtlich"
-    elif ($g|test("^ *subst[. _.,;]*$"))
+    elif ($g|test("^ *nomen *$|^ *subst[ _.,;]*$"))
       then "nennwörtlich"
 
     else "unbekannt"
