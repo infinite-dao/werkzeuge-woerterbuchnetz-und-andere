@@ -18,3 +18,7 @@ Siehe Ordner:
 - ☞ [`./DWB1`](./DWB1) ~ für das Grimm-Wörterbuch (z.B. verschiedene Wortabfragen mit Befilterung der Ergebnisse)
 - ☞ [`./DWDS`](./DWDS) ~ für das Digitale Wörterbuch Deutscher Sprache (z.B. Wortverlaufskurven selbsttätig beschriften)
 - ☞ [`./corpora.uni-leipzig.de`](./corpora.uni-leipzig.de) ~ für Wortschatz Uni Leipzig (z.B. Dornseiff-Bedeutungsgruppen auflisten)
+
+## Anregungen zur Sprache
+
+- ☞ [`./Wörterbücher zur Anregung`](./Wörterbücher zur Anregung) ~ selbst erstellte Wörterbücher (z.B. Mischmasch: Fremdwörter ⇌ verdeutschte Wörter, oder seltne deutsche Wörter aus älteren Zeiten)
