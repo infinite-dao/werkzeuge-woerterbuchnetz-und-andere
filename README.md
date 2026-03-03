@@ -21,4 +21,4 @@ Siehe Ordner:
 
 ## Anregungen zur Sprache
 
-- ☞ [`./Wörterbücher zur Anregung`](./Wörterbücher zur Anregung) ~ selbst erstellte Wörterbücher (z.B. Mischmasch: Fremdwörter ⇌ verdeutschte Wörter, oder seltne deutsche Wörter aus älteren Zeiten)
+- ☞ [Wörterbücher zur Anregung](<Wörterbücher zur Anregung>) ~ selbst erstellte Wörterbücher (z.B. Mischmasch: Fremdwörter ⇌ verdeutschte Wörter, oder seltne deutsche Wörter aus älteren Zeiten)
