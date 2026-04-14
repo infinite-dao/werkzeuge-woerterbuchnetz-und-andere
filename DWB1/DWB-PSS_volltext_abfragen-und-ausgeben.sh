@@ -1506,7 +1506,7 @@ s@woerterbuchnetz.de//\?@woerterbuchnetz.de/?@g;
 # sollte jq bewerkstelligen # s@<td>(&#x00f6;|&#246;|&ouml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00D6;\L\2\E\3\4@g; # ö Ö
 # sollte jq bewerkstelligen # s@<td>(&#x00fc;|&#252;|&uuml;)([^ ]+)(,? ?[^<>]*)(</td><td>[^<>]* ~ *Nennwort)@<td>&#x00DC;\L\2\E\3\4@g; # ü Ü 
 
-1 i\<!DOCTYPE html>\n<html lang=\"de\" xml:lang=\"de\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<style type=\"text/css\" >\n#Wortliste-Tabelle td { vertical-align:top; }\n\n#Wortliste-Tabelle td:nth-child(2),\n#Wortliste-Tabelle td:nth-child(4),\n#Wortliste-Tabelle td:nth-child(5) { font-size:smaller; }\n\na.local { text-decoratcion:none; }\n</style>\n<body><p>${bearbeitungstext_html}</p><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.). Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Zeitwörter (Tuwörter, Tätigkeitswörter, Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Hauptwörter, Substantive), als auch die Wörter bei denen GRIMM keine Angabe der Grammatik/Sprachkunst-Begriffe gemacht haben oder sie vergessen wurden.</p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Zur Sprachkunst oder Grammatik siehe vor allem <i style=\"font-variant:small-caps;\">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><thead><tr><th>Wort</th><th>Fundstelle (gekürzt)</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr></thead><tbody>
+1 i\<!DOCTYPE html>\n<html lang=\"de-DE\" xml:lang=\"de-DE\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<title></title>\n</head>\n<style type=\"text/css\" >\n#Wortliste-Tabelle td { vertical-align:top; }\n\n#Wortliste-Tabelle td:nth-child(2),\n#Wortliste-Tabelle td:nth-child(4),\n#Wortliste-Tabelle td:nth-child(5) { font-size:smaller; }\n\na.local { text-decoratcion:none; }\n</style>\n<body><p>${bearbeitungstext_html}</p><p>Man beachte die Formatierungen der Fundstellen im DWB1: <i>schräge Schrift</i> deutet meistens auf Erklärungen, Beschreibungen der GRIMMs selbst, während nicht-schräge (aufrechte Schrift) entweder ein Lemma (Wort im Wörterbuch) ist, oder meistens Beispiele aus Literatur sind (Textstellen zitierter Literatur oft auch Quellenangabe, Gedichtzeilentext u.ä.). Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Zeitwörter (Tuwörter, Tätigkeitswörter, Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Hauptwörter, Substantive), als auch die Wörter bei denen GRIMM keine Angabe der Grammatik/Sprachkunst-Begriffe gemacht haben oder sie vergessen wurden.</p><!-- hierher Abkürzungsverzeichnis einfügen --><p>Zur Sprachkunst oder Grammatik siehe vor allem <i style=\"font-variant:small-caps;\">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href=\"https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6\">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id=\"Wortliste-Tabelle\"><thead><tr><th>Wort</th><th>Fundstelle (gekürzt)</th><th>Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style=\"font-variant:small-caps;\">Schottel&nbsp;1663</i>)</th><th>Haupteintrag</th><th>Verknüpfung Textstelle</th></tr></thead><tbody>
 $ a\</tbody><tfoot><tr><td colspan=\"5\" style=\"border-top:2px solid gray;border-bottom:0 none;\"></td>\n</tr></tfoot></table>${html_technischer_hinweis_zur_verarbeitung}\n</body>\n</html>
 " | sed --regexp-extended '
   s@<th>@<th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">@g;
@@ -1669,12 +1669,18 @@ case $stufe_formatierung in
     case $janein in
       [jJ]|[jJ][aA])
         printf "  (überschreibe ODT)\n"
-        pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}" # siehe ~/.pandoc/reference.odt
+        pandoc \
+          --variable=lang:de-DE \
+          --from html --to odt \
+          "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}" # siehe ~/.pandoc/reference.odt
       ;;
       [nN]|[nN][eE][iI][nN])
         echo " sichere ${datei_sicherung} …";
         mv "${datei_utf8_odt_gram}" "${datei_sicherung}"
-        pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
+        pandoc \
+          --variable=lang:de-DE \
+          --from html --to odt \
+          "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
       ;;
       *)
         if [[ -z ${janein// /} ]];then
@@ -1686,7 +1692,10 @@ case $stufe_formatierung in
       ;;
     esac
   else
-    pandoc -f html -t odt "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
+    pandoc \
+      --variable=lang:de-DE \
+      --from html --to odt \
+      "${datei_utf8_html_gram_tidy}" > "${datei_utf8_odt_gram}"
   fi
   
   if [[ $stufe_einzeltabelle_odt -gt 0 ]];then 
@@ -1694,7 +1703,10 @@ case $stufe_formatierung in
       meldung "${GRUEN}Weiterverarbeitung: HTML → ODT (Einzeltabelle)${FORMAT_FREI} (${datei_utf8_html_gram_tidy_worttabelle_odt})"
       
       sed --regexp-extended --silent '/<table +id="Wortliste-Tabelle"/,/<\/table>/p' "${datei_utf8_html_gram_tidy}" \
-        | pandoc -f html -t odt -o "${datei_utf8_html_gram_tidy_worttabelle_odt}"
+        | pandoc \
+          --variable=lang:de-DE \
+          --from html --to odt \
+          --output "${datei_utf8_html_gram_tidy_worttabelle_odt}"
     else
     meldung  "${ORANGE}Kann ${datei_utf8_html_gram_tidy_worttabelle_odt} nicht erstellen, da ${datei_utf8_html_gram_tidy} nicht zu findene war ...${FORMAT_FREI}"
     fi
@@ -1709,7 +1721,7 @@ case $stufe_formatierung in
     esac
     
     if [[ -e  "${datei_utf8_html_gram_tidy}" ]]; then 
-      pandoc --wrap=none -f html -t markdown "${datei_utf8_html_gram_tidy}" | \
+      pandoc --wrap=none --from html --to markdown "${datei_utf8_html_gram_tidy}" | \
         sed --regexp-extended "
           s@\*\*@FETTSCHRIFT@g; s@\*@__@g; 
           s@FETTSCHRIFT@**@g; 
