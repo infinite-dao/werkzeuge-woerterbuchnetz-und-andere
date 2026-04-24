@@ -250,6 +250,7 @@
 - Knecht
 - knechten
 - Knechtung
+- körnen
 - kosen
 - kräuseln
 - Krume

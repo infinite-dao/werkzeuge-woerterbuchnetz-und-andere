@@ -97,6 +97,7 @@
 - darreichen
 - dartun
 - daselbst
+- dazumal
 - dein
 - deinethalben
 - dergestalt
@@ -234,6 +235,7 @@
 - Klafter
 - Knecht
 - knechten
+- körnen
 - kosen
 - krumen
 - Küchlein
