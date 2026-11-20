@@ -195,6 +195,7 @@
 - grimmig
 - Gunst
 - Hag
+- halsen
 - Hamen
 - Händlein
 - harren
@@ -324,6 +325,7 @@
 - Schmach
 - schmähen
 - Schmeichelei
+- schnöde
 - Schöpfbrunnen
 - schöpfen
 - schreiben

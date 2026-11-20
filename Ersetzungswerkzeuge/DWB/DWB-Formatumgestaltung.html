@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>DWB¹/DWB²/PfWb Wörterbuch HTML-Text umformen</title>
+<style>
+  body {
+    font-family: 'Komplett', 'Arial';
+  }
+  textarea.Zwischenablage { 
+    border: 1px dotted black; width:100%; min-height: 200px; max-height: 300px; overflow-y:auto; 
+    box-shadow: inset 0px 0px 5px rgba(0,0,0,0.5);
+  }
+  .Ausgabe {
+    width:calc(100% - 20px); min-height: 200px;border: 1px dotted black;
+    padding: 10px;
+    box-shadow: inset 0px 0px 5px rgba(0,0,0,0.5);
+    max-height: 300px; overflow-y:auto; 
+  }
+ 
+  p { 
+    margin-top: 0; margin-bottom:0;
+  }
+  #Ausgabe p {
+    text-indent:-0.5cm;
+    padding-left:0.5cm;
+    font-family:"Komplett";
+  }
+  #Ausgabe td { border:1px solid black; }
+  #Ausgabe table { border-collapse:collapse; }
+ a.local {
+    text-decoration: none;
+ }
+a.external {
+/* https://offene-naturfuehrer.de/w/skins/Vector/images/external-link-ltr-icon.png */
+  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC') center right no-repeat;
+/*   background-image: linear-gradient(transparent,transparent),url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%2210%22%3E%3Cg%20transform%3D%22translate%28-826.429%20-698.791%29%22%3E%3Crect%20width%3D%225.982%22%20height%3D%225.982%22%20x%3D%22826.929%22%20y%3D%22702.309%22%20fill%3D%22%23fff%22%20stroke%3D%22%2306c%22%2F%3E%3Cg%3E%3Cpath%20d%3D%22M831.194%20698.791h5.234v5.391l-1.571%201.545-1.31-1.31-2.725%202.725-2.689-2.689%202.808-2.808-1.311-1.311z%22%20fill%3D%22%2306f%22%2F%3E%3Cpath%20d%3D%22M835.424%20699.795l.022%204.885-1.817-1.817-2.881%202.881-1.228-1.228%202.881-2.881-1.851-1.851z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E'); */
+  padding-right: 13px;
+}
+
+</style>
+
+<script>
+/* Goethe Wörterbuch Quellenangabe, diese wird per JSON abgeholt, Beispiel  https://api.woerterbuchnetz.de/dictionaries/GWB/sigleinfo/waref1679 und folglich angezeigt: */
+/*
+  function displaySigleInfo (e, wbsigle, sigleid) {
+
+       var wbsigleid = wbsigle.toLowerCase();
+
+       $('.unlocked-sigleinfo').remove();
+
+       var winid = 'sigleinfo-'+wbsigleid+'-'+sigleid;
+       if (document.getElementById(winid) != undefined) {
+               $(".canbedragged").css('z-index', 1001);
+               $('#'+winid).css('z-index', 1002);
+               return;
+            }
+
+       var winWidth = 0.3*globVars.xMax;
+       var winHeight = 0.3*globVars.yMax;
+       
+       var fgcolor = globVars.deffgcolor;
+       var bgcolor = globVars.defbgcolor;
+
+       var dialogFrame = d3.select('#'+wbsigleid+'-main-wb-area-center').append('div')
+                                                     .attr("id", winid).attr("sigleid", sigleid).attr("wbsigle", wbsigle);
+       d3.select('#'+winid).attr("style", "background-color:" + modifyColor(globVars.defbgcolor, 1.0) + "; overflow: hidden; width: " + winWidth + "px; max-height: " + 
+               winHeight + "px; height: auto; position: absolute;");
+       d3.select('#'+winid).attr("class", "sigleinfo canbedragged unlocked-sigleinfo "+wbsigleid+"-sigleinfo").attr("areatype", "sigleinfo");
+       $('#'+winid).click(function() {
+               $(".canbedragged").css('z-index', '1001');
+               $('#'+winid).css('z-index', '1002');
+            });
+
+       var titlebar = d3.select("#"+winid).append('div');
+       titlebar.attr("style", "overflow: hidden; background-color:" + globVars.wbProperties[wbsigle].bgcolormedium + "; width: 100%; " + 
+               " position: relative; top: " + "0" + "px; left: " + 0 + "px;");
+       titlebar.attr("id", "header-"+winid).attr("class", "sigleinfo-header").style("cursor", "default");
+       $('#header-'+winid).click(function() {
+               $(".canbedragged").css('z-index', '1001');
+               $('#'+winid).css('z-index', '1002');
+            });
+
+       $('#header-'+winid).html('<span id="headerlabel-'+winid+'" class="sigleinfo-label"></span>');
+
+       var closecontainer = d3.select('#header-'+winid).append('div').attr("id", "closearea-"+winid).attr("class", "sigleinfo-closearea");
+       closecontainer.attr("style", "overflow: hidden; margin: 0.125em 0.0em 0.5em 0.5em; padding: 0.125em 0.75em 0 0.5em; background-color:" + modifyColor(globVars.wbProperties[wbsigle].bgcolormedium, 1.0) +  
+               "; position: absolute; top: " + 0 + "px; right: " + 0 + "px; text-align: right;");
+
+       var closeContent = '';
+       closeContent += '<a href="javascript:searchSigle(\''+wbsigle+'\',\''+sigleid+'\');"><span title="Vorkommen im Wörterbuch suchen" class="ui-icon ui-icon-search normal-icon-inv"></span></a>';
+       closeContent += '&#x00a0;<a href="javascript:lockSigleInfo(\''+wbsigle+'\',\''+sigleid+'\');"><span title="Fenster fixieren" class="ui-icon ui-icon-pin-w"></span></a>';
+       closeContent += '&#x00a0;<a href="javascript:closeSigleInfo(\''+wbsigle+'\',\''+sigleid+'\');"><span title="Fenster schließen" class="ui-icon ui-icon-circle-close"></span></a>';
+       $("#closearea-"+winid).html(closeContent);
+
+       var textarea = d3.select("#"+winid).append('div');
+       textarea.attr("style", "overflow-y: auto; background-color:" + modifyColor(globVars.defbgcolor, 1.0) + "; width: auto; height: auto; max-height: " + (0.9*winHeight).toString() + 'px;' +
+               " position: relative; top: 0px; left: " + 0 + "px; font-family: KompLett;");
+       textarea.attr("id", "text-container-"+winid).attr("class", "sigleinfo-content-container");
+
+       var textarea = d3.select("#text-container-"+winid).append('div');
+       textarea.attr("style", "overflow-y: auto; background-color:" + modifyColor(globVars.defbgcolor, 1.0) + "; width: auto; " +
+               " position: relative; top: " + 0 + "px; left: " + 0 + "px; font-family: KompLett;");
+       textarea.attr("id", "text-"+winid).attr("class", "sigleinfo-content");
+       
+       var url = globVars.APIdomain + '/dictionaries/' + wbsigle + '/sigleinfo/' + sigleid;
+       $.get(url, function (data) {
+                if (data.length > 0) {
+                      globVars.renderSigleInfo[wbsigle](data);
+                      globVars.setupStyles[wbsigle]();
+
+                      document.getElementById(winid).style.display = 'block';
+                      document.getElementById(winid).style.cursor = 'pointer';
+                      var bbox = document.getElementById(winid).getBoundingClientRect();
+
+                      var areaBox = document.getElementById(wbsigleid+'-wb-area-center').getBoundingClientRect();
+                      var xpos = e.pageX - 0*$('#'+wbsigleid+'-wb-area-center').offset().left;
+                      var ypos = e.pageY - areaBox.top;
+
+                      if (e.pageX+bbox.width > globVars.xMax) {
+                               document.getElementById(winid).style.left = (globVars.xMax-bbox.width).toString() + 'px';
+                            } else {
+                                     document.getElementById(winid).style.left = xpos + 'px';
+                                  }
+                      if (e.pageY+bbox.height+24 > areaBox.bottom-areaBox.top) {
+                               document.getElementById(winid).style.top = (areaBox.bottom-areaBox.top-bbox.height-24).toString() + 'px';
+                            } else {
+                                     document.getElementById(winid).style.top = ypos + 'px';
+                                  }
+
+                      $('#'+winid).draggable({start: function () {
+                                                              $(".canbedragged").css('z-index', '1001');
+                                                              $(this).css("z-index", '1002');
+                                                           },
+                                                    drag: function () {
+                                                                         $(".canbedragged").css('z-index', '1001');
+                                                                         $(this).css("z-index", '1002');
+                                                                      },
+                                                    stop: function () {
+                                                                         $(".canbedragged").css('z-index', '1001');
+                                                                         $(this).css("z-index", '1002');
+                                                                      }
+                            });
+                      $(".canbedragged").css('z-index', '1001');
+                      $('#'+winid).css('z-index', '1002');
+                   } else {
+                         closeSigleInfo(wbsigle, sigleid);         
+                      }
+                if (e.pageY+bbox.height+24 > areaBox.bottom-areaBox.top) {
+                      document.getElementById(winid).style.top = (areaBox.bottom-areaBox.top-bbox.height-24).toString() + 'px';
+                   } else {
+                         document.getElementById(winid).style.top = ypos + 'px';
+                      }
+
+                $('#'+winid).draggable({start: function () {
+                                                     $(".canbedragged").css('z-index', '1001');
+                                                     $(this).css("z-index", '1002');
+                                                  },
+                                           drag: function () {
+                                                             $(".canbedragged").css('z-index', '1001');
+                                                             $(this).css("z-index", '1002');
+                                                          },
+                                           stop: function () {
+                                                             $(".canbedragged").css('z-index', '1001');
+                                                             $(this).css("z-index", '1002');
+                                                          }
+                   });
+                $(".canbedragged").css('z-index', '1001');
+                $('#'+winid).css('z-index', '1002');
+            });
+  }
+*/
+</script>
+<script src="jquery-3.6.0.js"></script>
+</head>
+    <body>
+
+    <h3 style="margin-bottom:0" >DWB¹/DWB²/PfWb Wörterbuch HTML-Text umformen</h3>
+    <h5 style="margin-top:0" >(Stand 11. Christmonat (Dezember) 2022, 16:28)</h5>
+<p>HTML Text von <a href="https://woerterbuchnetz.de/?sigle=DWB#0" target="_blank" class="external" title="Deutsches Wörterbuch von Jacob Grimm und Wilhelm Grimm">DWB¹</a> oder <a href="https://woerterbuchnetz.de/?sigle=DWB2#0" target="_blank" class="external" title="Deutsches Wörterbuch von Jacob Grimm und Wilhelm Grimm / Neubearbeitung (A-F)">DWB²</a> oder <a href="https://woerterbuchnetz.de/?sigle=PfWB#0" target="_blank" class="external" title="Pfälzisches Wörterbuch">PfWB</a>  in das folgende Textfeld einfügen und unten auf <a href="#umformen" class="local">umformen</a> drücken. Vorgehen im Detail:</p>
+<ol>
+<li>im DWB möglichst kompletten Abschnitt in die Zwischenablage kopieren (Strg + C)</li>
+<li><a href="https://html-cleaner.com" title="Webseitenprogramm html-cleaner.com zur Bereinigung von HTML" target="_blank" class="external">html-cleaner.com</a> aufrufen und die Zwischenablage dort im Editorbereich einfügen (Strg + V)</li>
+<li>auf der rechten Seite von HTML Cleaner den gesamten HTML-Code-Text kopieren (Strg + C)</li>
+<li>diese Zwischenablage hier unten in das Textfeld einfügen und unten auf <a href="#umformen" class="local">umformen</a> drücken</li>
+</ol>
+<textarea id="Zwischenablage" class="Zwischenablage">
+<div class="article-container" id="dwb-wb-area-center-content-article-E05758"><a href="#" onclick="displayWBNetzLink(event,'DWB','E05758'); return false;"><span title="Link zu diesem Artikel anzeigen" class="ui-icon ui-icon-extlink normal-icon dwb-wbnetz-link no-print" style="color: rgb(154, 174, 134);"></span></a>&nbsp;<a href="#" onclick="printArticle('DWB','E05758'); return false;"><span title="Artikel drucken" class="ui-icon ui-icon-print normal-icon dwb-wbnetz-link no-print" style="color: rgb(154, 174, 134);"></span></a>&nbsp;<a id="dwb-anchor-lemid-E05758"></a><a id="dwb-anchor-bookref-3,644,45"></a><div class="link-overview-container no-print" id="dwb-link-overview-container-E05758"><div class="link-overview" id="dwb-link-overview-E05758-on" style="display: inline-block; width: 144px; max-width: 156px;"><span class="smalllinksigle" style="background-color: #cee8b3; border-color: #9aae86; color: black;"><a title="Link im selben Browser-Tab öffnen" class="wbnetz-link" href="javascript:getEntryPoint('DWB','W02658','lemid');"><sup>1</sup>DWb</a><a title="Link in neuem Browser-Tab öffnen" target="DWB" class="wbnetz-link" href="https://www.woerterbuchnetz.de/DWB?lemid=W02658"><span class="ui-icon ui-icon-arrow-u-r normal-icon"></span></a></span>&nbsp;<span class="link-overview-lemma high-quality-link">währen</span><!--
+--><span class="high-quality-link">,&nbsp;</span><span class="link-overview-gram high-quality-link">verb.</span></div><div title="Verweise im Wörterbuchnetz" class="link-overview" id="dwb-link-overview-E05758-off" style="display: none;">1<span class="ui-icon ui-icon-arrow-u-r normal-icon"></span></div></div><span id="dwb-textid-4042993" class="dwb-text-word dwb-lemma-recte-base" style="font-family: Komplett-Bold; text-transform: uppercase; color: rgb(0, 0, 0);">entwähren</span><!--
+--><span id="dwb-textid-4042994" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">,</span><span id="dwb-textid-4042995" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4042996" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">irritum</span><!--
+--><span id="dwb-textid-4042997" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> facere,</span><span id="dwb-textid-4042998" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> nicht</span><span id="dwb-textid-4042999" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> leisten,</span><!--
+--><span id="dwb-textid-4043000" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> gegensatz</span><span id="dwb-textid-4043001" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> von</span><span id="dwb-textid-4043002" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span> <span class="smalllinksigle" style="background-color: #cee8b3; border-color: #9aae86; color: black;"><a title="Link im selben Browser-Tab öffnen" class="wbnetz-link" href="javascript:getEntryPoint('DWB','27,780,75','bookref');"><sup>1</sup>DWb</a><a title="Link in neuem Browser-Tab öffnen" target="DWB" class="wbnetz-link" href="https://www.woerterbuchnetz.de/DWB?bookref=27,780,75"><span class="ui-icon ui-icon-arrow-u-r normal-icon"></span></a></span>&nbsp;&nbsp;<span id="dwb-textid-4043004" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">währen</span><!--
+--><span id="dwb-textid-4043006" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">,</span><span id="dwb-textid-4043007" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043008" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">ratum</span><!--
+--><span id="dwb-textid-4043009" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> habere,</span><span id="dwb-textid-4043010" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> praestare;</span><span id="dwb-textid-4043011" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> mhd.</span><!--
+--><span id="dwb-textid-4043012" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> lauten</span><span id="dwb-textid-4043013" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> beide</span><span id="dwb-textid-4043014" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> verba</span><!--
+--><span id="dwb-textid-4043015" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wërn</span><span id="dwb-textid-4043016" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043017" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">und</span><!--
+--><span id="dwb-textid-4043018" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërn,</span><span id="dwb-textid-4043019" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043020" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">ahd.</span><!--
+--><span id="dwb-textid-4043021" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wërên</span><span id="dwb-textid-4043022" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043023" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">und</span><!--
+--><span id="dwb-textid-4043024" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> intwërên.</span><span id="dwb-textid-4043025" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043026" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">genug</span><!--
+--><span id="dwb-textid-4043027" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> schon</span><span id="dwb-textid-4043028" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ist</span><span id="dwb-textid-4043029" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> gesagt,</span><!--
+--><span id="dwb-textid-4043030" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> dasz</span><span id="dwb-textid-4043031" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> man</span><span id="dwb-textid-4043032" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wërn</span><!--
+--><span id="dwb-textid-4043033" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043034" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">und</span><span id="dwb-textid-4043035" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wern,</span><!--
+--><span id="dwb-textid-4043036" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043037" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">folglich</span><span id="dwb-textid-4043038" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> auch</span><!--
+--><span id="dwb-textid-4043039" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërn</span><span id="dwb-textid-4043040" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043041" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">und</span><!--
+--><span id="dwb-textid-4043042" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwern</span><span id="dwb-textid-4043043" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043044" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">von</span><!--
+--><span id="dwb-textid-4043045" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> einander</span><span id="dwb-textid-4043046" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> halten</span><span id="dwb-textid-4043047" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> müsse,</span><!--
+--><span id="dwb-textid-4043048" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> wie</span><span id="dwb-textid-4043049" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> auch</span><span id="dwb-textid-4043050" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> die</span><!--
+--><span id="dwb-textid-4043051" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> nhd.,</span><span id="dwb-textid-4043052" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> nur</span><span id="dwb-textid-4043053" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> durch</span><!--
+--><span id="dwb-textid-4043054" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> das</span><span id="dwb-textid-4043055" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> h</span><span id="dwb-textid-4043056" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043057" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">entstellte,</span><span id="dwb-textid-4043058" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> schreibung</span><span id="dwb-textid-4043059" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> währen</span><!--
+--><span id="dwb-textid-4043060" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043061" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">und</span><span id="dwb-textid-4043062" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wehren</span><!--
+--><span id="dwb-textid-4043063" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043064" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">sondert.</span><span id="dwb-textid-4043065" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> von</span><!--
+--><span id="dwb-textid-4043066" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wern</span><span id="dwb-textid-4043067" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043068" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">hernach</span><!--
+--><span id="dwb-textid-4043069" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> unter</span><span id="dwb-textid-4043070" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwehren,</span><span id="dwb-textid-4043071" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043072" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">die</span><span id="dwb-textid-4043073" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> wurzeln</span><span id="dwb-textid-4043074" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> können</span><!--
+--><span id="dwb-textid-4043075" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> erst</span><span id="dwb-textid-4043076" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> bei</span><span id="dwb-textid-4043077" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> abhandlung</span><!--
+--><span id="dwb-textid-4043078" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> der</span><span id="dwb-textid-4043079" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> einfachen</span><span id="dwb-textid-4043080" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> wörter</span><!--
+--><span id="dwb-textid-4043081" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> genau</span><span id="dwb-textid-4043082" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> erwogen</span><span id="dwb-textid-4043083" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> werden,</span><!--
+--><span id="dwb-textid-4043084" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> vielleicht</span><span id="dwb-textid-4043085" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> dasz</span><span id="dwb-textid-4043086" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> beide</span><!--
+--><span id="dwb-textid-4043087" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wërn</span><span id="dwb-textid-4043088" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043089" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">und</span><!--
+--><span id="dwb-textid-4043090" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wern</span><span id="dwb-textid-4043091" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043092" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">auf</span><!--
+--><span id="dwb-textid-4043093" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> visan,</span><span id="dwb-textid-4043094" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wësan,</span><span id="dwb-textid-4043095" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043096" class="dwb-text-word dwb-sense-italics-base hit" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">manere</span><!--
+--><span id="dwb-textid-4043097" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> zurückgehen.</span><span id="dwb-textid-4043098" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> </span><br><span id="dwb-textid-4043100" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">mhd.</span><!--
+--><span id="dwb-textid-4043101" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> war</span><span id="dwb-textid-4043102" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> der</span><span id="dwb-textid-4043103" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> gegensatz</span><!--
+--><span id="dwb-textid-4043104" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> von</span><span id="dwb-textid-4043105" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wërn</span><span id="dwb-textid-4043106" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043107" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">und</span><span id="dwb-textid-4043108" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërn</span><span id="dwb-textid-4043109" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043110" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">noch</span><span id="dwb-textid-4043111" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> viel</span><span id="dwb-textid-4043112" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> flüssiger.</span><!--
+--><span id="dwb-textid-4043113" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wërn</span><span id="dwb-textid-4043114" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043115" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">hiesz</span><!--
+--><span id="dwb-textid-4043116" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> intransitiv</span><span id="dwb-textid-4043117" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> manere,</span><span id="dwb-textid-4043118" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> durare,</span><!--
+--><span id="dwb-textid-4043119" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> transitiv</span><span id="dwb-textid-4043120" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> aber</span><span id="dwb-textid-4043121" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ratum,</span><!--
+--><span id="dwb-textid-4043122" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> firmum</span><span id="dwb-textid-4043123" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> habere,</span><span id="dwb-textid-4043124" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> spondere,</span><!--
+--><span id="dwb-textid-4043125" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> efficere,</span><span id="dwb-textid-4043126" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> praestare,</span><span id="dwb-textid-4043127" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> folglich</span><!--
+--><span id="dwb-textid-4043128" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërn</span><span id="dwb-textid-4043129" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043130" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">irritum</span><!--
+--><span id="dwb-textid-4043131" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> facere,</span><span id="dwb-textid-4043132" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> non</span><span id="dwb-textid-4043133" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> praestare,</span><!--
+--><span id="dwb-textid-4043134" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> recusare:</span><span id="dwb-textid-4043135" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-verse-quote" style="font-size: 87%; padding: 1em 4em 0.25em; border: 0px solid black; width: max-content;"><span id="dwb-textid-4043137" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043138" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043139" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">daʒ</span><span id="dwb-textid-4043140" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> ër</span><!--
+--><span id="dwb-textid-4043141" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> dekeines</span><span id="dwb-textid-4043142" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> guotes</span><br><span id="dwb-textid-4043144" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043145" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043146" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">dar</span><span id="dwb-textid-4043147" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> umbe</span><!--
+--><span id="dwb-textid-4043148" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wolte</span><span id="dwb-textid-4043149" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> hân</span><span id="dwb-textid-4043150" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> gegërt,</span><br><span id="dwb-textid-4043152" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043153" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043154" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">daʒ</span><span id="dwb-textid-4043155" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> ër</span><!--
+--><span id="dwb-textid-4043156" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> dër</span><span id="dwb-textid-4043157" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> êren</span><span id="dwb-textid-4043158" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wære</span><!--
+--><span id="dwb-textid-4043159" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërt,</span><br><span id="dwb-textid-4043161" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043162" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043163" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">daʒ</span><span id="dwb-textid-4043164" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> ër</span><span id="dwb-textid-4043165" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> gevohten</span><!--
+--><span id="dwb-textid-4043166" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> hæte</span><span id="dwb-textid-4043167" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> niht.</span><br><span id="dwb-textid-4043169" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-starttitleverse-unknown-none" style="font-family: Komplett; text-align: right; color: rgb(0, 0, 0);"><span id="dwb-textid-4043171" class="dwb-text-word dwb-startsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043172" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">tr.</span><span id="dwb-textid-4043173" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> kr.</span><span id="dwb-textid-4043174" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043175" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">3684</span><span id="dwb-textid-4043176" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">,</span></div><span id="dwb-textid-4043178" class="dwb-text-word dwb-endsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span></div><span id="dwb-textid-4043180" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043181" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">er</span><span id="dwb-textid-4043182" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> hätte</span><span id="dwb-textid-4043183" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> kein</span><!--
+--><span id="dwb-textid-4043184" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> gut</span><span id="dwb-textid-4043185" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> dafür</span><span id="dwb-textid-4043186" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> genommen,</span><!--
+--><span id="dwb-textid-4043187" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> dasz</span><span id="dwb-textid-4043188" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> man</span><span id="dwb-textid-4043189" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ihm</span><!--
+--><span id="dwb-textid-4043190" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> die</span><span id="dwb-textid-4043191" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ehre</span><span id="dwb-textid-4043192" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> zu</span><!--
+--><span id="dwb-textid-4043193" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> kämpfen</span><span id="dwb-textid-4043194" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> versagt</span><span id="dwb-textid-4043195" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> haben</span><!--
+--><span id="dwb-textid-4043196" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sollte;</span><span id="dwb-textid-4043197" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-verse-quote" style="font-size: 87%; padding: 1em 4em 0.25em; border: 0px solid black; width: max-content;"><span id="dwb-textid-4043199" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043200" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043201" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">entwër</span><span id="dwb-textid-4043202" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> mich</span><!--
+--><span id="dwb-textid-4043203" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> einer</span><span id="dwb-textid-4043204" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> bëte</span><span id="dwb-textid-4043205" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> niht.</span><br><span id="dwb-textid-4043207" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-starttitleverse-unknown-none" style="font-family: Komplett; text-align: right; color: rgb(0, 0, 0);"><span id="dwb-textid-4043209" class="dwb-text-word dwb-startsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043210" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">Trist.</span><span id="dwb-textid-4043211" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043212" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">241,</span><!--
+--><span id="dwb-textid-4043213" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 12</span><span id="dwb-textid-4043214" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">;</span></div><span id="dwb-textid-4043216" class="dwb-text-word dwb-endsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span></div><span id="dwb-textid-4043218" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-verse-quote" style="font-size: 87%; padding: 1em 4em 0.25em; border: 0px solid black; width: max-content;"><span id="dwb-textid-4043220" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043221" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043222" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">dës</span><span id="dwb-textid-4043223" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> guotes</span><!--
+--><span id="dwb-textid-4043224" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> vinde</span><span id="dwb-textid-4043225" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wir</span><span id="dwb-textid-4043226" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> dâ</span><!--
+--><span id="dwb-textid-4043227" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> niht,</span><br><span id="dwb-textid-4043229" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043230" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043231" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">dës</span><span id="dwb-textid-4043232" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> unser</span><span id="dwb-textid-4043233" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> iegelîcher</span><!--
+--><span id="dwb-textid-4043234" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> gërt</span><br><span id="dwb-textid-4043236" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043237" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043238" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">und</span><span id="dwb-textid-4043239" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> dës</span><span id="dwb-textid-4043240" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wir</span><!--
+--><span id="dwb-textid-4043241" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> alle</span><span id="dwb-textid-4043242" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> sîn</span><span id="dwb-textid-4043243" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërt.</span><br><span id="dwb-textid-4043245" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-starttitleverse-unknown-none" style="font-family: Komplett; text-align: right; color: rgb(0, 0, 0);"><span id="dwb-textid-4043247" class="dwb-text-word dwb-startsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043248" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">308,</span><span id="dwb-textid-4043249" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 34</span><span id="dwb-textid-4043250" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">,</span></div><span id="dwb-textid-4043252" class="dwb-text-word dwb-endsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span></div><span id="dwb-textid-4043254" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043255" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">das</span><span id="dwb-textid-4043256" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> uns</span><span id="dwb-textid-4043257" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> allen</span><!--
+--><span id="dwb-textid-4043258" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> versagt</span><span id="dwb-textid-4043259" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> wird;</span><span id="dwb-textid-4043260" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-verse-quote" style="font-size: 87%; padding: 1em 4em 0.25em; border: 0px solid black; width: max-content;"><span id="dwb-textid-4043262" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043263" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043264" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">entwërent</span><span id="dwb-textid-4043265" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> ir</span><!--
+--><span id="dwb-textid-4043266" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> mich</span><span id="dwb-textid-4043267" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> dirre</span><span id="dwb-textid-4043268" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> bëte.</span><br><span id="dwb-textid-4043270" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-starttitleverse-unknown-none" style="font-family: Komplett; text-align: right; color: rgb(0, 0, 0);"><span id="dwb-textid-4043272" class="dwb-text-word dwb-startsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043273" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">Lanz.</span><span id="dwb-textid-4043274" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043275" class="dwb-text-word dwb-date-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">1626</span><!--
+--><span id="dwb-textid-4043276" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">;</span></div><span id="dwb-textid-4043278" class="dwb-text-word dwb-endsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span></div><span id="dwb-textid-4043280" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-verse-quote" style="font-size: 87%; padding: 1em 4em 0.25em; border: 0px solid black; width: max-content;"><span id="dwb-textid-4043282" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043283" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043284" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">daʒ</span><span id="dwb-textid-4043285" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> ër</span><!--
+--><span id="dwb-textid-4043286" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> sî</span><span id="dwb-textid-4043287" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> niht</span><span id="dwb-textid-4043288" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërte</span><br><span id="dwb-textid-4043290" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043291" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043292" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">swës</span><span id="dwb-textid-4043293" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> sî</span><!--
+--><span id="dwb-textid-4043294" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> an</span><span id="dwb-textid-4043295" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> in</span><span id="dwb-textid-4043296" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> gërte</span><br><span id="dwb-textid-4043298" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043299" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043300" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">von</span><span id="dwb-textid-4043301" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> kleidern</span><!--
+--><span id="dwb-textid-4043302" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> und</span><span id="dwb-textid-4043303" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> von</span><span id="dwb-textid-4043304" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> gmache.</span><br><span id="dwb-textid-4043306" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-starttitleverse-unknown-none" style="font-family: Komplett; text-align: right; color: rgb(0, 0, 0);"><span id="dwb-textid-4043308" class="dwb-text-word dwb-startsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043309" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">Greg.</span><span id="dwb-textid-4043310" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043311" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">113</span><span id="dwb-textid-4043312" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">,</span></div><span id="dwb-textid-4043314" class="dwb-text-word dwb-endsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span></div><span id="dwb-textid-4043316" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043317" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">was</span><span id="dwb-textid-4043318" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sie</span><span id="dwb-textid-4043319" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> für</span><!--
+--><span id="dwb-textid-4043320" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> kleid</span><span id="dwb-textid-4043321" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> und</span><span id="dwb-textid-4043322" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> pflege</span><!--
+--><span id="dwb-textid-4043323" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> verlangte,</span><span id="dwb-textid-4043324" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> das</span><span id="dwb-textid-4043325" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> gewährte,</span><!--
+--><span id="dwb-textid-4043326" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> leistete</span><span id="dwb-textid-4043327" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> er,</span><span id="dwb-textid-4043328" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> liesz</span><!--
+--><span id="dwb-textid-4043329" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> er</span><span id="dwb-textid-4043330" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> nicht</span><span id="dwb-textid-4043331" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ungeleistet;</span><!--
+--><span id="dwb-textid-4043332" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-verse-quote" style="font-size: 87%; padding: 1em 4em 0.25em; border: 0px solid black; width: max-content;"><span id="dwb-textid-4043334" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043335" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043336" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">iedoch</span><span id="dwb-textid-4043337" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wurdens</span><span id="dwb-textid-4043338" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> alle</span><!--
+--><span id="dwb-textid-4043339" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërt.</span><br><span id="dwb-textid-4043341" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-starttitleverse-unknown-none" style="font-family: Komplett; text-align: right; color: rgb(0, 0, 0);"><span id="dwb-textid-4043343" class="dwb-text-word dwb-startsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043344" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">ebenda</span><span id="dwb-textid-4043345" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043346" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">698</span><!--
+--><span id="dwb-textid-4043347" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">,</span></div><span id="dwb-textid-4043349" class="dwb-text-word dwb-endsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span></div><span id="dwb-textid-4043351" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043352" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">allen</span><span id="dwb-textid-4043353" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> freiern</span><span id="dwb-textid-4043354" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> wurde</span><!--
+--><span id="dwb-textid-4043355" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> die</span><span id="dwb-textid-4043356" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> werbung</span><span id="dwb-textid-4043357" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> abgeschlagen;</span><!--
+--><span id="dwb-textid-4043358" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-verse-quote" style="font-size: 87%; padding: 1em 4em 0.25em; border: 0px solid black; width: max-content;"><span id="dwb-textid-4043360" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043361" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043362" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">swëm</span><span id="dwb-textid-4043363" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> mîns</span><span id="dwb-textid-4043364" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> dienstes</span><!--
+--><span id="dwb-textid-4043365" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> nôt</span><span id="dwb-textid-4043366" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> geschiht,</span><br><span id="dwb-textid-4043368" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043369" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043370" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">und</span><span id="dwb-textid-4043371" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> swër</span><!--
+--><span id="dwb-textid-4043372" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> guoter</span><span id="dwb-textid-4043373" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> dës</span><span id="dwb-textid-4043374" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> gërt,</span><br><span id="dwb-textid-4043376" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043377" class="dwb-text-word dwb-startquoteline-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043378" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">dërn</span><span id="dwb-textid-4043379" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wirt</span><!--
+--><span id="dwb-textid-4043380" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> ës</span><span id="dwb-textid-4043381" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> niemer</span><span id="dwb-textid-4043382" class="dwb-text-word dwb-quoteline-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërt.</span><br><span id="dwb-textid-4043384" class="dwb-text-word dwb-addverse-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><div class="dwb-starttitleverse-unknown-none" style="font-family: Komplett; text-align: right; color: rgb(0, 0, 0);"><span id="dwb-textid-4043386" class="dwb-text-word dwb-startsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><!--
+--><span id="dwb-textid-4043387" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">Iw.</span><span id="dwb-textid-4043388" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043389" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">6004</span><span id="dwb-textid-4043390" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">,</span></div><span id="dwb-textid-4043392" class="dwb-text-word dwb-endsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span></div><span id="dwb-textid-4043394" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span>&nbsp;<a href="javascript:displayVolumeInformation('DWB','3','645');"><span title="Informationen zur Lieferung anzeigen" class="ui-icon ui-icon-list normal-icon dwb-wbnetz-link no-print" style="color: rgb(154, 174, 134);"></span></a> <span class="dwb-columnbreak-recte-none" style="font-family: KompLett-BoldSans; color: rgb(34, 119, 51); font-size: 87%;">/Bd.&nbsp;3,&nbsp;Sp.&nbsp;645/</span> <span id="dwb-textid-4043396" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043397" class="dwb-text-word dwb-pagebreak-recte-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043398" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043399" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">der</span><!--
+--><span id="dwb-textid-4043400" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> bleibt</span><span id="dwb-textid-4043401" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> meines</span><span id="dwb-textid-4043402" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> dienstes</span><!--
+--><span id="dwb-textid-4043403" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> nicht</span><span id="dwb-textid-4043404" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ungewährt.</span><span id="dwb-textid-4043405" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> diese</span><!--
+--><span id="dwb-textid-4043406" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> beispiele</span><span id="dwb-textid-4043407" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> aus</span><span id="dwb-textid-4043408" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> vielen</span><!--
+--><span id="dwb-textid-4043409" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ergeben,</span><span id="dwb-textid-4043410" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> dasz</span><span id="dwb-textid-4043411" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> hier</span><!--
+--><span id="dwb-textid-4043412" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> nicht</span><span id="dwb-textid-4043413" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> gerade</span><span id="dwb-textid-4043414" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> rechtsverhältnisse</span><!--
+--><span id="dwb-textid-4043415" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> vorliegen,</span><span id="dwb-textid-4043416" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> nur</span><span id="dwb-textid-4043417" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> der</span><!--
+--><span id="dwb-textid-4043418" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> bruder</span><span id="dwb-textid-4043419" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> als</span><span id="dwb-textid-4043420" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> vormund</span><!--
+--><span id="dwb-textid-4043421" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> seiner</span><span id="dwb-textid-4043422" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> schwester</span><span id="dwb-textid-4043423" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> liesze</span><!--
+--><span id="dwb-textid-4043424" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sich</span><span id="dwb-textid-4043425" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> rechtlich</span><span id="dwb-textid-4043426" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> verbunden</span><!--
+--><span id="dwb-textid-4043427" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> erachten</span><span id="dwb-textid-4043428" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> für</span><span id="dwb-textid-4043429" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sie</span><!--
+--><span id="dwb-textid-4043430" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> zu</span><span id="dwb-textid-4043431" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sorgen;</span><span id="dwb-textid-4043432" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> überall</span><!--
+--><span id="dwb-textid-4043433" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> im</span><span id="dwb-textid-4043434" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> leben</span><span id="dwb-textid-4043435" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> konnte</span><!--
+--><span id="dwb-textid-4043436" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> die</span><span id="dwb-textid-4043437" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sitte</span><span id="dwb-textid-4043438" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> pflichten</span><!--
+--><span id="dwb-textid-4043439" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> auferlegen</span><span id="dwb-textid-4043440" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> und</span><span id="dwb-textid-4043441" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ein</span><!--
+--><span id="dwb-textid-4043442" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wërn</span><span id="dwb-textid-4043443" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043444" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">oder</span><!--
+--><span id="dwb-textid-4043445" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërn</span><span id="dwb-textid-4043446" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043447" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">herbeiführen.</span><!--
+--><span id="dwb-textid-4043448" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sehr</span><span id="dwb-textid-4043449" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> natürlich</span><span id="dwb-textid-4043450" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> aber</span><!--
+--><span id="dwb-textid-4043451" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> begründete</span><span id="dwb-textid-4043452" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sich</span><span id="dwb-textid-4043453" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> oft</span><!--
+--><span id="dwb-textid-4043454" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> eine</span><span id="dwb-textid-4043455" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> juristische</span><span id="dwb-textid-4043456" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> obligation,</span><!--
+--><span id="dwb-textid-4043457" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> gläubiger</span><span id="dwb-textid-4043458" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> wie</span><span id="dwb-textid-4043459" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> schuldner</span><!--
+--><span id="dwb-textid-4043460" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> waren</span><span id="dwb-textid-4043461" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> gehalten</span><span id="dwb-textid-4043462" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> zu</span><!--
+--><span id="dwb-textid-4043463" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> wërn,</span><span id="dwb-textid-4043464" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043465" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">d.</span><!--
+--><span id="dwb-textid-4043466" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> h.</span><span id="dwb-textid-4043467" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> zu</span><span id="dwb-textid-4043468" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> erfüllen,</span><!--
+--><span id="dwb-textid-4043469" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> was</span><span id="dwb-textid-4043470" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sie</span><span id="dwb-textid-4043471" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> gelobt</span><!--
+--><span id="dwb-textid-4043472" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> hatten,</span><span id="dwb-textid-4043473" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> und</span><span id="dwb-textid-4043474" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> falls</span><!--
+--><span id="dwb-textid-4043475" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sie</span><span id="dwb-textid-4043476" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> es</span><span id="dwb-textid-4043477" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> nicht</span><!--
+--><span id="dwb-textid-4043478" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> thaten,</span><span id="dwb-textid-4043479" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> so</span><span id="dwb-textid-4043480" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwërten</span><!--
+--><span id="dwb-textid-4043481" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043482" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">sie.</span><span id="dwb-textid-4043483" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> </span><br><span id="dwb-textid-4043485" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">nhd.</span><!--
+--><span id="dwb-textid-4043486" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> hat</span><span id="dwb-textid-4043487" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sich</span><span id="dwb-textid-4043488" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> währen</span><!--
+--><span id="dwb-textid-4043489" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043490" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">nur</span><span id="dwb-textid-4043491" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> für</span><!--
+--><span id="dwb-textid-4043492" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> die</span><span id="dwb-textid-4043493" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> intransitivbedeutung</span><span id="dwb-textid-4043494" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> behauptet,</span><!--
+--><span id="dwb-textid-4043495" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> transitives</span><span id="dwb-textid-4043496" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> währen,</span><span id="dwb-textid-4043497" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043498" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">ratum</span><span id="dwb-textid-4043499" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> habere,</span><span id="dwb-textid-4043500" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> praestare,</span><!--
+--><span id="dwb-textid-4043501" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> heiszt</span><span id="dwb-textid-4043502" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> uns</span><span id="dwb-textid-4043503" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> überall</span><!--
+--><span id="dwb-textid-4043504" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 'gewähren'.</span><span id="dwb-textid-4043505" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 'entwähren'</span><span id="dwb-textid-4043506" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043507" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">ist</span><span id="dwb-textid-4043508" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ganz</span><span id="dwb-textid-4043509" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> beschränkt</span><!--
+--><span id="dwb-textid-4043510" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> und</span><span id="dwb-textid-4043511" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> wird</span><span id="dwb-textid-4043512" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> in</span><!--
+--><span id="dwb-textid-4043513" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> der</span><span id="dwb-textid-4043514" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> regel</span><span id="dwb-textid-4043515" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> durch</span><!--
+--><span id="dwb-textid-4043516" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 'nicht</span><span id="dwb-textid-4043517" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> gewähren'</span><span id="dwb-textid-4043518" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043519" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">oder</span><span id="dwb-textid-4043520" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> versagen</span><span id="dwb-textid-4043521" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043522" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">ausgedrückt,</span><span id="dwb-textid-4043523" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> den</span><span id="dwb-textid-4043524" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> wörterbüchern</span><!--
+--><span id="dwb-textid-4043525" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ist</span><span id="dwb-textid-4043526" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> es</span><span id="dwb-textid-4043527" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> schon</span><!--
+--><span id="dwb-textid-4043528" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> entgangen;</span><span id="dwb-textid-4043529" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> der</span><span id="dwb-textid-4043530" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> einzige</span><!--
+--><span id="dwb-textid-4043531" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043532" class="dwb-text-word dwb-startsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><a class="dwb-qvz-link sigleinfo-link" href="javascript:openQVZ('DWB',4043533);"><span id="dwb-textid-4043534" class="dwb-text-word dwb-authorprose-caps-base" style="font-family: Komplett; font-variant: small-caps; color: rgb(34, 119, 51);">Stieler</span></a><span id="dwb-textid-4043536" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043537" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">2416</span><span id="dwb-textid-4043538" class="dwb-text-word dwb-endsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043539" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043540" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">stellt</span><!--
+--><span id="dwb-textid-4043541" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> noch</span><span id="dwb-textid-4043542" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwären,</span><span id="dwb-textid-4043543" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043544" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">fallere,</span><span id="dwb-textid-4043545" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> renuere</span><span id="dwb-textid-4043546" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> als</span><!--
+--><span id="dwb-textid-4043547" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> dichterisches</span><span id="dwb-textid-4043548" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> wort</span><span id="dwb-textid-4043549" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> auf,</span><!--
+--><span id="dwb-textid-4043550" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> aus</span><span id="dwb-textid-4043551" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> den</span><span id="dwb-textid-4043552" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> dichtern</span><!--
+--><span id="dwb-textid-4043553" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sind</span><span id="dwb-textid-4043554" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> jedoch</span><span id="dwb-textid-4043555" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> keine</span><!--
+--><span id="dwb-textid-4043556" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> belege</span><span id="dwb-textid-4043557" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> zur</span><span id="dwb-textid-4043558" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> hand.</span><!--
+--><span id="dwb-textid-4043559" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> der</span><span id="dwb-textid-4043560" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> juristische</span><span id="dwb-textid-4043561" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sprachgebrauch</span><!--
+--><span id="dwb-textid-4043562" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> vermengt</span><span id="dwb-textid-4043563" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwehren</span><span id="dwb-textid-4043564" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> (</span><!--
+--><span id="dwb-textid-4043565" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">aus</span><span id="dwb-textid-4043566" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> dem</span><span id="dwb-textid-4043567" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> besitz</span><!--
+--><span id="dwb-textid-4043568" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> setzen</span><span id="dwb-textid-4043569" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">)</span><span id="dwb-textid-4043570" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043571" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">und</span><span id="dwb-textid-4043572" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwähren</span><span id="dwb-textid-4043573" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> (</span><!--
+--><span id="dwb-textid-4043574" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">nicht</span><span id="dwb-textid-4043575" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> leisten</span><span id="dwb-textid-4043576" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">)</span><!--
+--><span id="dwb-textid-4043577" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043578" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">allenthalben,</span><span id="dwb-textid-4043579" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043580" class="dwb-text-word dwb-startsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><a class="dwb-qvz-link sigleinfo-link" href="javascript:openQVZ('DWB',4043581);"><span id="dwb-textid-4043582" class="dwb-text-word dwb-authorprose-caps-base" style="font-family: Komplett; font-variant: small-caps; color: rgb(34, 119, 51);">Haltaus</span></a><span id="dwb-textid-4043584" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043585" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">bringt</span><span id="dwb-textid-4043586" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> beispiele</span><span id="dwb-textid-4043587" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> für</span><!--
+--><span id="dwb-textid-4043588" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ersteres</span><span id="dwb-textid-4043589" class="dwb-text-word dwb-title-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> sp.</span><span id="dwb-textid-4043590" class="dwb-text-word dwb-bibl-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043591" class="dwb-text-word dwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">350</span><span id="dwb-textid-4043592" class="dwb-text-word dwb-endsigle-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="dwb-textid-4043593" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043594" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">unter</span><!--
+--><span id="dwb-textid-4043595" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwären,</span><span id="dwb-textid-4043596" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043597" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">und</span><!--
+--><span id="dwb-textid-4043598" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> beispiele</span><span id="dwb-textid-4043599" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> für</span><span id="dwb-textid-4043600" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entwähren</span><!--
+--><span id="dwb-textid-4043601" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043602" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">sp.</span><span id="dwb-textid-4043603" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 353</span><!--
+--><span id="dwb-textid-4043604" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043605" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">unter</span><span id="dwb-textid-4043606" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> entweren.</span><!--
+--><span id="dwb-textid-4043607" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043608" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">mit</span><span id="dwb-textid-4043609" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> bewähren</span><!--
+--><span id="dwb-textid-4043610" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="dwb-textid-4043611" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">wahr</span><span id="dwb-textid-4043612" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> machen,</span><!--
+--><span id="dwb-textid-4043613" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> mhd.</span><span id="dwb-textid-4043614" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> bewæren,</span><span id="dwb-textid-4043615" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="dwb-textid-4043616" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">haben</span><span id="dwb-textid-4043617" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> beide</span><span id="dwb-textid-4043618" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> ausdrücke</span><!--
+--><span id="dwb-textid-4043619" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> nichts</span><span id="dwb-textid-4043620" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> zu</span><span id="dwb-textid-4043621" class="dwb-text-word dwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> schaffen.</span><!--
+--><span id="dwb-textid-4043622" class="dwb-text-word dwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span></div>
+
+<div class="article-container" id="pfwb-wb-area-center-content-article-M00431"><a href="#" onclick="displayWBNetzLink(event,'PfWB','M00431'); return false;"><span title="Link zu diesem Artikel anzeigen" class="ui-icon ui-icon-extlink normal-icon pfwb-wbnetz-link no-print" style="color: rgb(129, 139, 169);"></span></a>&nbsp;<a href="#" onclick="printArticle('PfWB','M00431'); return false;"><span title="Artikel drucken" class="ui-icon ui-icon-print normal-icon pfwb-wbnetz-link no-print" style="color: rgb(129, 139, 169);"></span></a>&nbsp;<a id="pfwb-anchor-lemid-M00431"></a><a id="pfwb-anchor-bookref-4,1146,58"></a><div class="link-overview-container no-print" id="pfwb-link-overview-container-M00431"><div class="link-overview" id="pfwb-link-overview-M00431-on" style="display: none;"><span class="smalllinksigle" style="background-color: #d5ea95; border-color: #9faf6f; color: black;"><a title="Link im selben Browser-Tab öffnen" class="wbnetz-link" href="javascript:getEntryPoint('RhWB','M01038','lemid');">RhWb</a><a title="Link in neuem Browser-Tab öffnen" target="RhWB" class="wbnetz-link" href="https://www.woerterbuchnetz.de/RhWB?lemid=M01038"><span class="ui-icon ui-icon-arrow-u-r normal-icon"></span></a></span>&nbsp;<span class="link-overview-lemma high-quality-link">malochemen</span>&nbsp;&nbsp; <span class="smalllinksigle" style="background-color: #dac08b; border-color: #a39068; color: black;"><a title="Link zu externer Seite: Südhessisches Wörterbuch" class="wbnetz-link" href="javascript:getEntryPoint('SHW','melle','lemid');">SHW</a></span>&nbsp;<span class="link-overview-lemma high-quality-link">melle</span></div><div title="Verweise im Wörterbuchnetz" class="link-overview" id="pfwb-link-overview-M00431-off" style="display: inline-block;">2<span class="ui-icon ui-icon-arrow-u-r normal-icon"></span></div></div><span id="pfwb-textid-3542644" class="pfwb-text-word pfwb-form-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="pfwb-textid-3542645" class="pfwb-text-word pfwb-lemma-recte-base" style="font-family: Komplett-Bold; color: rgb(0, 0, 0);">malochen</span><span id="pfwb-textid-3542646" class="pfwb-text-word pfwb-form-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="pfwb-textid-3542647" class="pfwb-text-word pfwb-unknown-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="pfwb-textid-3542648" class="pfwb-text-word pfwb-gram-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">schw.</span><span id="pfwb-textid-3542649" class="pfwb-text-word pfwb-unknown-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="pfwb-textid-3542650" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">:</span><!--
+--><span id="pfwb-textid-3542651" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> '</span><span id="pfwb-textid-3542652" class="pfwb-text-word pfwb-startdefinition-unknown-none"></span><span id="pfwb-textid-3542653" class="pfwb-text-word pfwb-def-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">schwer</span><!--
+--><span id="pfwb-textid-3542654" class="pfwb-text-word pfwb-def-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> arbeiten</span><span id="pfwb-textid-3542655" class="pfwb-text-word pfwb-enddefinition-unknown-none"></span><span id="pfwb-textid-3542656" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">',</span><!--
+--><span id="pfwb-textid-3542657" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="pfwb-textid-3542658" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">maloche</span><span id="pfwb-textid-3542659" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> (maˈlōxə)</span><!--
+--><span id="pfwb-textid-3542660" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> [Pirmas</span><span id="pfwb-textid-3542661" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> (</span><span id="pfwb-textid-3542662" class="pfwb-text-word pfwb-sense-caps-base" style="font-family: Komplett; font-variant: small-caps; color: rgb(0, 0, 0);">Otterstetter</span><!--
+--><span id="pfwb-textid-3542663" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 206)],</span><span id="pfwb-textid-3542664" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="pfwb-textid-3542665" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">maloje</span><!--
+--><span id="pfwb-textid-3542666" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> </span><span class="pfwb-columnbreak-recte-none" style="font-family: KompLett-BoldSans; color: rgb(17, 34, 102); font-size: 87%;">/Bd.&nbsp;4,&nbsp;Sp.&nbsp;1147/</span> <span id="pfwb-textid-3542668" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> (mḁˈlǫjə)</span><!--
+--><span id="pfwb-textid-3542669" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> [KL-Lind</span><span id="pfwb-textid-3542670" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> (</span><span id="pfwb-textid-3542671" class="pfwb-text-word pfwb-sense-caps-base" style="font-family: Komplett; font-variant: small-caps; color: rgb(0, 0, 0);">Höh</span><!--
+--><span id="pfwb-textid-3542672" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 128)].</span><span id="pfwb-textid-3542673" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="pfwb-textid-3542674" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);">Die</span><!--
+--><span id="pfwb-textid-3542675" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> Zeit</span><span id="pfwb-textid-3542676" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> vegeht</span><span id="pfwb-textid-3542677" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> -</span><!--
+--><span id="pfwb-textid-3542678" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> jetzt</span><span id="pfwb-textid-3542679" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> hääßt's</span><span id="pfwb-textid-3542680" class="pfwb-text-word pfwb-sense-italics-base" style="font-family: Komplett-Italic; color: rgb(0, 0, 0);"> malooche</span><!--
+--><span id="pfwb-textid-3542681" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> [</span><span id="pfwb-textid-3542682" class="pfwb-text-word pfwb-sense-caps-base" style="font-family: Komplett; font-variant: small-caps; color: rgb(0, 0, 0);">Runck</span><span id="pfwb-textid-3542683" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> Du</span><!--
+--><span id="pfwb-textid-3542684" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> un</span><span id="pfwb-textid-3542685" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> ich</span><span id="pfwb-textid-3542686" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 79].</span><!--
+--><span id="pfwb-textid-3542687" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> —</span><span id="pfwb-textid-3542688" class="pfwb-text-word pfwb-sense-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="pfwb-textid-3542689" class="pfwb-text-word pfwb-unknown-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="pfwb-textid-3542690" class="pfwb-text-word pfwb-noteh-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="pfwb-textid-3542691" class="pfwb-text-word pfwb-noteh-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> Jidd.</span><span id="pfwb-textid-3542692" class="pfwb-text-word pfwb-noteh-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> malochen</span><!--
+--><span id="pfwb-textid-3542693" class="pfwb-text-word pfwb-noteh-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> (</span><span id="pfwb-textid-3542694" class="pfwb-text-word pfwb-noteh-caps-base" style="font-family: Komplett; font-variant: small-caps; color: rgb(0, 0, 0);">Wolf</span><span id="pfwb-textid-3542695" class="pfwb-text-word pfwb-noteh-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 3522).</span><!--
+--><span id="pfwb-textid-3542696" class="pfwb-text-word pfwb-noteh-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> —</span><span id="pfwb-textid-3542697" class="pfwb-text-word pfwb-noteh-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><span id="pfwb-textid-3542698" class="pfwb-text-word pfwb-unknown-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span><!--
+--><span id="pfwb-textid-3542699" class="pfwb-text-word pfwb-notexr-unknown-none" style="font-family: Komplett; color: rgb(0, 0, 0);"></span><span id="pfwb-textid-3542700" class="pfwb-text-word pfwb-notexr-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span> <span class="smalllinksigle" style="background-color: #dac08b; border-color: #a39068; color: black;"><a title="Link zu externer Seite: Südhessisches Wörterbuch" class="wbnetz-link" href="javascript:getEntryPoint('SHW','4,625,1','bookref');">SHW</a></span>&nbsp;&nbsp;<span id="pfwb-textid-3542702" class="pfwb-text-word pfwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">Südhess.</span><!--
+--><span id="pfwb-textid-3542703" class="pfwb-text-word pfwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> IV</span><span id="pfwb-textid-3542704" class="pfwb-text-word pfwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 625</span><span id="pfwb-textid-3542706" class="pfwb-text-word pfwb-notexr-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> melochen;</span><!--
+--><span id="pfwb-textid-3542707" class="pfwb-text-word pfwb-notexr-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span> <span class="smalllinksigle" style="background-color: #d5ea95; border-color: #9faf6f; color: black;"><a title="Link im selben Browser-Tab öffnen" class="wbnetz-link" href="javascript:getEntryPoint('RhWB','5,793,32','bookref');">RhWb</a><a title="Link in neuem Browser-Tab öffnen" target="RhWB" class="wbnetz-link" href="https://www.woerterbuchnetz.de/RhWB?bookref=5,793,32"><span class="ui-icon ui-icon-arrow-u-r normal-icon"></span></a></span>&nbsp;&nbsp;<span id="pfwb-textid-3542709" class="pfwb-text-word pfwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">Rhein.</span><!--
+--><span id="pfwb-textid-3542710" class="pfwb-text-word pfwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> V</span><span id="pfwb-textid-3542711" class="pfwb-text-word pfwb-ref-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> 793</span><span id="pfwb-textid-3542713" class="pfwb-text-word pfwb-notexr-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);">.</span><!--
+--><span id="pfwb-textid-3542714" class="pfwb-text-word pfwb-unknown-recte-base" style="font-family: Komplett; color: rgb(0, 0, 0);"> </span></div>
+
+</textarea>
+
+<div><button id="umformen">Umformen</button>  Tabelle in Absätze umformen <input type="checkbox" checked="checked" id="Tabelle_umformen" ></div>
+
+<div id="Ausgabe" class="Ausgabe">
+</div>
+
+<script>
+String.prototype.mapReplace = function(map) {
+    var regex = [];
+    for(var key in map)
+        regex.push(key.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"));
+    return this.replace(new RegExp(regex.join('|'),"g"),function(word){
+        return map[word];
+    });
+};
+
+$(document).ready(function() {
+  $("button#umformen").click(function(){
+    var textwert=$.trim($("textarea#Zwischenablage").val());
+    
+    $('#Ausgabe').html('').append($(textwert));
+    // console.log(textwert);
+    
+    var $Ausgabe = $('#Ausgabe');
+    
+    $Ausgabe.html(function (i, html) {
+      if (html) { // can have undefined
+        // console.log(html);
+        html=html.replace(/&nbsp;/g, ' ');
+      }
+      return html;
+    });
+    // span, a (verwerfen: geht nur falls Inhalt vorhanden)
+      $(
+           "span.dwb-bibl-recte-base" 
+        + ", span.dwb-form-recte-base" 
+        + ", span.dwb-sense-recte-base" 
+        // + ", span.dwb-ref-recte-base" 
+        + ", span.dwb-variante-recte-base" 
+        + ", span.dwb-quoteline-recte-base"
+        
+        + ", span.dwb2-bibl-recte-base" 
+        + ", span.dwb2-date-recte-base"
+        + ", span.dwb2-form-recte-base" 
+        + ", span.dwb2-num-recte-base" 
+        + ", span.dwb2-quote-recte-base"
+        + ", span.dwb2-quoteline-recte-base"
+        + ", span.dwb2-ref-recte-base" 
+        + ", span.dwb2-sense-recte-base" 
+        + ", span.dwb2-variante-recte-base" 
+                
+        + ", span.pfwb-bibl-recte-base" 
+        + ", span.pfwb-date-recte-base"
+        + ", span.pfwb-form-recte-base" 
+        + ", span.pfwb-num-recte-base" 
+        + ", span.pfwb-quote-recte-base"
+        + ", span.pfwb-quoteline-recte-base"
+        + ", span.pfwb-ref-recte-base" 
+        + ", span.pfwb-sense-recte-base" 
+        + ", span.pfwb-variante-recte-base" 
+                
+        +", a.dwb-qvz-link.sigleinfo-link"
+        , $Ausgabe
+      ).contents().unwrap();
+
+    
+    // a href hinzufügen
+      $(
+        "span.dwb-lemma-recte-base" 
+        + ", span.hit.dwb-lemma-recte-base"
+        
+        + ", span.dwb2-lemma-recte-base"
+        + ", span.hit.dwb2-lemma-recte-base"
+        
+        + ", span.pfwb-lemma-recte-base"
+        + ", span.hit.pfwb-lemma-recte-base"
+        , $Ausgabe
+      ).each(function(){
+        var $diesesLemma = $(this)
+            , dieserUrtext = $diesesLemma.text()
+            , woerterBuchCode = $diesesLemma.prop('class').replace(/.*(\b[^ ]+)-lemma-recte-base\b.*/,'$1')
+            //, istDWB2 = /(dwb2-)/.test($diesesLemma.prop('class')) // zu tun2022-01-27 02:51:06
+            //, isPfWb = /(pfwb-)/.test($diesesLemma.prop('class'))
+            , dieserLinkVerweis = 'https://www.woerterbuchnetz.de/' 
+            , grammatikWert = $diesesLemma.parent().find(
+                'span.dwb-gram-italics-base'
+                + ', span.dwb2-gen-italics-base'
+                + ', span.pfwb-gen-italics-base'
+            ).text()
+        ;
+        console.log('TEST: Lemma, dieserUrtext ' + dieserUrtext);
+        
+        $diesesLemma.removeAttr("style");
+        switch (woerterBuchCode) {
+            case 'dwb': dieserLinkVerweis+='DWB' + '/' +  dieserUrtext.toLowerCase(); break;    
+            case 'dwb2': dieserLinkVerweis+='DWB2' + '/' +  dieserUrtext; break;    
+            case 'pfwb': dieserLinkVerweis+='PfWB' + '/' +  dieserUrtext; break;    
+            default: dieserLinkVerweis+="?sigle=DWB&lemma=" + dieserUrtext;
+        }
+        $diesesLemma.wrap(
+          $('<a />', { href: dieserLinkVerweis } )
+        ).parent().after(' <span class="lemma-linkage">~</span> <span class="article-quotation quotation-start">»</span>');
+
+        if (grammatikWert) {
+            console.log('TEST: grammatikWert: '
+                + grammatikWert
+            );
+        }
+        if (dieserUrtext === dieserUrtext.toUpperCase()
+            || /\b[nmf]\./.test(grammatikWert)
+        ) {
+          // console.log('dieserUrtext' + dieserUrtext);
+          $diesesLemma.text(function(i, t) {
+            var rueckWert = t;
+            if (/\b[nmf]\./.test(grammatikWert)) {// n. => neutrum, m-maskulin, f-feminin
+              // $diesesLemma.css({'text-transform':'capitalize'}); // muß in kleinbuchstaben sein
+              rueckWert = t[0].toUpperCase() + t.substring(1).toLowerCase();
+              //console.log('if: grammatikWert: ' + rueckWert);
+              const geschlechtswortMitGrammatik = {
+                  "f.": "die",
+                  "f. subst.": "die",
+                  "m.": "der",
+                  "n.": "das",
+                  "m. f.": "der o. die",
+                  "m. und f.": "der u. die",
+                  "f. m.": "die o. der",
+                  "n. m.": "das o. der",
+                  "m. n.": "der o. das",
+                  "m. f. n.": "der o. die o. das",
+      "m., n.": "der o. das",
+                  "m., n., f.": "der o. das o. die"
+              };
+              $.map( geschlechtswortMitGrammatik, function( wert, schluessel ) {
+                  if (grammatikWert === schluessel) {
+                      $diesesLemma.parents('a').after(', ' + wert);
+                  }
+              });
+            } else {
+              //console.log('else: grammatikWert => toLowerCase: ' + rueckWert);
+              rueckWert = t.toLowerCase();
+              
+            }
+            return rueckWert;
+          });
+          $diesesLemma.append( $('<span />', { class: 'original-value', css: { 'display': 'none' }, text: dieserUrtext }) );
+        }
+        
+      });
+    
+    // $('.link-overview-container.no-print').empty(); // ungünstig
+    
+    // zu tun 2022-01-27 02:53:21
+    console.log("Test Querverweis-Link: Anzahl a.wbnetz-link = " +
+      // vielleicht .not('.link-overview-container a.wbnetz-link').length
+      $(
+        'span.smalllinksigle + span.dwb-ref-recte-base'
+        + ', span.smalllinksigle + span.dwb2-ref-recte-base'
+        + ', span.smalllinksigle + span.pfwb-notexr-recte-base'
+        , $Ausgabe
+      ).length 
+    );
+    
+    $(
+      'span.smalllinksigle + span.dwb-ref-recte-base'
+      + ', span.smalllinksigle + span.dwb2-ref-recte-base'
+      + ', span.smalllinksigle + span.pfwb-notexr-recte-base'
+      , $Ausgabe
+    ).each(function(){
+      var $thisLinkContainer = $(this).prev('span.smalllinksigle')
+        , woerterBuchCode = $(this).prop('class').replace(/.*(\b[^ ]+)-(ref|notexr)-recte-base\b.*/,'$1')
+        , thisHref = $thisLinkContainer.find('a.wbnetz-link').attr("href")
+        , $thisRefLemma = $(this)
+        ;
+        
+      thisHref_replaced = thisHref.replace(
+          /javascript:getEntryPoint\( *'([^']*)' *, *'([^']*)' *, *'([^']*)' *\); */
+          // javascript:getEntryPoint('SHW','4,625,1','bookref');
+          , "https://www.woerterbuchnetz.de/$1?$3=$2"
+        );
+      $thisLinkContainer.find('a.wbnetz-link').attr({ "href": thisHref_replaced });
+      // entferne CSS Stil und javascript links
+      // $thisLinkContainer.attr({'style': ''}).find('a.wbnetz-link[href^="javascript"]').contents().unwrap();
+      // javascript:getEntryPoint('SHW','4,625,1','bookref'); https://www.woerterbuchnetz.de/RhWB?bookref=5,793,32
+      switch (woerterBuchCode) {
+          case 'dwb':   
+          case 'dwb2': 
+            $thisLinkContainer.attr({'style': ''}).find('a.wbnetz-link[href^="http"]').contents().unwrap();
+            $thisRefLemma.attr({'style': ''}).wrap( $('<a />', { href: thisHref } ) );
+          break;    
+      }
+      
+      // console.log('TEST smalllinksigle: ' + thisHref + ' => ersetzt: ' + thisHref_replaced + ' ~ Nachbartext: ' + $thisRefLemma.text() + " woerterBuchCode: " + woerterBuchCode );
+    });
+    $( 'a.wbnetz-link[href^="javascript:getEntryPoint"], a[href^="javascript:getEntryPoint"]' , $Ausgabe ).each(function(){
+      var thisHref=$(this).attr('href')
+        , thisHref_replaced = thisHref.replace(
+          /javascript:getEntryPoint\( *'([^']*)' *, *'([^']*)' *, *'([^']*)' *\); */
+          // javascript:getEntryPoint('SHW','4,625,1','bookref');
+          , "https://www.woerterbuchnetz.de/$1?$3=$2"
+        );
+      $(this).attr({'href': thisHref_replaced });
+      // console.log('TEST a.wbnetz-link: ' + thisHref + ' => ersetzt: ' + thisHref_replaced + ', text: ' + $(this).text());
+    });
+    // span => sup
+      $(
+          'span.dwb-bibl-recte-super'
+      + ', span.dwb-date-recte-super'
+      + ', span.dwb-gram-recte-super'
+      + ', span.dwb-ref-recte-super'
+      + ', span.dwb-sense-recte-super'
+      + ', span.dwb-title-recte-super'
+      
+      + ', span.dwb2-bibl-recte-super'
+      + ', span.dwb2-date-recte-super'
+      + ', span.dwb2-gram-recte-super'
+      + ', span.dwb2-ref-recte-super'
+      + ', span.dwb2-sense-recte-super'
+      + ', span.dwb2-title-recte-super'
+      
+      + ', span.pfwb-bibl-recte-super'
+      + ', span.pfwb-date-recte-super'
+      + ', span.pfwb-gram-recte-super'
+      + ', span.pfwb-ref-recte-super'
+      + ', span.pfwb-sense-recte-super'
+      + ', span.pfwb-title-recte-super'
+      , $Ausgabe
+      ).replaceWith(function(){
+      return $("<span />", {
+          html: $(this).html(),
+          class: $(this).prop('class'),
+          css: {
+              'vertical-align': 'super',
+              'font-size': '7pt'
+          }
+      });
+    });
+    
+    $( 
+      'span.dwb2-sense-italics-super', 
+      + ', span.pfwb-sense-italics-super'
+      , $Ausgabe 
+    ).replaceWith(function(){
+      return $("<span />", {
+          html: $(this).html(),
+          css: {
+              'vertical-align': 'super',
+              'font-size': '7pt',
+              'font-style': 'italic'
+          }
+      });
+    });
+    // span => em
+      $(
+      'span.dwb-bibl-italics-base'
+      + ', span.dwb-gram-italics-base'
+      + ', span.dwb-ref-italics-base'
+      + ', span.dwb-quote-italics-base'
+      + ', span.dwb-quoteline-italics-base'
+      + ', span.dwb-title-italics-base'
+      + ', span.dwb-sense-italics-base'
+      + ', span.dwb-sense-italics-spaced'
+      , $Ausgabe
+      ).replaceWith(function(){
+      return $("<em />", {
+          html: $(this).html(),
+          class: $(this).prop('class'),
+          style: $(this).prop('class') === 'dwb-sense-italics-spaced' ? 'letter-spacing: 0.125em; padding-left: 0.25em;' : ''
+        }
+      );
+    });
+
+    $(
+      'span.dwb2-def-italics-base'      
+      + ', span.dwb2-bibl-italics-base'
+      + ', span.dwb2-biblsource-italics-base'
+      + ', span.dwb2-pos-italics-base'
+      + ', span.dwb2-note-italics-base'
+      + ', span.dwb2-quote-italics-base'
+      + ', span.dwb2-quoteline-italics-base'
+      + ', span.dwb2-sense-italics-base'
+      + ', span.dwb2-title-italics-base'
+      
+      + ', span.pfwb-def-italics-base'      
+      + ', span.pfwb-bibl-italics-base'
+      + ', span.pfwb-biblsource-italics-base'
+      + ', span.pfwb-pos-italics-base'
+      + ', span.pfwb-note-italics-base'
+      + ', span.pfwb-quote-italics-base'
+      + ', span.pfwb-quoteline-italics-base'
+      + ', span.pfwb-sense-italics-base'
+      + ', span.pfwb-title-italics-base'
+      , $Ausgabe
+    ).replaceWith(function(){
+      return $("<em />", {html: $(this).html()});    
+    });
+    
+    if ($("#Tabelle_umformen").prop('checked')) {
+      //Tabelle => <p>
+        $('td', $Ausgabe).replaceWith(function(){
+        return $("<span />", {
+            html: $(this).html(),
+            class: 'table-td'
+          }
+        );
+      });
+        $('tr', $Ausgabe).replaceWith(function(){
+        return $("<p />", {
+            html: $(this).html(),
+            class: 'table-tr'
+          }
+        );
+      }).unwrap('tbody,table');
+    } else {
+    // td colspan="" reduzieren
+      $('table', $Ausgabe).each(function(){
+        colSpans= []; 
+        $thisTable=$(this);
+        $thisTable.find("tr").each(function(){
+          colSpans.push($("td:last[colspan]",$(this)).attr("colspan"));
+        });
+        const colSpanMin=Math.min.apply(Math, colSpans);
+        // console.log(colSpans);
+        // console.log(colSpanMin);
+        $thisTable.find("tr").each(function(){
+          const colSpanAlt=$("td:last[colspan]",$(this)).attr("colspan")
+            , colSpanNeu = colSpanAlt - colSpanMin + 1
+          ;
+          $(this).find("td:last[colspan]").attr({"colspan": colSpanNeu });
+          // console.log("colspan alt: " + colSpanAlt + " neu: " + colSpanNeu);
+        });        
+      });
+      /* */
+      //$('table tr', $Ausgabe).each(function(){ colSpans.push($("td:last[colspan]",$(this)).attr("colspan")) });
+      //$('table td', $Ausgabe)
+    }
+
+    // div => small
+      $('div.dwb-starttitleverse-unknown-none', $Ausgabe).replaceWith(function(){
+      return $("<span />", {
+          html: $(this).html(),
+          css: {'font-size': '8pt'},
+          class: "dwb-starttitleverse-unknown-none"
+        }
+      );
+    });
+    $('span.dwb-starttitleverse-unknown-none', $Ausgabe).before("&nbsp;&nbsp;&nbsp;&nbsp;");
+    
+    $('div.dwb2-starttitleverse-unknown-none', $Ausgabe).replaceWith(function(){
+      return $("<span />", {
+          html: $(this).html(),
+          css: {'font-size': '8pt'},
+          class: "dwb2-starttitleverse-unknown-none"
+        }
+      );
+    });
+    $('span.dwb2-starttitleverse-unknown-none', $Ausgabe).before("&nbsp;&nbsp;&nbsp;&nbsp;");
+
+    $('div.pfwb-starttitleverse-unknown-none', $Ausgabe).replaceWith(function(){
+      return $("<span />", {
+          html: $(this).html(),
+          css: {'font-size': '8pt'},
+          class: "pfwb-starttitleverse-unknown-none"
+        }
+      );
+    });
+    $('span.pfwb-starttitleverse-unknown-none', $Ausgabe).before("&nbsp;&nbsp;&nbsp;&nbsp;");
+
+    // span => span caps
+    $(
+         'span.dwb-authorprose-caps-base'
+      + ', span.dwb-authorverse-caps-base'
+      + ', span.dwb-gram-caps-base'
+      + ', span.dwb-sense-caps-base'
+      + ', span.dwb-title-caps-base'
+      + ', span.dwb-sense-caps-base'
+      
+      + ', span.dwb2-authorprose-caps-base'
+      + ', span.dwb2-authorverse-caps-base'
+      + ', span.dwb2-gram-caps-base'
+      + ', span.dwb2-sense-caps-base'
+      + ', span.dwb2-title-caps-base'
+      + ', span.dwb2-sense-caps-base'
+      + ', span.dwb2-artikelautor-recte-base'
+      
+      + ', span.pfwb-authorprose-caps-base'
+      + ', span.pfwb-authorverse-caps-base'
+      + ', span.pfwb-gram-caps-base'
+      + ', span.pfwb-sense-caps-base'
+      + ', span.pfwb-title-caps-base'
+      + ', span.pfwb-sense-caps-base'
+      + ', span.pfwb-artikelautor-recte-base'
+      , $Ausgabe
+      
+    ).replaceWith(function(){
+      return $("<span />", {
+          html: $(this).html(),
+          css: {
+              'text-transform': 'uppercase',
+              'font-family': 'Cinzel'
+          },
+          class: $(this).prop('class')
+        });    
+    });
+        
+    // span => b
+      $(
+      'span.dwb-sensemark6-recte-base'
+      + ', span.dwb-sensemark5-recte-base'
+      + ', span.dwb-sensemark4-recte-base'
+      + ', span.dwb-sensemark3-recte-base'
+      + ', span.dwb-sensemark2-recte-base'
+      + ', span.dwb-sensemark1-recte-base'
+      
+      + ', span.dwb2-sensemark6-recte-base'
+      + ', span.dwb2-sensemark5-recte-base'
+      + ', span.dwb2-sensemark4-recte-base'
+      + ', span.dwb2-sensemark3-recte-base'
+      + ', span.dwb2-sensemark2-recte-base'
+      + ', span.dwb2-sensemark1-recte-base'
+      + ', span.dwb2-num-bold-base'
+      
+      + ', span.pfwb-sensemark6-recte-base'
+      + ', span.pfwb-sensemark5-recte-base'
+      + ', span.pfwb-sensemark4-recte-base'
+      + ', span.pfwb-sensemark3-recte-base'
+      + ', span.pfwb-sensemark2-recte-base'
+      + ', span.pfwb-sensemark1-recte-base'
+      + ', span.pfwb-num-bold-base'
+      
+      , $Ausgabe
+    ).replaceWith(function(){
+      return $("<b />", {
+          html: $(this).html()
+        });    
+    });
+    
+
+    // Leeres entfernen
+   /*
+   $("span,a", $Ausgabe).each(function() {
+      if ($(this).text().trim().length === 0) {
+          $(this).remove()
+      }
+    });
+*/
+    // Zwillingselemente vereinen
+    $Ausgabe.html(function (i, html) {
+      if (html) {
+        html = html
+          .replace(/<\/em>([ \n]*)<em>/g, '$1')
+          .replace(/(?<=<em class="dwb-sense-italics-base">)([^<>]+)<\/em>([ \n]*)<em class="dwb-sense-italics-base">/g, '$1$2')
+          .replace(/(?<=<em class="dwb-title-italics-base">)([^<>]+)<\/em>([ \n]*)<em class="dwb-title-italics-base">/g, '$1$2')
+          .replace(/(?<=<em class="dwb-sense-italics-spaced">)([^<>]+)<\/em>([ \n]*)<em class="dwb-sense-italics-spaced">/g, '$1$2')
+          .replace(/(?<=<em class="dwb2-sense-italics-base">)([^<>]+)<\/em>([ \n]*)<em class="dwb2-sense-italics-base">/g, '$1$2')
+          .replace(/(?<=<em class="dwb2-title-italics-base">)([^<>]+)<\/em>([ \n]*)<em class="dwb2-title-italics-base">/g, '$1$2')
+          .replace(/(?<=<em class="dwb2-sense-italics-spaced">)([^<>]+)<\/em>([ \n]*)<em class="dwb2-sense-italics-spaced">/g, '$1$2')
+          .replace(/(?<=<em class="pfwb-sense-italics-base">)([^<>]+)<\/em>([ \n]*)<em class="pfwb-sense-italics-base">/g, '$1$2')
+          .replace(/(?<=<em class="pfwb-title-italics-base">)([^<>]+)<\/em>([ \n]*)<em class="pfwb-title-italics-base">/g, '$1$2')
+          .replace(/(?<=<em class="pfwb-sense-italics-spaced">)([^<>]+)<\/em>([ \n]*)<em class="pfwb-sense-italics-spaced">/g, '$1$2')
+          ;
+      }
+      return html;
+    }).html(function (i, html) {
+      if (html) {
+        html = html.mapReplace({
+            /* ae  */ "\ue433":"a\u0364", /* combining latin small letter e */
+            /* oe  */ "\ue438":"o\u0364", /* combining latin small letter e */
+            /* ue uͤ */ "\ue440":"u\u0364", /* combining latin small letter e */
+            /* uo  */ "\ue560":"u\u0366", /* combining latin small letter o */
+            /* Uo  */ "\ue0AD": "U\u0366", /* combining latin small letter o */
+            /* s bar */ "\ue998" : "s\u0305" /* combining overline bar */
+          });
+      }
+      return html;
+    });
+    // div => p
+    /* 
+    console.log(
+        'DEBUG <p> Anzahl: ' + $('#Ausgabe').find('p').length
+    ); 
+    */
+    $('div.dwb-verse-quote', $Ausgabe).replaceWith(function(){
+       return $("<span />", {
+               html: $(this).html().replace(/(<br *\/?>)/g, '$1&nbsp;&nbsp;'),
+               class: "dwb-verse-quote",
+               css: {"display":"block", "font-size":"10pt"}
+           }
+       ).prepend("&nbsp;&nbsp;");
+    });
+    
+    $('div.dwb2-verse-quote', $Ausgabe).replaceWith(function(){
+       return $("<span />", {
+               html: $(this).html(),
+               class: 'dwb2-verse-quote'
+           }
+       );
+    });
+    $('div.pfwb-verse-quote', $Ausgabe).replaceWith(function(){
+       return $("<span />", {
+               html: $(this).html(),
+               class: 'pfwb-verse-quote'
+           }
+       );
+    });
+    $('div.article-container', $Ausgabe).append('<span class="article-quotation quotation-end">«</span>')
+    // schlußendlich alles zur Ausgabe
+    // $('#Ausgabe').html($zwischenablage);
+  }); // click 
+}); // ready
+</script>
+    </body>
+</html>

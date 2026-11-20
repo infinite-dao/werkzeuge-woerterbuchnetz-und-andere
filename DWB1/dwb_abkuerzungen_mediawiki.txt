@@ -1,0 +1,703 @@
+== Abkürzungen (DWB1) ==
+<div style="column-count: 4; column-gap: 30px;">
+; A : anfang (bei zeitangaben)
+; abh. : abhandlung
+; abt. : abteilung
+; akad. : akademie
+; Anh. : Anhalt
+; anm. : anmerkung
+; ATB : altdeutsche textbibliothek
+; aufl. : auflage
+; auftr. : auftrag
+; ausg. : ausgabe
+; ausgew. : ausgewählt
+; b. : bei
+; Bay.; -bay. : Bayern; -bayern
+; bd.; bde. : band; bände
+; bearb. : bearbeitet
+; beitr. : beiträge
+; ber. : bericht
+; bes. : besonders, besorgt
+; bibl. : bibliotheca, bibliothek
+; bibl. d. ges. dt. nat.-lit. : bibliothek der gesamten deutschen national-literatur
+; bl. : blatt.
+; Bndr. : Berliner neudruck(e)
+; Br. : Breisgau
+; Brandenb. : Brandenburg
+; bzw. : beziehungsweise
+; cl. : classe
+; cop. : copyright
+; d. : der, die, das
+; d. ä. : der ältere (im ansatz d. verfassernamens in kapitälchen)
+; dass. : dasselbe
+; ders. : derselbe
+; dies. : dieselbe
+; diss. : dissertation
+; d. j. : der jüngere (im ansatz d. verfassernamens in kapitälchen)
+; DLD : deutsche literaturdenkmale
+; DLE : deutsche literatur in entwicklungsreihen
+; DNL : deutsche nationalliteratur (Kürschner)
+; dt. : deutsch
+; DTM : deutsche texte des mittelalters
+; durchges. : durchgesehen
+; DWB : deutsches wörterbuch v. Jac. Grimm u. Wilh. Grimm
+; E : ende (bei zeitangaben)
+; ebd. : ebenda
+; einl. : einleitung
+; Els. : Elsaß
+; erkl. : erklärt, erklärung(en)
+; ersch. : erschienen
+; Erzgeb. : Erzgebirge
+; evtl. : eventuell
+; f. : für
+; f., ff., folg. : folgende
+; flugschr. a. d. ersten jahren d. ref. : flugschriften aus den ersten jahren der reformation
+; fortges. : fortgesetzt
+; frhr. : freiherr (im ansatz d. verfassernamens in kapitälchen)
+; geb. : gebessert, geboren
+; gedr. : gedruckt
+; gen. : genannt
+; ges. : gesammelt
+; gth. : Gegentheil
+; h. : hälfte (bei zeitangaben), heft
+; hg. : herausgeber
+; hg. v. : herausgegeben von
+; hist. : historisch
+; Holst. : Holstein
+; hs. : handschrift
+; impr. : impressum
+; insbes. : insbesondere
+; jg.; jge. : jahrgang; jahrgänge
+; jh. : jahrhundert
+; jun. : junior
+; kath. : katholisch
+; kl. : klasse
+; kr. : kreis
+; -l. : -lich
+; Laus. : Lausitz
+; lfg. : lieferung
+; Lothr. : Lothringen
+; LV : bibliothek des literarischen vereins Stuttgart
+; M : mitte (bei zeitangaben)
+; M. : Main
+; Mecklenb. : Mecklenburg
+; MGH : monumenta Germaniae historica
+; mitget. : mitgeteilt
+; mitt. : mitteilung
+; mon. Habs. : monumenta Habsburgica
+; ms. : manuskript
+; n : nach (bei zeitangaben)
+; nachw. : nachwort
+; ndr. : neudruck(e) (Halle)
+; n. f. : neue folge
+; nr. : nummer
+; O. : Oder
+; o. ä. : oder ähnlich
+; o. j. : ohne jahr
+; o. o. : ohne ort
+; o. o. u. j. : ohne ort und jahr
+; Öst. : Österreich
+; Oldenb. : Oldenburg
+; orig. : original
+; pasqu. : pasquille
+; phil. : philosophisch
+; Pr.; -pr. : Preußen; -preußen
+; progr. : programm
+; ps. : pseudonym
+; QV : quellenverzeichnis
+; ref. : reformation
+; s. : sankt, seite(n), siehe
+; s. a. : siehe auch
+; Sachs. : Sachsen
+; SB : sitzungsbericht(e)
+; Schles. : Schlesien
+; Schlesw. : Schleswig
+; s. d. : siehe dort
+; sen. : senior
+; slg. : sammlung
+; sp. : später, spalte
+; st. : sankt
+; suppl. : supplement
+; t. : teil
+; Thür. : Thüringen
+; tle. : teile
+; tsd. : tausend
+; TSM : texte des späten mittelalters
+; u : um (bei zeitangaben)
+; u. : und
+; u. a. : und andere, unter anderem
+; u. d. ps. : unter dem pseudonym
+; u. d. t. : unter dem titel
+; übers. : übersetzer, übersetzt, übersetzung
+; umgearb. : umgearbeitet
+; u. ö. : und öfter
+; v : vor (bei zeitangaben)
+; v. : von
+; ver. : verein
+; veränd. : verändert
+; verb. : verbessert
+; verf. : verfasser, verfaßt
+; verh. : verheiratete
+; verl. : verlegt
+; verm. : vermehrt
+; versch. : verschieden
+; Vogtld. : Vogtland
+; vollst. : vollständig
+; wb. : wörterbuch
+; Westf. : Westfalen
+; Wndr. : Wiener neudruck(e)
+; Württ. : Württemberg
+; z. : zum, zur
+; z. b. : zum beispiel
+; zfda. : zeitschrift für deutsches altertum
+; zfdph. : zeitschrift für deutsche philosophie
+; zfdwf. : zeitschrift für deutsche wortforschung
+; zit. : zitat, zitiert, zitierung
+; zs. : zeitschrift
+; zw. : zwischen
+</div>
+
+== Abkürzungen (Grimm-Nacharbeitung DWB2) ==
+<div style="column-count: 4; column-gap: 30px;">
+; A : Anfang (vor Belegdatum)
+; a. : Akkusativ (in kombinierten Angaben zur Flexion)
+; a. a. o. : am angegebenen Ort
+; abh. : Abhandlung
+; abl. : Ablativ
+; abl. : Ableitung
+; adän. : altdänisch
+; adj. : Adjektiv
+; adv. : Adverb
+; ae. : altenglisch
+; afda. : Anzeiger für deutsches Altertum
+; afrs. : altfriesisch
+; afrz. : altfranzösisch
+; agerm. : altgermanisch
+; ags. : angelsächsisch
+; ahd. : althochdeutsch
+; ai. : altindisch
+; air. : altirisch
+; aisl. : altisländisch
+; ak. : Akademie (als Ausgabenkennzeichnung)
+; akk. : Akkusativ
+; aksl. : altkirchenslawisch
+; akt. : Aktiv
+; al(em). : alemannisch
+; alat. : altlateinisch
+; alb. : albanisch
+; allg. : allgemein
+; alm. : Almanach
+; ält. : älter
+; amer. : amerikanisch
+; an. : altnordisch
+; anfrk. : altniederfränkisch
+; anh. : Anhang
+; anm. : Anmerkung
+; anorw. : altnorwegisch
+; anz. : Anzeiger
+; app. : Appendix
+; arab. : arabisch
+; arch. : Archiv
+; archäol. : Archäologie, archäologisch
+; art. : Artikel
+; as. : altsächsisch
+; aschwed. : altschwedisch
+; aslaw. : altslawisch
+; AT : Altdeutsche Texte
+; ATB : Altdeutsche Textbibliothek
+; attr. : Attribut, attributiv
+; aufl. : Auflage
+; aufs. : Aufsatz
+; ausg. : Ausgabe
+; ausgew. : ausgewählt
+; -b. : -bar
+; -b. : -berg, -burg (in Ortsnamen)
+; b. : Buch
+; bad. : badisch
+; bair. : bairisch
+; balt. : baltisch
+; bd., bde. : Band, Bände
+; bed. : Bedeutung
+; beil. : Beilage
+; beitr. : Beitrag
+; beob. : Beobachtung
+; ber. : Bericht
+; Berl. : Berlin
+; berl. : berlinisch
+; BES : Beiträge zur Erforschung der deutschen Sprache
+; bes. : besonders
+; beschr. : Beschreibung
+; best. art. : bestimmter Artikel
+; bibl. : Bibliothek
+; biogr. : Biographie, biographisch
+; biol. : Biologie, biologisch
+; bl. : Blatt
+; BMZ : Mittelhochdeutsches Wörterbuch von Benecke, Müller, Zarncke
+; böhm. : böhmisch
+; br. : Brief
+; brand. : brandenburgisch
+; Braunschw. : Braunschweig
+; Bresl. : Breslau
+; brw. : Briefwechsel
+; BSB : Sitzungsberichte der Deutschen (früher: Preußischen) Akademie der Wissenschaften zu Berlin, philosophisch-historische Klasse
+; büchl. : Büchlein
+; bulg. : bulgarisch
+; bzw. : beziehungsweise
+; Chemn. : Chemnitz
+; chr. : Chronica, Chronicon, Chronik
+; cod. : Codex
+; const. : Constitutio
+; conv.-lex. : Conversations-Lexikon
+; corp. : Corpus
+; corr. : Correspondenz
+; d. : Dativ (in kombinierten Angaben zur Flexion)
+; d. : der, die, das
+; dän. : dänisch
+; darst. : Darstellung
+; dat. : Dativ
+; dem. pron. : Demonstrativpronomen
+; denkm. : Denkmal
+; denkw. : Denkwürdigkeit
+; ders. : derselbe
+; d. h. : das heißt
+; d. i. : das ist
+; dicht. : Dichtung
+; dict. : Dictionarium
+; dim. : Diminutiv
+; dipl. : Diploma, diplomaticus, diplomatisch
+; diss. : Dissertation
+; DLD : Deutsche Literaturdenkmale des 18. und 19. Jahrhunderts
+; DLE : Deutsche Literatur. Sammlung literarischer Kunst- und Kulturdenkmäler in Entwicklungsreihen
+; DNL : Deutsche National-Litteratur, hg. v. Kürschner
+; doc., dok. : Documentum, Dokument
+; Dortm. : Dortmund
+; dr. : Drama, dramatisch
+; -dr. : -druck
+; dr. : Druck (vor Belegdatum)
+; Dresd. : Dresden
+; DRW : Deutsches Rechtswörterbuch
+; dt. : deutsch
+; Dtld. : Deutschland
+; DTM : Deutsche Texte des Mittelalters
+; DTV : Deutscher Taschenbuchverlag
+; Düsseld. : Düsseldorf
+; DVS : Deutsche Vierteljahrsschrift für Literaturwissenschaft und Geistesgeschichte
+; 1DWB,2DWB : Deutsches Wörterbuch von J. Grimm und W. Grimm
+; E : Ende (vor Belegdatum)
+; ebd. : ebenda
+; einl. : Einleitung
+; els. : elsässisch
+; encycl., enzykl. : Enzyklopädie
+; engl. : englisch
+; entscheid. : Entscheidung
+; epigr. : Epigramm
+; Erf. : Erfurt
+; erg. : Ergänzung
+; ergbd. : Ergänzungsband
+; ergh. : Ergänzungsheft
+; ergwb. : Ergänzungswörterbuch
+; erinn. : Erinnerung
+; Erl. : Erlangen
+; erz. : Erzählung, erzählend
+; estn. : estnisch
+; et. : etymologisch
+; europ. : europäisch
+; ev. : evangelisch
+; f. : Femininum (in Stellung hinter dem Substantiv)
+; f., ff. : folgende (in Stellenangabe)
+; f. : für
+; fab. : Fabel
+; faks. : Faksimile (als Ausgabenkennzeichnung)
+; fem. : Femininum
+; FEW : Französisches Etymologisches Wörterbuch, hg. v. W. v. Wartburg
+; finn. : finnisch
+; font. rer. : Fontes rerum
+; forsch. : Forschung
+; forts. : Fortsetzung
+; fragm. : Fragment
+; Frankf. (/M., /O.) : Frankfurt (a. Main, a. d. Oder)
+; frk. : fränkisch
+; frmhd. : frühmittelhochdeutsch
+; frnhd. : frühneuhochdeutsch
+; frs. : friesisch
+; frz. : französisch
+; fut. : Futur
+; g. : Genitiv (in kombinierten Angaben zur Flexion)
+; ged. : Gedicht
+; gel. : gelehrt
+; gemd. : gemeindeutsch
+; gemobd. : gemeinoberdeutsch
+; gen. : Genitiv
+; geogr. : Geographie, geographisch
+; geol. : Geologie, geologisch
+; germ. : germanisch
+; ges. : gesammelt, gesamt
+; ges. : Gesellschaft
+; gesch. : Geschichte
+; ggs. : Gegensatz
+; gl. : Glossar(ium), Glosse
+; gleichbed. : gleichbedeutend
+; got. : gotisch
+; Gött. : Göttingen
+; gr(ch). : griechisch
+; gramm. : Grammatik, grammatisch
+; Greifsw. : Greifswald
+; GRM : Germanisch-Romanische Monatsschrift
+; GWB : Goethe-Wörterbuch
+; gth. : Gegentheil
+; -h. : -haft
+; -h. : -heim (in Ortsnamen)
+; h : Jahrhunderthälfte (vor Belegdatum)
+; h. : Heft
+; Hann. : Hannover
+; hd. : hochdeutsch
+; hdb. : Handbuch
+; hdlex. : Handlexikon
+; hdwb. : Handwörterbuch
+; hebr. : hebräisch
+; hess. : hessisch
+; hg. : Herausgeber, herausgegeben
+; hist. : Historia, Historie, historisch
+; hl. : heilig
+; HND : Neudrucke deutscher Literaturwerke des XVI. und XVII. Jahrhunderts (Halle)
+; holst. : holsteinisch
+; HRG : Handwörterbuch zur deutschen Rechtsgeschichte
+; hs., hss. : Handschrift, Handschriften
+; HSB : Sitzungsberichte der Heidelberger Akademie der Wissenschaften, philosophisch-historische Klasse
+; hzgt. : Herzogtum
+; id. : Idiotikon
+; idg. : indogermanisch
+; i. e. s. : im engeren Sinne
+; IF : Indogermanische Forschungen
+; imp. : Imperativ
+; imperf. : Imperfekt
+; ind. : Indikativ
+; indef.pron. : Indefinitpronomen
+; inf. : Infinitiv
+; Innsbr. : Innsbruck
+; insbes. : insbesondere
+; instr. : Instrumental
+; interj. : Interjektion
+; interr. pron. : Interrogativpronomen
+; intrans. : intransitiv
+; ir. : irisch
+; isl. : isländisch
+; i. s. v. : im Sinne von
+; it. : italienisch
+; iur. : iuris
+; i. w. s. : im weiteren Sinne
+; -j. : -jährig
+; jb. : Jahrbuch
+; jber. : Jahresbericht
+; jg. : Jahrgang
+; jh.,-e.,-en., -s. : Jahrhundert, -e, -en, -s
+; jidd. : jiddisch
+; jmd., -m., -n., -s. : jemand, -em, -en, -es
+; jub. : Jubiläumsausgabe (als Ausgabenkennzeichnung)
+; jüng. : jünger
+; jur. : juris, juristisch
+; kal. : Kalender
+; kap. : Kapitel
+; kärnt. : kärntisch
+; kath. : katholisch
+; kde. : Kunde
+; kelt. : keltisch
+; kl. : klein
+; komp. : Komparativ
+; konj. : Konjunktion
+; konj. : Konjunktiv
+; Konst. : Konstanz
+; konv.(-)lex. : Konversationslexikon
+; korr. : Korrespondenz
+; 1. : lies
+; -1. : -lich
+; la., laa. : Lesart, Lesarten
+; langob. : langobardisch
+; lat. : lateinisch
+; Leipz. : Leipzig
+; lett. : lettisch
+; lex. : Lexikon
+; lfg. : Lieferung
+; LGF : Lunder germanistische Forschungen
+; ling. : Linguistik, linguistisch
+; lit. : litauisch
+; lit., litt. : Lit(t)eratur, lit(t)erarisch
+; lok. : Lokativ
+; lothr. : lothringisch
+; LSB : Sitzungsberichte der Sächsischen Akademie der Wissenschaften zu Leipzig (früher: Berichte über die Verhandlungen der Sächsischen Gesellschaft [bzw. Akademie] der Wissenschaften zu Leipzig), philologisch-historische Klasse
+; Lüb. : Lübeck
+; lux. : luxemburgisch
+; LV : Bibliothek des Literarischen Vereins in Stuttgart
+; M : Mitte (vor Belegdatum)
+; m- : mittel- (bei Sprachbezeichnungen)
+; m. : Maskulinum (in Stellung hinter dem Substantiv)
+; ma. : Mittelalter
+; mähr. : mährisch
+; mal. : mittelalterlich
+; mask. : Maskulinum
+; math. : Mathematik, mathematisch
+; md. : mitteldeutsch
+; mda.,mdaa. : Mundart, -en
+; mdal. : mundartlich
+; mdawb., mdawbb. : Mundartwörterbuch, -bücher
+; me. : mittelenglisch
+; meckl. : mecklenburgisch
+; med. : Medizin, medizinisch
+; MED : Middle English Dictionary
+; mem. : Memoiren
+; meteorol. : Meteorologie, meteorologisch
+; MF : Des Minnesangs Frühling
+; mfrk. : mittelfränkisch
+; MGH : Monumenta Germaniae historica
+; MGP : Monumenta Germaniae paedagogica
+; mhd. : mittelhochdeutsch
+; mitt. : Mitteilung
+; mlat. : mittellateinisch
+; mnd. : mittelniederdeutsch
+; mnl. : mittelniederländisch
+; mod. : modern
+; mon. : Monument(um)
+; mosfrk. : moselfränkisch
+; MSB : Sitzungsberichte der Bayerischen Akademie der Wissenschaften (München), philosophisch-historische Klasse
+; MSD : Denkmäler deutscher Poesie und Prosa, hg. v. Müllenhoff und Scherer
+; Münch. : München
+; mythol. : Mythologie, mythologisch
+; n : nach (vor Belegdatum)
+; n. : neu, novus
+; n. : Neutrum (in Stellung hinter dem Substantiv)
+; n. : Nominativ (in kombinierten Angaben z Flexion)
+; nachtr. : Nachtrag
+; nat. : Nationalausgabe
+; nbf. : Nebenform
+; ncl. : Nomenclator
+; nd- : nieder- (bei Sprachbezeichnungen)
+; nd. : niederdeutsch
+; ndän. : neudänisch
+; ndr. : Neudruck
+; ne. : neuenglisch
+; NED : A New English Dictionary (Murray)
+; neutr. : Neutrum
+; n. f. : neue Folge
+; nfrz. : neufranzösisch
+; ngr(ch). : neugriechisch
+; nhd. : neuhochdeutsch
+; nl. : niederländisch
+; nlat. : neulateinisch
+; nnd. : neuniederdeutsch
+; nnl. : neuniederländisch
+; nnorw. : neunorwegisch
+; nom. : Nominativ
+; norw. : norwegisch
+; nov. : Novelle
+; ns. : niedersächsisch
+; nschwed. : neuschwedisch
+; num. : Numerale
+; ob- : ober- (bei Sprachbezeichnungen)
+; obd. : oberdeutsch
+; obfrk. : oberfränkisch
+; obs. : obersächsisch
+; oecon. : Oeconomia
+; ODS : Ordbog over det danske sprog
+; ökon. : Ökonomie, ökonomisch
+; ofrk. : ostfränkisch
+; ofrs. : ostfriesisch
+; o.j. : ohne Jahr
+; omd. : ostmitteldeutsch
+; o. o. (u. j.) : ohne Ort (und Jahr)
+; op. : Opus, Opera
+; or. : Original
+; ordb. : Ordbok
+; ordn. : Ordnung
+; OSS : Ordbok över svenska språket
+; öst. : österreichisch
+; päd. : Pädagogik, pädagogisch
+; part. : Partizip
+; part.adj. : Partizipialadjektiv
+; pass. : Passiv
+; PBB (H.), (T.) : Beiträge zur Geschichte der deutschen Sprache und Literatur, begründet von Paul und Braune (Halle), (Tübingen)
+; perf. : Perfekt
+; pers. : Person
+; pers.pron. : Personalpronomen
+; phänomenol. : Phänomenologie
+; philol. : Philologie, philologisch
+; philos. : Philosophie, philosophisch
+; phraseol. : Phraseologie, phraseologisch
+; physiol. : Physiologie, physiologisch
+; pl. : Plural (in kombinierten Angaben zur Flexion)
+; plur. : Plural
+; poln. : polnisch
+; pomm. : pommerisch
+; port. : portugiesisch
+; poss.pron. : Possessivpronomen
+; präd. : Prädikat, prädikativ
+; präp. : Präposition
+; präs. : Präsens
+; prät. : Präteritum
+; pred. : Predigt
+; preuß. : preußisch
+; progr. : Programm
+; prom(p)t. : Prom(p)tuarium
+; pron. : Pronomen
+; prot. : protestantisch
+; prov. : provenzalisch
+; ps. : Psalm
+; psychol. : Psychologie, psychologisch
+; qu. : Quelle
+; ref. : Reform, Reformatio(n)
+; refl. : reflexiv
+; refl.pron. : Reflexivpronomen
+; reg. : Register
+; rel. : Religion, religiös
+; rel.pron. : Relativpronomen
+; rev. : Revolution
+; rhein. : rheinisch
+; rhfrk. : rheinfränkisch
+; rip. : ripuarisch
+; rom. : Roman
+; rom. : romanisch
+; Rost. : Rostock
+; rotw. : rotwelsch
+; rumän. : rumänisch
+; russ. : russisch
+; -s. : -sam
+; s. : sämtlich
+; s. : Seite
+; s. : siehe
+; s. a. : siehe auch
+; samml. : Sammlung
+; sanskr. : Sanskrit, sanskritisch
+; sat. : Satire, satirisch
+; schles. : schlesisch
+; schlesw. : schleswigisch
+; schr. : Schrift
+; schw. : schwach (vor grammatischem Terminus)
+; schwäb. : schwäbisch
+; schwed. : schwedisch
+; schweiz. : schweizerisch
+; script. rer. : Scriptores rerum
+; s. d. : siehe dort
+; serb. : serbisch
+; serbokr. : serbokroatisch
+; sg. : Singular (in kombinierten Angaben) zur Flexion
+; siebenb. : siebenbürgisch
+; sing. : Singular
+; skand. : skandinavisch
+; slaw. : slawisch
+; s. o. : siehe oben
+; son. : Sonett
+; sorb. : sorbisch
+; soz. : sozial
+; soziol. : Soziologie, soziologisch
+; sp. : Spalte
+; sp. : Spiel
+; span. : spanisch
+; spr. : Sprache
+; sprichw. : Sprichwort
+; -sprl. : -sprachlich
+; -st. : -stadt, -stätt, -stedt (in Ortsnamen)
+; st. : sanct, sanctus, sankt
+; st. : stark (vor grammatischem Terminus)
+; stud. : Studie, Studium
+; Stuttg. : Stuttgart
+; s. u. : siehe unten
+; subst. : Substantiv
+; superl. : Superlativ
+; suppl. : Supplement
+; s. v. : sub voce
+; svw. : soviel wie
+; syn. : Synonym, synonym
+; t. : teutsch
+; terminol. : Terminologie, terminologisch
+; technol. : Technologie, technologisch
+; term. techn. : Terminus technicus
+; tgb. : Tagebuch
+; theol. : Theologia, Theologie, theologisch
+; thes. : Thesaurus
+; thür. : thüringisch
+; tirol. : tirolisch
+; TND : Neudrucke deutscher Literaturwerke (Tübingen)
+; trans. : transitiv
+; tschech. : tschechisch
+; TSM : Texte des späten Mittelalters
+; Tüb. : Tübingen
+; türk. : türkisch
+; u : um (vor Belegdatum)
+; u- : unter- (bei Sprachbezeichnungen)
+; u. : und
+; u. a. : und andere
+; u. ä. : und ähnlich
+; übertr. : übertragen
+; u. dgl. : und dergleichen
+; ukrain. : ukrainisch
+; unbest. art. : unbestimmter Artikel
+; ungar. : ungarisch
+; unterr. : Unterricht
+; unters. : Untersuchung
+; u. ö. : und öfter
+; urgerm. : urgermanisch
+; urk. : Urkunde
+; urkb. : Urkundenbuch
+; usw. : und so weiter
+; u. z. : unserer Zeitrechnung
+; v : vor (vor Belegdatum)
+; v. : Vers
+; v. : von
+; va. : Volksausgabe (als Ausgabenkennzeichnung)
+; var. : Variante
+; vb. : Verb
+; ver. : Verein
+; verf. : Verfassung
+; verh. : Verhandlung
+; verm. : vermischt
+; veröff. : Veröffentlichung
+; verordn. : Verordnung
+; vers. : Versuch
+; vgl. : vergleiche
+; voc. : Vocabularius
+; voc. opt. : Vocabularius optimus
+; voc. rer. : Vocabularius rerum
+; vok. : Vokabular
+; vok. : Vokativ
+; vorr. : Vorrede
+; vortr. : Vortrag
+; vorw. : Vorwort
+; vulg. : Vulgata
+; vulglat. : vulgärlateinisch
+; v. u. z. : vor unserer Zeitrechnung
+; W. : Weimar (als Ausgabenkennzeichnung)
+; w. : Werk
+; wb., wbb. : Wörterbuch, -bücher
+; WDG : Wörterbuch der deutschen Gegenwartssprache
+; weist. : Weistum
+; westf. : westfälisch
+; Wiesb. : Wiesbaden
+; wiss. : Wissenschaft, wissenschaftlich
+; WLV : Schriften des Literarischen Vereins in Wien
+; wmd. : westmitteldeutsch
+; WND : Wiener Neudrucke
+; WNT : Woordenboek der Nederlandsche Taal
+; WSB : Sitzungsberichte der (österreichischen) Akademie der Wissenschaften in Wien, philosophisch-historische Klasse
+; württ. : württembergisch
+; wz. : Wurzel (als sprachwissenschaftlicher Terminus)
+; z. : Zeile
+; z. : zu, zum, zur
+; z. b. : zum Beispiel
+; ZDL : Zeitschrift für Dialektologie und Linguistik
+; zfda. : Zeitschrift für deutsches Altertum
+; zfdph. : Zeitschrift für deutsche Philologie
+; zfdspr. : Zeitschrift für deutsche Sprache
+; zfdwf. : Zeitschrift für deutsche Wortforschung
+; zfgObrh. : Zeitschrift für die Geschichte des Oberrheins
+; zf(h)dmdaa. : Zeitschrift für (hoch)deutsche Mundarten
+; zfmdaf. : Zeitschrift für Mundartforschung
+; zj. : zum Jahre (vor Belegdatum)
+; zool. : Zoologie, zoologisch
+; zs. : Zeitschrift
+; z. t. : zum Teil
+; ztg. : Zeitung
+; Zür. : Zürich
+; zusb. : Zusammenbildung
+; zusr. : Zusammenrückung
+; zuss. : Zusammensetzung
+; zw. : zwischen
+</div>

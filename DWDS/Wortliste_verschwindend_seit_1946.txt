@@ -189,6 +189,7 @@
 - gewahr
 - gewähren
 - gewandt
+- Gewände
 - Gewohnheit
 - Gezelt
 - geziemen
@@ -199,6 +200,7 @@
 - Gräuel (Gräuel,Greuel)
 - grimmig
 - grollen
+- halsen
 - Hamen
 - harren
 - hasten
@@ -368,6 +370,7 @@
 - Tünche
 - tunken
 - übel
+- übervorteilen
 - Ulk
 - Umgegend
 - umhin

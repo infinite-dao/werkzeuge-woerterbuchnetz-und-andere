@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
+# WARNUNG: Diese Befehlsvorschrift ist veraltet (deprecated). Bitte stattdessen ./Lemmaabfrage_DWB1.py nutzen
 # Programm gründet auf Maciej Radzikowski’s englischer Vorlage https://betterdev.blog/minimal-safe-bash-script-template/
-# ZUTUN stufe_textauszug (Nährstand, Lehrstand, Wehrstand)
-# ZUTUN filter wortliste zum beschränken z.B. bei Suche *stand* alle "aufstand" usw. weglassen
-# ZUTUN Grammatik ~ Schottel zusammenführen in Tabelle
-# ZUTUN Prüfung Nennwort → Großschreibung
-# ZUTUN Suche zü* Umlaute ersetzen nach &#x00fc; usw.
 
 set -Eeuo pipefail
 trap aufraeumen SIGINT SIGTERM ERR EXIT
@@ -34,7 +30,10 @@ nutzung() {
   local diese_nutzung=''
 
   diese_nutzung=$( cat <<NUTZUNG
+WARNUNG: Diese Befehlsvorschrift ist veraltet (deprecated). Bitte stattdessen ./Lemmaabfrage_DWB1.py nutzen
+
 Nutzung:
+
   ./$(basename "${BASH_SOURCE[0]}") [-h] [-s] [-H] [-O] -l "*wohl*"
 
 Ein Wort aus der Programm-Schnitt-Stelle (PSS, engl. API) des Grimm-Wörterbuchs
@@ -159,18 +158,18 @@ json_speicher_datei() {
 alle_dateinamen_bereitstellen() {
   local diese_json_speicher_datei="${*-unbekannt}"
   json_speicher_datei_ordentlich_ueberarbeitet="${diese_json_speicher_datei%.*}-ordentlich überarbeitet.json"
-  datei_utf8_text_zwischenablage="${diese_json_speicher_datei%.*}-utf8_Zwischenablage.txt"
-  datei_utf8_text_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8_Zwischenablage mit gram.txt"
-  datei_utf8_reiner_text="${diese_json_speicher_datei%.*}-utf8_nur-Wörter.txt"
-  datei_utf8_reiner_text_gram="${diese_json_speicher_datei%.*}-utf8_nur-Wörter mit gram.txt"
-  datei_utf8_html_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8_Zwischenablage_Wortliste mit gram.html"
-  datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8_Wortliste mit gram_tidy.html"
-    datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8_Wortliste mit gram_tidy.html.log"
-  datei_utf8_html_gram_tidy_worttabelle_odt="${datei_utf8_html_gram_tidy%.*}_Einzeltabelle.odt"
-  datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte="${datei_utf8_html_gram_tidy%.*}_Einzelabschnitte.md"
-  datei_utf8_odt_gram="${diese_json_speicher_datei%.*}_Wortliste mit gram.odt"
+  datei_utf8_text_zwischenablage="${diese_json_speicher_datei%.*}-utf8 Zwischenablage.txt"
+  datei_utf8_text_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8 Zwischenablage mit Sprachkunde.txt"
+  datei_utf8_reiner_text="${diese_json_speicher_datei%.*}-utf8 nur Wörter.txt"
+  datei_utf8_reiner_text_gram="${diese_json_speicher_datei%.*}-utf8 nur Wörter mit Sprachkunde.txt"
+  datei_utf8_html_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8 Zwischenablage Wortliste mit Sprachkunde.html"
+  datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8 Wortliste mit Sprachkunde_tidy.html"
+    datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8 Wortliste mit Sprachkunde_tidy.html.log"
+  datei_utf8_html_gram_tidy_worttabelle_odt="${datei_utf8_html_gram_tidy%.*} Einzeltabelle.odt"
+  datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte="${datei_utf8_html_gram_tidy%.*} Einzelabschnitte.md"
+  datei_utf8_odt_gram="${diese_json_speicher_datei%.*} Wortliste mit Sprachkunde.odt"
     datei_diese_wbnetzkwiclink="${datei_utf8_html_zwischenablage_gram}.wbnetzkwiclink.txt"
-  datei_utf8_html_gram_tidy_markdown_telegram="${diese_json_speicher_datei%.*}-utf8_Wortliste mit gram_tidy_(Telegram).md"
+  datei_utf8_html_gram_tidy_markdown_telegram="${diese_json_speicher_datei%.*}-utf8 Wortliste mit Sprachkunde_tidy (Telegram).md"
 }
 
 parameter_abarbeiten() {
@@ -682,7 +681,7 @@ if [[ -e "${json_speicher_datei}" ]];then
     cat "${json_speicher_datei}" | jq --arg ohne_woerterliste_regex "${ohne_woerterliste_regex_xml}" \
     '
   def woerterbehalten: ["DWB1", "DWB2"];
-  def Anfangsgrosz:
+  def Begingrosz:
     INDEX(woerterbehalten[]; .) as $wort_behalten
     | [splits("^ *") | select(length>0)]
     | map(
@@ -699,7 +698,7 @@ if [[ -e "${json_speicher_datei}" ]];then
       )
     | join("");
 
-  def UmlauteAnfangsAusschreiben:
+  def UmlauteZuBeginAusschreiben:
     INDEX(woerterbehalten[]; .) as $wort_behalten
     | [splits("^ *") | select(length>0)]
     | map(
@@ -767,50 +766,78 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif ($w|test("^Auszen"))    then ($w|sub("^Auszen"; "Außen"))
     elif ($w|test("^auszer"))    then ($w|sub("^auszer"; "außer"))
     elif ($w|test("^Auszer"))    then ($w|sub("^Auszer"; "Außer"))
-    elif ($w|test("^busz"))    then ($w|sub("^busz"; "buß"))
-    elif ($w|test("^Busz"))    then ($w|sub("^Busz"; "Buß"))
-    elif ($w|test("^fusz"))    then ($w|sub("^fusz"; "fuß"))
-    elif ($w|test("^Fusz"))    then ($w|sub("^Fusz"; "Fuß"))
+    elif ($w|test("^erlasz"))    then ($w|sub("^erlasz"; "erlaß"))
+    elif ($w|test("^Erlasz"))    then ($w|sub("^Erlasz"; "Erlaß"))
+    elif ($w|test("^misz"))      then ($w|sub("^misz"; "miß"))
+    elif ($w|test("^Misz"))      then ($w|sub("^Misz"; "Miß"))
+    elif ($w|test("^wisz"))      then ($w|sub("^wisz"; "wiß"))
+    elif ($w|test("^Wisz"))      then ($w|sub("^Wisz"; "Wiß"))
+    # Wörter: 2…ß
+    elif ($w|test("^[bBfFgGlLmMpPrR][aeiouü]sz"))    then ($w|sub("^(?<a>[bBfFgGlLmMpPrR])(?<b>[aeiouü])sz"; "\(.a)\(.b)ß"))
+      # elif ($w|test("^busz"))    then ($w|sub("^busz"; "buß"))
+      # elif ($w|test("^Busz"))    then ($w|sub("^Busz"; "Buß"))
+      # elif ($w|test("^fusz"))    then ($w|sub("^fusz"; "fuß"))
+      # elif ($w|test("^Fusz"))    then ($w|sub("^Fusz"; "Fuß"))
+      # elif ($w|test("^füsz"))    then ($w|sub("^füsz"; "füß"))
+      # elif ($w|test("^Füsz"))    then ($w|sub("^Füsz"; "Füß"))
+      # elif ($w|test("^Gusz"))    then ($w|sub("^Gusz"; "Guß"))
+      # elif ($w|test("^gusz"))    then ($w|sub("^gusz"; "guß"))
+      # elif ($w|test("^lasz"))    then ($w|sub("^lasz"; "laß"))
+      # elif ($w|test("^Lasz"))    then ($w|sub("^Lasz"; "Laß"))
+      # elif ($w|test("^masz"))    then ($w|sub("^masz"; "maß"))
+      # elif ($w|test("^Masz"))    then ($w|sub("^Masz"; "Maß"))
+      # elif ($w|test("^misz"))    then ($w|sub("^misz"; "miß"))
+      # elif ($w|test("^Misz"))    then ($w|sub("^Misz"; "Miß"))
+      # elif ($w|test("^pasz"))   then ($w|sub("^pasz"; "paß"))
+      # elif ($w|test("^Pasz"))   then ($w|sub("^Pasz"; "Paß"))
+      # elif ($w|test("^risz"))   then ($w|sub("^risz"; "riß"))
+      # elif ($w|test("^Risz"))   then ($w|sub("^Risz"; "Riß"))
+    # Wörter: 3…ß
+    elif ($w|test("^[bBhHpPrRsS][elprt][aeiou]sz"))    then ($w|sub("^(?<a>[bBhHpPrRsS])(?<b>[elprt])(?<c>[aeiou])sz"; "\(.a)\(.b)\(.c)ß"))
+      # elif ($w|test("^beisz"))   then ($w|sub("^beisz"; "beiß"))
+      # elif ($w|test("^Beisz"))   then ($w|sub("^Beisz"; "Beiß"))
+      # elif ($w|test("^blasz"))    then ($w|sub("^blasz"; "blaß"))
+      # elif ($w|test("^Blasz"))    then ($w|sub("^Blasz"; "Blaß"))
+      # elif ($w|test("^heisz"))   then ($w|sub("^heisz"; "heiß"))
+      # elif ($w|test("^Heisz"))   then ($w|sub("^Heisz"; "Heiß"))
+      # elif ($w|test("^presz"))    then ($w|sub("^presz"; "preß"))
+      # elif ($w|test("^Presz"))    then ($w|sub("^Presz"; "Preß"))
+      # elif ($w|test("^reisz"))   then ($w|sub("^reisz"; "weiß"))
+      # elif ($w|test("^Reisz"))   then ($w|sub("^Reisz"; "Weiß"))
+      # elif ($w|test("^spasz"))   then ($w|sub("^spasz"; "spaß"))
+      # elif ($w|test("^Spasz"))   then ($w|sub("^Spasz"; "Spaß"))
+      # elif ($w|test("^weisz"))   then ($w|sub("^weisz"; "weiß"))
+      # elif ($w|test("^Weisz"))   then ($w|sub("^Weisz"; "Weiß"))
     elif ($w|test("^fuesz"))   then ($w|sub("^fuesz"; "füß"))
     elif ($w|test("^Fuesz"))   then ($w|sub("^Fuesz"; "Füß"))
-    elif ($w|test("^füsz"))    then ($w|sub("^füsz"; "füß"))
-    elif ($w|test("^Füsz"))    then ($w|sub("^Füsz"; "Füß"))
-    elif ($w|test("^genosz"))    then ($w|sub("^genosz"; "genoß"))
-    elif ($w|test("^Genosz"))    then ($w|sub("^Genosz"; "Genoß"))
+    # Wörter: 4…ß
+    elif ($w|test("^[gGuUsS][emnpt][binr][aeiuo]sz"))    then ($w|sub("^(?<a>[gGuUsS])(?<b>[emnpt][binr][aeiuo])sz"; "\(.a)\(.b)ß"))
+      # Unbusz
+      # elif ($w|test("^genosz"))    then ($w|sub("^genosz"; "genoß"))
+      # elif ($w|test("^Genosz"))    then ($w|sub("^Genosz"; "Genoß"))
+      # elif ($w|test("^spiesz"))   then ($w|sub("^spiesz"; "spieß"))
+      # elif ($w|test("^Spiesz"))   then ($w|sub("^Spiesz"; "Spieß"))
+      # elif ($w|test("^strasz"))   then ($w|sub("^strasz"; "straß"))
+      # elif ($w|test("^Strasz"))   then ($w|sub("^Strasz"; "Straß"))
+      # elif ($w|test("^umrisz"))   then ($w|sub("^umrisz"; "umriß"))
+      # elif ($w|test("^Umrisz"))   then ($w|sub("^Umrisz"; "Umriß"))
     elif ($w|test("^grösz"))   then ($w|sub("^grösz"; "größ"))
     elif ($w|test("^Grösz"))   then ($w|sub("^Grösz"; "Größ"))
     elif ($w|test("^grosz"))   then ($w|sub("^grosz"; "groß"))
     elif ($w|test("^Grosz"))   then ($w|sub("^Grosz"; "Groß"))
-    elif ($w|test("^Gusz"))    then ($w|sub("^Gusz"; "Guß"))
-    elif ($w|test("^gusz"))    then ($w|sub("^gusz"; "guß"))
-    elif ($w|test("^heisz"))   then ($w|sub("^heisz"; "heiß"))
-    elif ($w|test("^Heisz"))   then ($w|sub("^Heisz"; "Heiß"))
-    elif ($w|test("^masz"))    then ($w|sub("^masz"; "maß"))
-    elif ($w|test("^Masz"))    then ($w|sub("^Masz"; "Maß"))
-    elif ($w|test("^misz"))    then ($w|sub("^misz"; "miß"))
-    elif ($w|test("^Misz"))    then ($w|sub("^Misz"; "Miß"))
-    elif ($w|test("^pasz"))   then ($w|sub("^pasz"; "paß"))
-    elif ($w|test("^Pasz"))   then ($w|sub("^Pasz"; "Paß"))
     elif ($w|test("^schlosz"))  then ($w|sub("^schlosz"; "schloß"))
     elif ($w|test("^Schlosz"))  then ($w|sub("^Schlosz"; "Schloß"))
     elif ($w|test("^schmeisz"))  then ($w|sub("^schmeisz"; "schmeiß"))
     elif ($w|test("^Schmeisz"))  then ($w|sub("^Schmeisz"; "Schmeiß"))
     elif ($w|test("^schweisz"))  then ($w|sub("^schweisz"; "schweiß"))
     elif ($w|test("^Schweisz"))  then ($w|sub("^Schweisz"; "Schweiß"))
-    elif ($w|test("^spasz"))   then ($w|sub("^spasz"; "spaß"))
-    elif ($w|test("^Spasz"))   then ($w|sub("^Spasz"; "Spaß"))
-    elif ($w|test("^spiesz"))   then ($w|sub("^spiesz"; "spieß"))
-    elif ($w|test("^Spiesz"))   then ($w|sub("^Spiesz"; "Spieß"))
-    elif ($w|test("^strasz"))   then ($w|sub("^strasz"; "straß"))
-    elif ($w|test("^Strasz"))   then ($w|sub("^Strasz"; "Straß"))
-    elif ($w|test("^umrisz"))   then ($w|sub("^umrisz"; "umriß"))
-    elif ($w|test("^Umrisz"))   then ($w|sub("^Umrisz"; "Umriß"))
     elif ($w|test("^urgrosz"))   then ($w|sub("^urgrosz"; "urgroß"))
     elif ($w|test("^Urgrosz"))   then ($w|sub("^Urgrosz"; "Urgroß"))
     # Mittelwörter
     elif ($w|test("äuszer"))    then ($w|sub("äuszer"; "äußer"))
     elif ($w|test("Äuszer"))    then ($w|sub("Äuszer"; "Äußer"))
     elif ($w|test("blosz"))      then ($w|sub("blosz"; "bloß"))
+    elif ($w|test("grosz"))      then ($w|sub("grosz"; "groß"))
     elif ($w|test("gröszen"))      then ($w|sub("gröszen"; "größen"))
     elif ($w|test("Gröszen"))      then ($w|sub("Gröszen"; "Größen"))
     elif ($w|test("gröszer"))      then ($w|sub("gröszer"; "größer"))
@@ -835,14 +862,18 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif ($w|test("Süsz"))      then ($w|sub("Süsz"; "Süß"))
     elif ($w|test("verheisz"))      then ($w|sub("verheisz"; "verheiß"))
     # Endwörter
+    elif ($w|test("eisz$"))   then ($w|sub("eisz$"; "eiß"))
     elif ($w|test("genosz$"))    then ($w|sub("genosz$"; "genoß"))
     elif ($w|test("gieszel$"))   then ($w|sub("gieszel$"; "gießel"))
-    elif ($w|test("heisz$"))   then ($w|sub("heisz$"; "heiß"))
+    elif ($w|test("prozesz$"))   then ($w|sub("prozesz$"; "prozeß"))
     elif ($w|test("szchen$"))  then ($w|sub("szchen$"; "ßchen"))
     elif ($w|test("sze$"))     then ($w|sub("sze$"; "ße"))
     elif ($w|test("szt$"))     then ($w|sub("szt$"; "ßt"))
     elif ($w|test("szen$"))     then ($w|sub("szen$"; "ßen"))
+    elif ($w|test("szend$"))     then ($w|sub("szend$"; "ßend"))
+    elif ($w|test("szhaft$"))     then ($w|sub("szhaft"; "ßhaft"))
     elif ($w|test("szig$"))     then ($w|sub("szig$"; "ßig"))
+    elif ($w|test("szlich$"))     then ($w|sub("szlich$"; "ßlich"))
     elif ($w|test("aesz$"))    then ($w|sub("aesz$"; "äß"))
     elif ($w|test("äsz$"))     then ($w|sub("äsz$"; "äß"))
     elif ($w|test("asz$"))     then ($w|sub("asz$"; "aß"))
@@ -850,7 +881,10 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif ($w|test("ösz$"))     then ($w|sub("ösz$"; "öß"))
     elif ($w|test("oesz$"))    then ($w|sub("oesz$"; "öß"))
     elif ($w|test("uesz$"))    then ($w|sub("uesz$"; "üß"))
+    elif ($w|test("ueszel$"))    then ($w|sub("ueszel$"; "üßel"))
+    elif ($w|test("üszel$"))    then ($w|sub("üszel$"; "üßel"))
     elif ($w|test("üsz$"))     then ($w|sub("üsz$"; "üß"))
+    elif ($w|test("usz$"))     then ($w|sub("usz$"; "uß"))
     elif ($w|test("szung$"))     then ($w|sub("szung$"; "ßung"))
     else $w
     end
@@ -873,6 +907,12 @@ if [[ -e "${json_speicher_datei}" ]];then
     elif ($g|test("^ *verb[al]*[ .-]*adj[_.,;]* *$"))
     then "eigenschaftlich"
     elif ($g|test("^ *verb[al]*[ .-]*adj[_.,;]+[ -–—]+adv[_.,;]* *$"))
+    then "eigenschaftlich"
+    elif ($g|test("^ *part[icpalesz]*[. -]+adj[.]? *$"))
+    then "eigenschaftlich"
+    elif ($g|test("^ *part[icpalesz]*[. -]+adj[ektiv]*[. ]+[oder ]*adv[erb]*.*$|^ *part.[ -]+adv.[ ]+adj.*$"))
+    then "eigenschaftlich"
+    elif ($g|test("^ *(präp|pr&#x00e4;p|praep)[osz]*[. -]+adv[erb]*.*$"))
     then "eigenschaftlich"
 
     elif ($g|test("^ *v[.]*|^ *ver*|^ *part.*"))
@@ -1216,6 +1256,12 @@ if [[ -e "${json_speicher_datei}" ]];then
       geschlechtswort_vorm_wort: $w,
       grammatik_deutung: ($g + " ~ Vorwort, Verhältniswort")
     }
+    elif ($g|test("^ *(präp|pr&#x00e4;p|praep)[osz]*[. -]+adv[erb]*.*$"))
+    then {
+      wort_mit_geschlechtswort: $w,
+      geschlechtswort_vorm_wort: $w,
+      grammatik_deutung: ($g + " ~ vorwörtliches Umstandswort")
+    }
     elif ($g|test("^ *praet.[;]? *$"))
     then {
       wort_mit_geschlechtswort: $w,
@@ -1323,13 +1369,13 @@ if [[ -e "${json_speicher_datei}" ]];then
       label: (.label),
       value: (.value),
       gram: (.gram),
-      gramHautgruppen: GrammatikInHauptgruppen(.gram; (.label|Anfangsgrosz)),
-      Wort: (.label|Anfangsgrosz|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen),
+      gramHautgruppen: GrammatikInHauptgruppen(.gram; (.label|Begingrosz)),
+      Wort: (.label|Begingrosz|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen),
       wort: (.label|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen),
       Wortdeutung_mit_Grammatik: GrammatikDemWortAnhaengen(
         .gram;
         (.label|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen);
-        (.label|Anfangsgrosz|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen)
+        (.label|Begingrosz|htmlSonderzeichenAlsEinzelzeichen|szErsetzen|szErsetzen)
       ),
       wort_umlaut_geschrieben: (.label|htmlSonderzeichenUmlauteAusgeschrieben)
   })
@@ -1465,9 +1511,9 @@ case $stufe_formatierung in
       else .
       end
     | if .gram == null or .gram == ""
-      then "<tr><td>\(.Wortdeutung_mit_Grammatik.wort_mit_geschlechtswort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.Wortdeutung_mit_Grammatik.grammatik_deutung)</td><td><small><a href=“https://www.woerterbuchnetz.de/DWB?lemid=\(.value)”>woerterbuchnetz.de/DWB/\(.label)</a>, <a href=“https://www.woerterbuchnetz.de/DWB?lemid=\(.value)”>woerterbuchnetz.de/DWB?lemid=\(.value)</a></small></td></tr>"
+      then "<tr><td>\(.Wortdeutung_mit_Grammatik.wort_mit_geschlechtswort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.Wortdeutung_mit_Grammatik.grammatik_deutung)</td><td><small><a href=\"https://www.woerterbuchnetz.de/DWB?lemid=\(.value)\">woerterbuchnetz.de/DWB/\(.label)</a>, <a href=\"https://www.woerterbuchnetz.de/DWB?lemid=\(.value)\">woerterbuchnetz.de/DWB?lemid=\(.value)</a></small></td></tr>"
       else
-      "<tr><td>\(.Wortdeutung_mit_Grammatik.wort_mit_geschlechtswort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.Wortdeutung_mit_Grammatik.grammatik_deutung)</td><td><small><a href=“https://www.woerterbuchnetz.de/DWB?lemid=\(.value)”>woerterbuchnetz.de/DWB/\(.label)</a>, <a href=“https://www.woerterbuchnetz.de/DWB?lemid=\(.value)”>woerterbuchnetz.de/DWB?lemid=\(.value)</a></small></td></tr>"
+      "<tr><td>\(.Wortdeutung_mit_Grammatik.wort_mit_geschlechtswort)</td><!--wbnetzkwiclink<td><wbnetzkwiclink>https://api.woerterbuchnetz.de/dictionaries/DWB/kwic/\(.value)/textid/1/wordid/1</wbnetzkwiclink></td>wbnetzkwiclink--><td>\(.Wortdeutung_mit_Grammatik.grammatik_deutung)</td><td><small><a href=\"https://www.woerterbuchnetz.de/DWB?lemid=\(.value)\">woerterbuchnetz.de/DWB/\(.label)</a>, <a href=\"https://www.woerterbuchnetz.de/DWB?lemid=\(.value)\">woerterbuchnetz.de/DWB?lemid=\(.value)</a></small></td></tr>"
       end
 
   ' | sed --regexp-extended "s@\"@@g;
@@ -1586,7 +1632,7 @@ $ a\</tbody><tfoot><tr><td colspan=\"4\" style=\"border-top:2px solid gray;borde
     if [[ -e "Abkürzungen-GRIMM-Tabelle-DWB1-und-DWB2.html"  ]];then
     sed --in-place '/<\/body>/e cat Abkürzungen-GRIMM-Tabelle-DWB1-und-DWB2.html' "${datei_utf8_html_zwischenablage_gram}"
 
-    sed --in-place 's@<!-- *hierher Abkürzungsverzeichnis einfügen *-->@<p>Siehe auch das <a class="local" href="#sec-GRIMM_Abkuerzungen">Abkürzungsverzeichnis</a>.</p>\n@' "${datei_utf8_html_zwischenablage_gram}"
+    sed --in-place 's@<!-- *hierher Abkürzungsverzeichnis einfügen *-->@<p>Siehe auch das <a class="local" href="#abschnitt-GRIMM_Abkuerzungen">Abkürzungsverzeichnis</a>.</p>\n@' "${datei_utf8_html_zwischenablage_gram}"
     fi
     # Fundstellen Ende
   ;;
