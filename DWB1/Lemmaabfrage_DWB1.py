@@ -132,55 +132,58 @@ def sz_ersetzen(w):
         return ""
     ergebnis = w
 
-    # Feste Anfangswörter
     feste_anfaenge = [
         (r'^auszen', 'außen'), (r'^Auszen', 'Außen'),
         (r'^auszer', 'außer'), (r'^Auszer', 'Außer'),
         (r'^barfüsz', 'barfüß'), (r'^Barfüsz', 'Barfüß'),
         (r'^barfusz', 'barfuß'), (r'^Barfusz', 'Barfuß'),
+        (r'^droszlicht', 'droßlicht'), (r'^Droszlicht', 'Droßlicht'),
         (r'^erlasz', 'erlaß'), (r'^Erlasz', 'Erlaß'),
-        (r'^füsz', 'füß'), (r'^Füesz', 'Füß'),
+        (r'^fusz', 'fuß'), (r'^Fusz', 'Fuß'),
+        (r'^füsz', 'füß'), (r'^Fuesz', 'Füß'),
         (r'^gäszchen', 'gäßchen'), (r'^Gäszchen', 'Gäßchen'),
+        (r'^gesträusz', 'gesträuß'), (r'^Gesträusz', 'Gesträuß'),
+        (r'^grösz', 'größ'), (r'^Grösz', 'Größ'),
+        (r'^grosz', 'groß'), (r'^Grosz', 'Groß'),
         (r'^misz', 'miß'), (r'^Misz', 'Miß'),
+        (r'^räszlicht', 'räßlicht'), (r'^reszlicht', 'reßlicht'),
+        (r'^rusz', 'ruß'), (r'^Rusz', 'Ruß'),
+        (r'^schiesz', 'schieß'), (r'^Schiesz', 'Schieß'),
+        (r'^schleisz', 'schleiß'), (r'^Schleisz', 'Schleiß'),
+        (r'^schlosz', 'schloß'), (r'^Schlosz', 'Schloß'),
+        (r'^schmeisz', 'schmeiß'), (r'^Schmeisz', 'Schmeiß'),
+        (r'^schösz', 'schöß'), (r'^Schösz', 'Schöß'),
+        (r'^schoosz', 'schooß'), (r'^Schoosz', 'Schooß'),
+        (r'^schosz', 'schoß'), (r'^Schosz', 'Schoß'),
+        (r'^schweisz', 'schweiß'), (r'^Schweisz', 'Schweiß'),
+        (r'^spasz', 'spaß'), (r'^Spasz', 'Spaß'),
+        (r'^spleisz', 'spleiß'), (r'^Spleisz', 'Spleiß'),
+        (r'^spreisz', 'spreiß'), (r'^Spreisz', 'Spreiß'),
+        (r'^sprosz', 'sproß'), (r'^Sprosz', 'Sproß'),
+        (r'^sprösz', 'spröß'), (r'^Sprösz', 'Spröß'),
+        (r'^stosz', 'stoß'), (r'^Stosz', 'Stoß'),
+        (r'^strasz', 'straß'), (r'^Strasz', 'Straß'),
+        (r'^trasz', 'traß'), (r'^Trasz', 'Traß'),
+        (r'^tüszlicht', 'tüßlicht'),
+        (r'^urgrosz', 'urgroß'), (r'^Urgrosz', 'Urgroß'),
+        (r'^vergiszmein', 'vergißmein'), (r'^Vergiszmein', 'Vergißmein'),
         (r'^wisz', 'wiß'), (r'^Wisz', 'Wiß'),
+        (r'^weisz', 'weiß'), (r'^Weisz', 'Weiß'),
+        (r'^zwiszlich', 'zwißlich'),
     ]
+    # Feste Anfangswörter
 
     for muster, ziel in feste_anfaenge:
         if re.search(muster, ergebnis):
             ergebnis = re.sub(muster, ziel, ergebnis)
 
-    # Weitere feste Wortstämme
-    stamm_ersetzungen = [
-        (r'^grösz', 'größ'), (r'^Grösz', 'Größ'),
-        (r'^grosz', 'groß'), (r'^Grosz', 'Groß'),
-        (r'^schlosz', 'schloß'), (r'^Schlosz', 'Schloß'),
-        (r'^schmeisz', 'schmeiß'), (r'^Schmeisz', 'Schmeiß'),
-        (r'^schweisz', 'schweiß'), (r'^Schweisz', 'Schweiß'),
-        (r'^urgrosz', 'urgroß'), (r'^Urgrosz', 'Urgroß'),
-        (r'äuszer', 'äußer'), (r'Äuszer', 'Äußer'),
-        (r'blosz', 'bloß'), (r'grosz', 'groß'),
-        (r'gröszen', 'größen'), (r'Gröszen', 'Größen'),
-        (r'gröszer', 'größer'), (r'Gröszer', 'Größer'),
-        (r'heisz', 'heiß'), (r'mäszig', 'mäßig'),
-        (r'maszen', 'maßen'), (r'müszig', 'müßig'),
-        (r'Müszig', 'Müßig'), (r'nusz', 'nuß'),
-        (r'Nusz', 'Nuß'), (r'scheisz', 'scheiß'),
-        (r'schmeisz', 'schmeiß'), (r'schliesz', 'schließ'),
-        (r'Schliesz', 'Schließ'), (r'schlusz', 'schluß'),
-        (r'Schlusz', 'Schluß'), (r'schusz', 'schuß'),
-        (r'Schusz', 'Schuß'), (r'strasz', 'straß'),
-        (r'süsz', 'süß'), (r'Süsz', 'Süß'),
-        (r'verheisz', 'verheiß'),
-    ]
-    for muster, ziel in stamm_ersetzungen:
-        ergebnis = re.sub(muster, ziel, ergebnis)
-
-    # Endungsmuster
+    # Endungsmuster (vor Stammersetzungen)
     endungen = [
         (r'beiszer$', 'beißer'),
         (r'beiszker$', 'beißker'),
         (r'beisz$', 'beiß'),
         (r'eisz$', 'eiß'),
+        (r'füszicht$', 'füßicht'),
         (r'genosz$', 'genoß'),
         (r'gieszel$', 'gießel'),
         (r'prozesz$', 'prozeß'),
@@ -208,6 +211,29 @@ def sz_ersetzen(w):
     for muster, ziel in endungen:
         ergebnis = re.sub(muster, ziel, ergebnis)
 
+    # Weitere feste Wortstämme
+    stamm_ersetzungen = [
+        (r'äuszer', 'äußer'), (r'Äuszer', 'Äußer'),
+        (r'blosz', 'bloß'), (r'grosz', 'groß'),
+        (r'gröszen', 'größen'), (r'Gröszen', 'Größen'),
+        (r'gröszer', 'größer'), (r'Gröszer', 'Größer'),
+        (r'heisz', 'heiß'), (r'mäszig', 'mäßig'),
+        (r'maszen', 'maßen'), (r'müszig', 'müßig'),
+        (r'Müszig', 'Müßig'), (r'nusz', 'nuß'),
+        (r'Nusz', 'Nuß'), (r'scheisz', 'scheiß'),
+        (r'schmeisz', 'schmeiß'), (r'schliesz', 'schließ'),
+        (r'Schliesz', 'Schließ'), (r'schlusz', 'schluß'),
+        (r'Schlusz', 'Schluß'), (r'schusz', 'schuß'),
+        (r'Schusz', 'Schuß'), (r'strasz', 'straß'),
+        (r'süsz', 'süß'), (r'Süsz', 'Süß'),
+        (r'vergiszmein', 'vergißmein'),
+        (r'verheisz', 'verheiß'),
+        (r'verlaszmich', 'verlaßmich'),
+    ]
+    for muster, ziel in stamm_ersetzungen:
+        ergebnis = re.sub(muster, ziel, ergebnis)
+
+
     return ergebnis
 
 
@@ -232,7 +258,7 @@ def grammatik_in_hauptgruppen(g, w):
             return "tuwörtlich"
         elif re.search(r'.+(?:bar|ig|isch|lich|sam)$', w_low):
             return "eigenschaftlich"
-        elif re.search(r'.+(?:heit|keit|ling|schaft|thum|tum|ung)$', w_low):
+        elif re.search(r'.+(?:heit|keit|ling|schaft|thum|tum|ung|zuversicht)$', w_low):
             return "nennwörtlich"
         else:
             return ""
@@ -393,6 +419,11 @@ _ZUSAMMENGESETZTE_SPRACHKUNDE_REGELN = [
 def grammatik_dem_wort_anhaengen(g, w, W):
     """
     Erstellt Wort mit Artikel, vorangestelltem Artikel und die sprachkundlich gedeutete Einordnung.
+
+    :returns: Eine Schlüsselliste, die »Wort, Geschlechtswort« enthält falls deutbar (wort_mit_geschlechtswort),
+    das »Geschlechtswort (vor dem) Wort« (geschlechtswort_vorm_wort),
+    und die gedeutete Sprachkundlichkeit (grammatik_deutung).
+    :rtype: dict[str, str]
     """
     if g is None or not g.strip():
         return {
@@ -880,19 +911,18 @@ def grammatik_dem_wort_anhaengen(g, w, W):
 
 def erstelle_ohne_filter(ohne_str):
     """
-    Erstellt reguläre Ausdrücke und formatierte Texte zur Ausschlußfilterung aus der '--ohne' Angabe.
+    Erstellt reguläre Ausdrücke zur Ausschlußfilterung aus der '--ohne' Angabe.
+    Unterstützt sowohl 'wort' als auch Formen mit Geschlechtswort wie 'das *licht'.
     """
     if not ohne_str or not ohne_str.strip():
         return "", "", ""
 
-    # Wandlung von Wildcards (*, ?) und Trennzeichen in Regex
     raw_ohne = ohne_str.strip()
-    begriffe = [begriff_hier.strip() for begriff_hier in re.split(r'[,; ]+', raw_ohne) if begriff_hier.strip()]
+    # Trennung nach Komma oder Semikolon (Leerzeichen innerhalb eines Musters bleiben erhalten)
+    begriffe = [b.strip() for b in re.split(r'[,;]+', raw_ohne) if b.strip()]
 
-    # Anzeige-Text
     ohne_text = ", ".join(begriffe)
 
-    # Regex-Muster zusammenbauen
     muster_teile = []
     muster_teile_xml = []
     entity_ersetzungen = [
@@ -901,12 +931,11 @@ def erstelle_ohne_filter(ohne_str):
         ('ü', '&#x00fc;'), ('Ü', '&#x00dc;'),
         ('ú', '&#x00fa;'), ('Ú', '&#x00da;'),
     ]
+
     for begriff_hier in begriffe:
-        reg_muster = re.escape(begriff_hier)
-        reg_muster = reg_muster.replace(r'\*', '.*').replace(r'\?', '.')
+        reg_muster = re.escape(begriff_hier).replace(r'\*', '.*').replace(r'\?', '.')
         muster_teile.append(reg_muster)
 
-        # XML-Variante mit Entity-Umlauten
         b_xml = begriff_hier
         for sonderzeichen, xml_entity in entity_ersetzungen:
             b_xml = b_xml.replace(sonderzeichen, xml_entity)
@@ -1117,18 +1146,24 @@ Verwendbare Wahlmöglichkeiten:
         value = item.get('value', '')
         gram = item.get('gram', '')
 
-        # Filterprüfung
+        label_grosz = begin_grosz(label)# ✔
+        gram_hauptgruppe = grammatik_in_hauptgruppen(gram, label_grosz) # ✔
+
+        wort_grosz = bereite_wort_auf(label, capitalize=True)# ✔
+        wort_klein = bereite_wort_auf(label, capitalize=False)# ✔
+
+        wort_deutung = grammatik_dem_wort_anhaengen(gram, wort_klein, wort_grosz)# ✔
+        geschlwort_vorm_wort = wort_deutung['geschlechtswort_vorm_wort']# ✔
+
+        # Filterprüfung gegen Lemma UND gegen Form mit Geschlechtswort
         label_dekodiert = html_sonderzeichen_als_einzelzeichen(label)
-        if ohne_filter_re and (ohne_filter_re.search(label) or ohne_filter_re.search(label_dekodiert)):
-            continue
+        if ohne_filter_re:
+            if (ohne_filter_re.search(label) or
+                ohne_filter_re.search(label_dekodiert) or
+                ohne_filter_re.search(geschlwort_vorm_wort) or
+                ohne_filter_re.search(wort_klein)):
+                continue
 
-        label_gross = begin_grosz(label)
-        gram_hauptgruppe = grammatik_in_hauptgruppen(gram, label_gross)
-
-        wort_gross = bereite_wort_auf(label, capitalize=True)
-        wort_klein = bereite_wort_auf(label, capitalize=False)
-
-        deutung = grammatik_dem_wort_anhaengen(gram, wort_klein, wort_gross)
         wort_sortier_umlaut = html_sonderzeichen_umlaute_ausgeschrieben(label)
 
         verarbeitete_liste.append({
@@ -1136,9 +1171,9 @@ Verwendbare Wahlmöglichkeiten:
             'value': value,
             'gram': gram,
             'gramHautgruppen': gram_hauptgruppe,
-            'Wort': wort_gross,
+            'Wort': wort_grosz,
             'wort': wort_klein,
-            'Wortdeutung_mit_Grammatik': deutung,
+            'Wortdeutung_mit_Grammatik': wort_deutung,
             'wort_umlaut_geschrieben': wort_sortier_umlaut
         })
 
@@ -1152,8 +1187,16 @@ Verwendbare Wahlmöglichkeiten:
     with open(json_speicher_datei_ueberarbeitet, 'w', encoding='utf-8') as f:
         json.dump(verarbeitete_liste, f, ensure_ascii=False, indent=2)
 
-    # Zusatzbemerkungen für Textausgabe
-    zusatzbemerkungen_text = "Die Liste ist vorgruppiert geordnet nach den Grammatik-Angaben von Grimm, d.h. die Wörter sind nach Wortarten gruppiert: ohne Grammatik-Angabe, Eigenschaftswörter (Adjektive), Nennwörter (Substantive), Zeit- oder Tuwörter usw.."
+    # Genaue Anzahl verarbeiteter Belege / Tabellenzeilen
+    anzahl_verarbeitete_eintraege = len(verarbeitete_liste)
+
+    # Zusatzbemerkungen für Textausgabe mit präziser Beleganzahl
+    zusatzbemerkungen_text = (
+        f"Im Grimm-Wb. fanden sich {anzahl_verarbeitete_eintraege} Beiträge oder Belege. "
+        f"Die nachfolgende Liste ist dabei vorgeordnet nach den sprachkundlichen Angaben von Grimm, "
+        f"d.h. nach Wortarten gruppiert: ohne sprachkundliche (Grammatik-)Angabe, "
+        f"Eigenschaftswörter (Adjektive) und dergleichen, Nennwörter (Substantive), Zeit- oder Tuwörter usw.."
+    )
     if ohne_text:
         zusatzbemerkungen_text += f"\n\nIn der Liste wurden folgende Wortverbindungen bewußt entfernt, allso ohne\n„{ohne_text}“."
 
@@ -1161,13 +1204,13 @@ Verwendbare Wahlmöglichkeiten:
     gesehene_woerter = set()
     reine_woerter_zeilen = []
     for item in verarbeitete_liste:
-        art_form = item['Wortdeutung_mit_Grammatik']['geschlechtswort_vorm_wort']
-        if art_form not in gesehene_woerter:
-            gesehene_woerter.add(art_form)
+        geschlwort_vorm_wort = item['Wortdeutung_mit_Grammatik']['geschlechtswort_vorm_wort']
+        if geschlwort_vorm_wort not in gesehene_woerter:
+            gesehene_woerter.add(geschlwort_vorm_wort)
             if not item['gram']:
                 reine_woerter_zeilen.append(f"{item['wort']};")
             else:
-                reine_woerter_zeilen.append(f"{art_form};")
+                reine_woerter_zeilen.append(f"{geschlwort_vorm_wort};")
 
     with open(datei_utf8_reiner_text, 'w', encoding='utf-8') as f:
         f.write(f"{titel_text} ({untertitel_text})\n\n{zusatzbemerkungen_text}\n\n")
@@ -1180,12 +1223,12 @@ Verwendbare Wahlmöglichkeiten:
     gram_woerter_zeilen = []
     gesehene_gram_zeilen = set()
     for item in verarbeitete_liste:
-        art_form = item['Wortdeutung_mit_Grammatik']['geschlechtswort_vorm_wort']
+        geschlwort_vorm_wort = item['Wortdeutung_mit_Grammatik']['geschlechtswort_vorm_wort']
         gram = item['gram']
         if not gram:
-            zeile = f"{art_form};"
+            zeile = f"{geschlwort_vorm_wort};"
         else:
-            zeile = f"{art_form} ({gram});"
+            zeile = f"{geschlwort_vorm_wort} ({gram});"
 
         if zeile not in gesehene_gram_zeilen:
             gesehene_gram_zeilen.add(zeile)
@@ -1285,7 +1328,8 @@ Verwendbare Wahlmöglichkeiten:
 
 a.local {{ text-decoration:none; }}
 </style>
-<body style="font-family: Antykwa Torunska, serif; background: white;"><p>{bearbeitungstext_html}</p><p>Diese Tabelle ist nach <i>Grammatik (Grimm)</i> buchstäblich vorsortiert gruppiert, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p>{abkuerzungs_hinweis}<p>Zur Sprachkunst oder Grammatik siehe vor allem <i style="font-variant:small-caps;">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id="Wortliste-Tabelle"><thead><tr><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Wort</th>{f'<th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Textauszug (gekürzt)</th>' if args.Fundstellen else ''}<th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style="font-variant:small-caps;">Schottel&nbsp;1663</i>)</th><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Verknüpfungen</th></tr></thead><tbody>
+<body style="font-family: Antykwa Torunska, serif; background: white;"><p>{bearbeitungstext_html}</p>
+<p>Im Grimm-Wb. fanden sich {anzahl_verarbeitete_eintraege} Beiträge oder Belege. Diese Tabelle ist nach sprachkundlichen Begriffen <i>Grammatik (Grimm)</i> buchstäblich geordnet, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p>{abkuerzungs_hinweis}<p>Zur Sprachkunst oder Grammatik siehe vor allem <i style="font-variant:small-caps;">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id="Wortliste-Tabelle"><thead><tr><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Wort</th>{f'<th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Textauszug (gekürzt)</th>' if args.Fundstellen else ''}<th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style="font-variant:small-caps;">Schottel&nbsp;1663</i>)</th><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Verknüpfungen</th></tr></thead><tbody>
 {chr(10).join(html_zeilen)}
 </tbody><tfoot><tr><td colspan="{4 if args.Fundstellen else 3}" style="border-top:2px solid gray;border-bottom:0 none;"></td>
 </tr></tfoot></table>{html_technischer_hinweis}

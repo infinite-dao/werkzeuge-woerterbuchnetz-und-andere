@@ -71,15 +71,19 @@ ___
 Nun erstellen wir eine umfangreiche Abfrage: Wir wollen die Endung „…icht“ erfragen, z. B. in flaschicht; steinicht (d.h. man bedenke steinicht = steinähnlich, hingegen steinig = steinartig usw.), wir können:
 - mit `--ODT` ein Tabellendokument, und mit `--Fundstellen` noch Textauszüge zusätzlich abfragen und einbetten lassen
 - mit `--Liste_Einzelabschnitte` eine Textliste der Wörter in Einzelabschnitte (nach Sprachkunst sortierte Abschnitte) erstellen, und
-- mit `--ohne "…"` können wir Wörter wegnehmen lassen, die wir vorher schon überprüft haben, weil sie als unzutreffend erachtet worden, die wir also nicht brauchen
+- mit `--ohne "…"` können wir Wörter wegnehmen lassen, die wir vorher schon überprüft haben, weil sie als unzutreffend erachtet haben, die wir also nicht brauchen. Dabei können auch Nennwörter gezielt herausgenommen werden, z.B. bei einer Abfrage der alten Eigenschafts-Bezeichnungen _…icht_ (flaschicht, äugicht, steinicht usw.) fallen viele Licht-Wörter mit in die Liste, so daß man anbefehlen kann: `--ohne "das *licht"`, was versucht, nur sächliche Nennwörter mit `*licht` zu entfernen. Hier eine halbwegs gute Ausgangsliste für _…icht_-Eigenschaftswörter: 
 
 ```bash
-./Lemmaabfrage_DWB1.py \
-  --Liste_Einzelabschnitte \
-  --Fundstellen --ODT \
-  --Lemmaabfrage  '*icht' \
-  --ohne "nicht, *bericht, *pflicht, *gedicht, *gesicht, *gewicht, *bleicht"
-# 2632 Fundstellen
+./Lemmaabfrage_DWB1.py --Lemmaabfrage "*icht"  \
+  --ohne "*bericht, *bleicht, *bösewicht, fackellicht, *gedicht, *gesicht, *gewicht, gaulicht, golicht"\
+  ", nicht, der *nicht, zunicht, *verzicht*, das Berührmeinnicht, das *dickicht, das Waldesdicht"\
+  ", die *gicht, das Gegicht, das Kaltvergicht, das Vergicht, das *gericht, der Ketzergericht"\
+  ", der *habicht, das *licht, die *pflicht, die *licht, die *nachricht, das *röhricht, der Schlicht"\
+  ", die *schicht, die *sicht, das Schmeckenicht, der *unterricht, die *unterricht, der *wicht"\
+  ", das *vergißmeinnicht"
+# Abfrage an api.woerterbuchnetz.de … (https://api.woerterbuchnetz.de/dictionaries/DWB/lemmata/select/*icht/0/json)
+# Weiterverarbeitung → JSON 3285 Ergebnisse …
+# Weiterverarbeitung → JSON 1769 eineinzige Wörter aus 3285 Ergebnissen
 ```
 
 ## Volltextsuche innerhalb von Stichwörterbeiträgen
