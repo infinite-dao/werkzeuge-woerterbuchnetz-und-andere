@@ -2,3 +2,5 @@
 *.kate-swp
 .venv
 .idea
+.junie
+Planung*.md

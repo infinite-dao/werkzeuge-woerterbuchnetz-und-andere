@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# WARNUNG: Diese Befehlsvorschrift ist veraltet (deprecated). Bitte stattdessen ./Volltextabfrage_DWB1.py nutzen
 # Programm gründet auf Maciej Radzikowski’s englischer Vorlage https://betterdev.blog/minimal-safe-bash-script-template/
 # ZUTUN --Telegrammarkdown wird nicht erzeugt wenn --ODT fehlt
 # ZUTUN https://github.com/infinite-dao/werkzeuge-woerterbuchnetz-und-andere/issues/1
@@ -206,21 +207,21 @@ json_speicher_datei() {
 # dateivariablen_filter_bereitstellen json_speicher_datei
 dateivariablen_filter_bereitstellen() {
   local diese_json_speicher_datei=${1-unbekannt}
-  datei_utf8_text_zwischenablage="${diese_json_speicher_datei%.*}-utf8_Zwischenablage.txt"
-  datei_utf8_text_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8_Zwischenablage mit gram.txt"
+  datei_utf8_text_zwischenablage="${diese_json_speicher_datei%.*}-utf8 Zwischenablage.txt"
+  datei_utf8_text_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8 Zwischenablage mit Sprachkunde.txt"
   datei_utf8_reiner_text="${diese_json_speicher_datei%.*}-utf8_nur-Wörter.txt"
-  datei_utf8_reiner_text_gram="${diese_json_speicher_datei%.*}-utf8_nur-Wörter mit gram.txt"
+  datei_utf8_reiner_text_gram="${diese_json_speicher_datei%.*}-utf8_nur-Wörter mit Sprachkunde.txt"
 
-  datei_utf8_html_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8_Zwischenablage_Wortliste mit gram.html"
+  datei_utf8_html_zwischenablage_gram="${diese_json_speicher_datei%.*}-utf8 Zwischenablage Wortliste mit Sprachkunde.html"
     datei_diese_wbnetzkwiclink="${datei_utf8_html_zwischenablage_gram}.wbnetzkwiclink.txt"
 
-  datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8_Wortliste mit gram_tidy.html"
-  datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8_Wortliste mit gram_tidy.html.log"
-  datei_utf8_html_gram_tidy_markdown_telegram="${diese_json_speicher_datei%.*}-utf8_Wortliste mit gram_tidy_(Telegram).md"
+  datei_utf8_html_gram_tidy="${diese_json_speicher_datei%.*}-utf8 Wortliste mit Sprachkunde_tidy.html"
+  datei_utf8_html_gram_tidy_log="${diese_json_speicher_datei%.*}-utf8 Wortliste mit Sprachkunde_tidy.html.log"
+  datei_utf8_html_gram_tidy_markdown_telegram="${diese_json_speicher_datei%.*}-utf8 Wortliste mit Sprachkunde_tidy (Telegram).md"
   datei_utf8_html_gram_tidy_worttabelle_odt="${datei_utf8_html_gram_tidy%.*}_einzeltabelle.odt"
   
 
-  datei_utf8_odt_gram="${diese_json_speicher_datei%.*}_Wortliste mit gram.odt"
+  datei_utf8_odt_gram="${diese_json_speicher_datei%.*} Wortliste mit Sprachkunde.odt"
   json_speicher_all_query_datei="${diese_json_speicher_datei%.*}.allquery.json"
   # Zwischenablage für JSON Verarbeitung
   json_speicher_allquery_datei_zwischenablage="${diese_json_speicher_datei%.*}.allquery.Zwischenablage.json"

@@ -90,27 +90,86 @@ Nun erstellen wir eine umfangreiche Abfrage: Wir wollen die Endung „…icht“
 
 ## Volltextsuche innerhalb von Stichwörterbeiträgen
 
-`DWB-PSS_volltext_abfragen-und-ausgeben.sh` – Dieses Programm befragt die Volltextsuche ab (inmitten des Wörterbuches) über eine Programm-Schnitt-Stelle (PSS, enl. API), und es werden verschiedene Dateien erzeugt, in denen reinweg die nur gefundenen Wörter stehen, oder eine ausführliche Wortlisten-Tabelle:
+[Volltextabfrage_DWB1.py](Volltextabfrage_DWB1.py) – Diese Befehlsvorschrift fragt die Volltextsuche ab und gibt die Möglichkeit auch Ausschluß-Wörter anzugeben. Die umfangreiche Hilfe kann mit `--Hilfe` angezeigt werden:
+
+    Nutzung:
+      ./Volltextabfrage_DWB1.py [-h] [-s] [-H] [-O] [-S "…"] -V "stupere"
+    
+    Ein Wort aus der Programm-Schnitt-Stelle (PSS, engl. API) des Grimm-Wörterbuchs
+    DWB abfragen und daraus Listen-Textdokumente erstellen. Im Normalfall werden erzeugt:
+    - Textdatei reine Wortliste (ohne Zusätzliches)
+    - Textdatei mit Sprachkunde-Einträgen
+    Zusätzlich kann man eine HTML oder ODT Datei erstellen lassen (benötigt Programme pandoc / tidy).
+    
+    Verwendbare Wahlmöglichkeiten:
+    -h,    --Hilfe             Hilfetext dieses Programms ausgeben.
+    -v,-V  --Volltextabfrage   Pflichtfeld für die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
+    -S     --Stichwortabfrage  Zusätzliche Einschränkung der Stichworte/Lemmata (z.B. „*lösen*“, „*heili*, *heils*“).
+    -o,    --ohne              Ohne diese Stichwörter/Lemmata – Liste einfacher regulärer Ausdrücke anwendbar
+                               (z.B. --ohne "*pflicht, das *licht").
+    -e,    --eineinzig         Ergebnisliste vereinzigen, so daß nur jedes Stichwort einmal vorkommt.
+    -H,    --HTML              HTML-Datei erzeugen.
+    -O,    --ODT               ODT-Datei (für LibreOffice) erzeugen.
+    -T,    --Telegrammarkdown  MD-Datei (für Text in Markdown bei Telegram) erzeugen.
+    -z,    --wortfunde-auslesen
+                               Zusammenfassend alle Wortfunde nachlesen, der im Volltext gefundenen Wortformen 
+                               und in ein gesondertes Markdown-Dokument schreiben 
+                               (<gesuchte-wort-abfrage>-utf8 Volltext nur Wortfunde zusammengefaßt.md) erstellen.
+           --Einzeltabelle     Die Wörtertabelle allein in eine gesonderte Datei speichern.
+    -b,    --behalte_Dateien   Behalte auch die vorläufigen Zwischendateien, die regulär gelöscht werden.
+    -s,    --stillschweigend   Kaum Meldungen ausgeben.
+           --debug             Befehlsmeldungen und Debug-Informationen ausgeben.
+           --farb-frei         Meldungen ohne Farben ausgeben.
+    
+    Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
+           --ohne-suchpuffer   Den persistenten SQLite-Suchpuffer für diesen Lauf außer acht lassen.
+           --suchpuffer-leeren Den gesamten SQLite-Suchpuffer leeren und Speicherplatz freigeben.
+           --suchpuffer-info   Verdichtete Übersicht zur Nutzung, Speichergröße und Wiederfunden ausgeben.
+           --suchpuffer-pfad   Benutzerdefinierten Pfad für die SQLite-Pufferdatei angeben.
+           --ohne-zeitgleich-suche
+                               Zeitgleiches Nachladen von Fundstellen (4-fach suchend) abschalten und rein nacheinander abfragen.
+
+In schlichter Anweisung werden nur Textdateien erzeugt mit den Stichworten/Lemmata in denen die Volltextsuche etwas gefunden hat. Vermittels weiterer Befehls-Anweisungen kann man zusätzlich gesonderte Ausgabeformate oder eine nachlesende Zusammenfassung (tatsächlich im Text gefundene Wortformen) erstellen lassen:
 
 - Textdatei nur aus Wörtern
-- Textdatei aus Wörtern mit Grammatik-Angabe
-- hinzufügbar (ODT): Offenes Dokument Textvormat als Wortlisten-Tabelle 
-- hinzufügbar (HTML): Netzseite als Wortlisten-Tabelle
+- Textdatei aus Wörtern mit Sprachkunde-Angabe
+- hinzufügbar: Wortfunde zusammenfassen (`--wortfunde-auslesen`)
+- hinzufügbar (ODT): Offenes Dokument Textvormat als Wortlisten-Tabelle  (`--ODT`)
+- hinzufügbar (HTML): Netzseite als Wortlisten-Tabelle (`--HTML`)
+- usw. siehe Datei-Hilfe
 
-Das Ergebnis kann sehr umfangreich sein.
+Das Suchergebnis kann sehr umfangreich sein, und es wird empfohlen, achtsam mit den Abfragen umzugehen, da bei Erzeugung der umfänglichen Textdokumente erneute Netzanfragen getätigt werden müssen. Hierfür versucht ein Suchpuffer einen vernünftigen Mittelweg zu schaffen, wobei mehrmalige Anfragen derselben (kürzlich verwendeten) Volltextsuchen, den hiesigen Suchpuffer nutzen, anstatt die Serveranfragen unnötig zu belasten:
 
-Eingabebeispiel
 ```bash
-./DWB-PSS_volltext_abfragen-und-ausgeben.sh  --Hilfe
+./Volltextabfrage_DWB1.py --suchpuffer-info
+# === Übersicht & Auskunft zum DWB1-Suchpuffer ===
+#   Bestand der Datenbank:  Vorhanden
+#   Speicherort (SQLite):   /home/andreas/.cache/woerterbuchnetz/dwb1_suchpuffer.sqlite
+#   Belegter Speicherplatz: 0.04 MB (40.960 Bytes) / größtens 100 MB
+#   Gespeicherte Einträge:  18 / höchstens 10.000 Einträge
+#   Längste Vorratsdauer:   180 Tage (Selbstleerung kürzlich kaum genutzter Einträge)
+#   Abfrage-Zählungen:
+#     - Puffer-Treffer:     36
+#     - Neuabrufe (Fehl.):  18
+#     - Gesamtanfragen:     54
+#     - Wiederfunde:        66.7 %
+#   Ältester Eintrag:       2026-11-24T00:48:28.539460
+#   Letzter Zugriff:        2026-11-24T00:48:59.029779
+```
+
+Suchbeispiele
+```bash
+# Hilfe anzeigen lassen
+./Volltextabfrage_DWB1.py  --Hilfe
 
 # das lateinische stupere (für staunen) abfragen lassen:
-./DWB-PSS_volltext_abfragen-und-ausgeben.sh  --HTML --ODT --Volltextabfrage "stupere" 
+./Volltextabfrage_DWB1.py  --Volltextabfrage "stupere" --wortfunde-zusammenfassen 
+
+./Volltextabfrage_DWB1.py  --HTML --ODT --Volltextabfrage "stupere" # mit 2 Textausgabe-Tabellen-Formaten 
 
 # Volltextsuche „…lösen…“, aber nur Stichwörter auf Endung „…ung“
-./DWB-PSS_volltext_abfragen-und-ausgeben.sh  --HTML --ODT --Volltextabfrage "*lösen*" --Stichwortabfrage "*ung"
+./Volltextabfrage_DWB1.py  --ODT --Volltextabfrage "*lösen*" --Stichwortabfrage "*ung"
 ```
-ZUTUN: Programm verbessern:
-- derzeit nur Einzelwörter suchbar, keine Wörter mit Leerzeichen, z.B. Phrasensuche "alte Endung"
 
 ## Abfrage-Funktionen (PSS/API)
 
@@ -166,3 +225,8 @@ ZUTUN: Programm verbessern:
 }
 ```
 
+Die folgenden Dateien sind veraltet, und werden nicht weiter gepflegt
+- [DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh](DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh)
+- [DWB-PSS_volltext_abfragen-und-ausgeben.sh](DWB-PSS_volltext_abfragen-und-ausgeben.sh)
+
+Sie werden irgendwann gelöscht, bitte stattdessen die Python-Vorschriften verwenden.
