@@ -1063,7 +1063,7 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
     ohne_filter_re = re.compile(ohne_regex, re.IGNORECASE) if ohne_regex else None
 
     datum_heute_lang = ermittle_altes_monatsdatum()
-    titel_text = f"Volltextsuche „{volltext_text}“ aus Grimm-Wörterbuch ({datum_heute_lang})"
+    titel_text = f"Volltextsuche „{volltext_text}“ aus Grimm-Wörterbuch"
     untertitel_text = datum_heute_lang
 
     heute_str = datetime.datetime.now().strftime('%Y%m%d')
@@ -1417,7 +1417,7 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
 
         with open(datei_utf8_wortfunde_zusammengefaszt, 'w', encoding='utf-8') as f:
             f.write(
-                f"# {titel_text}\n\n"
+                f"# {titel_text} ({untertitel_text})\n\n"
                 f"## Wortfunde in Stichwörtern/Lemmata\n"
                 f"{inhalt_b}\n\n"
                 f"## Wortfunde als Tabelle\n\n"
