@@ -90,7 +90,50 @@ Nun erstellen wir eine umfangreiche Abfrage: Wir wollen die Endung „…icht“
 
 ## Volltextsuche innerhalb von Stichwörterbeiträgen
 
-[Volltextabfrage_DWB1.py](Volltextabfrage_DWB1.py) – Diese Befehlsvorschrift fragt die Volltextsuche ab und gibt die Möglichkeit auch Ausschluß-Wörter anzugeben. Die umfangreiche Hilfe kann mit `--Hilfe` angezeigt werden:
+[Volltextabfrage_DWB1.py](Volltextabfrage_DWB1.py) – Diese Befehlsvorschrift fragt die Volltextsuche ab und gibt die Möglichkeit auch Ausschluß-Wörter anzugeben. Mittels Volltextsuche sind auch lateinische Umschreibungen der GRIMM auffindbar, so daß man sinnverwandte Wörter leichter findet (jedoch fehlen bei vielen Belegen auch lateinische Umschreibungen). Wir können daher versuchen Textstelllen nachzusuchen, in denen „sensib…“ vorkommt:
+```bash
+Volltextabfrage_DWB1.py  --Volltextabfrage "sensib*" 
+```
+… und bekommen als Ergebnisbelege recht viele Fühl- und Empfindungswörter:
+
+    empfindeln;
+    fühlend;
+    sturm;
+    elementarisch;
+    empfindbar;
+    empfindlich;
+    empfindlich (adv.);
+    fühlbar (adj.);
+    fühlbar (adv.);
+    fühlig (adj.);
+    fühlig (adv.);
+    fühlsam (adj.);
+    gefühlig (adj.);
+    gewiss (adj. und adv.);
+    seelentzückend (adj.);
+    sensibel (adj.);
+    sichtbar (adj.);
+    sichtlich (adj.);
+    sinnig (adj.);
+    sinnisch (adj.);
+    sinnlich (adj.);
+    spürhaft (adj. und adv.);
+    spürig (adj.);
+    spürlich (adj. und adv.);
+    …
+    usw.
+
+
+In schlichter Anweisung werden nur Textdateien erzeugt mit den Stichworten/Lemmata in denen die Volltextsuche etwas gefunden hat. Vermittels zusätzlicher Befehls-Anweisungen kann man gesonderte Ausgabeformate oder eine nachlesende Zusammenfassung (tatsächlich im Text gefundene Wortformen) erstellen lassen:
+
+- Textdatei nur aus Wörtern
+- Textdatei aus Wörtern mit Sprachkunde-Angabe
+- hinzufügbar: Wortfunde zusammenfassen (`--wortfunde-auslesen`)
+- hinzufügbar (ODT): Offenes Dokument Textvormat als Wortlisten-Tabelle  (`--ODT`)
+- hinzufügbar (HTML): Netzseite als Wortlisten-Tabelle (`--HTML`)
+- usw. siehe Datei-Hilfe
+
+Die umfangreiche Hilfe kann mit `--Hilfe` angezeigt werden:
 
     Nutzung:
       ./Volltextabfrage_DWB1.py [-h] [-s] [-H] [-O] [-S "…"] -V "stupere"
@@ -129,16 +172,7 @@ Nun erstellen wir eine umfangreiche Abfrage: Wir wollen die Endung „…icht“
            --ohne-zeitgleich-suche
                                Zeitgleiches Nachladen von Fundstellen (4-fach suchend) abschalten und rein nacheinander abfragen.
 
-In schlichter Anweisung werden nur Textdateien erzeugt mit den Stichworten/Lemmata in denen die Volltextsuche etwas gefunden hat. Vermittels weiterer Befehls-Anweisungen kann man zusätzlich gesonderte Ausgabeformate oder eine nachlesende Zusammenfassung (tatsächlich im Text gefundene Wortformen) erstellen lassen:
-
-- Textdatei nur aus Wörtern
-- Textdatei aus Wörtern mit Sprachkunde-Angabe
-- hinzufügbar: Wortfunde zusammenfassen (`--wortfunde-auslesen`)
-- hinzufügbar (ODT): Offenes Dokument Textvormat als Wortlisten-Tabelle  (`--ODT`)
-- hinzufügbar (HTML): Netzseite als Wortlisten-Tabelle (`--HTML`)
-- usw. siehe Datei-Hilfe
-
-Das Suchergebnis kann sehr umfangreich sein, und es wird empfohlen, achtsam mit den Abfragen umzugehen, da bei Erzeugung der umfänglichen Textdokumente erneute Netzanfragen getätigt werden müssen. Hierfür versucht ein Suchpuffer einen vernünftigen Mittelweg zu schaffen, wobei mehrmalige Anfragen derselben (kürzlich verwendeten) Volltextsuchen, den hiesigen Suchpuffer nutzen, anstatt die Serveranfragen unnötig zu belasten:
+Das Suchergebnis kann also sehr umfangreich werden, und es wird empfohlen, achtsam mit den Abfragen umzugehen, da bei Erzeugung der umfänglichen Textdokumente erneute Netzanfragen getätigt werden müssen. Hierfür versucht ein Suchpuffer einen vernünftigen Mittelweg zu schaffen, wobei mehrmalige Anfragen derselben (kürzlich verwendeten) Volltextsuchen, den hiesigen Suchpuffer nutzen, anstatt die Serveranfragen unnötig zu belasten:
 
 ```bash
 ./Volltextabfrage_DWB1.py --suchpuffer-info
@@ -162,7 +196,7 @@ Das Suchergebnis kann sehr umfangreich sein, und es wird empfohlen, achtsam mit 
 # Hilfe anzeigen lassen
 ./Volltextabfrage_DWB1.py  --Hilfe
 
-# das lateinische stupere (für staunen) abfragen lassen:
+# das lateinische stupere (für staunen, verdutzt sein usw.) abfragen lassen:
 ./Volltextabfrage_DWB1.py  --Volltextabfrage "stupere" 
 
 ./Volltextabfrage_DWB1.py  --HTML --ODT --Volltextabfrage "stupere" # mit 2 Textausgabe-Tabellen-Formaten 
@@ -185,15 +219,15 @@ ergibt beispielsweise:
 
 #### Wortfunde in Stichwörtern/Lemmata
 
-*abloesen* in [*zinsreichung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=Z06937&textid=63531252)
+*ablösen* in [*zinsreichung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=Z06937&textid=63531252)
 
-*abloesend* (2 Fundstellen)
+*ablösend* (2 Fundstellen)
 - in [*trauung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=T09322&textid=43272532)
 - in [*winkung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=W22633&textid=59995260)
 
-*abloesens* in [*ablösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=A00897&textid=65453)
+*ablösens* in [*ablösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=A00897&textid=65453)
 
-*aufloesen* (9 Fundstellen)
+*auflösen* (8 Fundstellen)
 - in [*gleichung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=G18787&textid=13147711)
 - in [*stockung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=S48286&textid=38988164)
 - in [*strahlung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=S50574&textid=39640888)
@@ -202,32 +236,33 @@ ergibt beispielsweise:
 - in [*verwässerung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=V06161&textid=51135317)
 - in [*wegdrängung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=W10937&textid=56300869)
 - in [*werdung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=W17471&textid=58444407)
-- in [*zeitabtheilung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=Z03440&textid=62533611)
 
-*aufloesende* in [*stockung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=S48286&textid=38985790)
+*aufloͤsen* in [*zeitabtheilung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=Z03440&textid=62533611)
 
-*aufloesens* in [*auflösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=A06631&textid=637358)
+*auflösende* in [*stockung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=S48286&textid=38985790)
 
-*aufzuloesen* (3 Fundstellen)
+*auflösens* in [*auflösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=A06631&textid=637358)
+
+*aufzulösen* (3 Fundstellen)
 - in [*bezauberung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=B06602&textid=1686754)
 - in [*stockverblasung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=S48294&textid=38988714)
 - in [*verkleisterung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=V02161&textid=49777820)
 
-*auseinanderloesen* in [*trennung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=T09785&textid=43523543)
+*auseinanderlösen* in [*trennung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=T09785&textid=43523543)
 
-*ausloesen* in [*lösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220296)
+*auslösen* in [*lösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220296)
 
-*ausloesens* in [*auslösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=A08507&textid=845332)
+*auslösens* in [*auslösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=A08507&textid=845332)
 
-*einloesen* (2 Fundstellen)
+*einlösen* (2 Fundstellen)
 - in [*wi(e)derlösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=W19525&textid=59167974)
 - in [*zinslosung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=Z06921&textid=63527506)
 
-*erloesen* (2 Fundstellen)
+*erlösen* (2 Fundstellen)
 - in [*gottesoffenbarung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=G23809&textid=14398012)
 - in [*heilung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=H05395&textid=17467813)
 
-*loesen* (26 Fundstellen)
+*lösen* (26 Fundstellen)
 - in [*brandschatzung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=B10550&textid=2005160)
 - in [*erlassung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=E07965&textid=4291918)
 - in [*göttererscheinung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=G23472&textid=14286924)
@@ -255,76 +290,75 @@ ergibt beispielsweise:
 - in [*vorlosung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=V13878&textid=52839949)
 - in [*vorzugsstellung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=V16677&textid=53496782)
 
-*loesent* in [*losung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23219588)
+*lösent* in [*losung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23219588)
 
-*wasserloesen* (2 Fundstellen)
+*wasserlösen* (2 Fundstellen)
 - in [*kammelung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=K00916&textid=19096501)
 - in [*wetterung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=W18814&textid=58869958)
 
-*wiederloesen* in [*lösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220331)
+*wiederlösen* in [*lösung*](https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220331)
 
 #### Wortfunde als Tabelle
 
-| Volltextfund       | im Stichwort (Lemma) | Fundstelle im Wörterbuchnetz                            |
-|:-------------------| :--- |:--------------------------------------------------------|
-| abloesen | zinsreichung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=Z06937&textid=63531252> |
-| abloesend | trauung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=T09322&textid=43272532> |
-| abloesend | winkung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W22633&textid=59995260> |
-| abloesens | ablösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=A00897&textid=65453> |
-| aufloesen | gleichung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=G18787&textid=13147711> |
-| aufloesen | stockung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S48286&textid=38988164> |
-| aufloesen | strahlung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S50574&textid=39640888> |
-| aufloesen | verabredung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V00284&textid=49207129> |
-| aufloesen | verknüpfung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V02220&textid=49787095> |
-| aufloesen | verwässerung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V06161&textid=51135317> |
-| aufloesen | wegdrängung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W10937&textid=56300869> |
-| aufloesen | werdung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W17471&textid=58444407> |
-| aufloesen | zeitabtheilung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=Z03440&textid=62533611> |
-| aufloesende | stockung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S48286&textid=38985790> |
-| aufloesens | auflösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=A06631&textid=637358> |
-| aufzuloesen | bezauberung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=B06602&textid=1686754> |
-| aufzuloesen | stockverblasung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S48294&textid=38988714> |
-| aufzuloesen | verkleisterung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V02161&textid=49777820> |
-| auseinanderloesen | trennung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=T09785&textid=43523543> |
-| ausloesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220296> |
-| ausloesens | auslösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=A08507&textid=845332> |
-| einloesen | wi(e)derlösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W19525&textid=59167974> |
-| einloesen | zinslosung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=Z06921&textid=63527506> |
-| erloesen | gottesoffenbarung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=G23809&textid=14398012> |
-| erloesen | heilung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=H05395&textid=17467813> |
-| loesen | brandschatzung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=B10550&textid=2005160> |
-| loesen | erlassung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=E07965&textid=4291918> |
-| loesen | göttererscheinung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=G23472&textid=14286924> |
-| loesen | grasböschung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=G26080&textid=14970744> |
-| loesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23219867> |
-| loesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23219884> |
-| loesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220094> |
-| loesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220261> |
-| loesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220292> |
-| loesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220410> |
-| loesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220481> |
-| loesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220529> |
-| loesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220598> |
-| loesen | loslösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06869&textid=23215860> |
-| loesen | losung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23218722> |
-| loesen | losung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23218811> |
-| loesen | losung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23219048> |
-| loesen | losung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23219468> |
-| loesen | rechnung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=R02004&textid=27717301> |
-| loesen | schatzung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S05324&textid=29648229> |
-| loesen | spannung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S32700&textid=34930286> |
-| loesen | verkettung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V02083&textid=49756113> |
-| loesen | verschränkung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V03724&textid=50233611> |
-| loesen | verwirrung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V06474&textid=51290034> |
-| loesen | vorlosung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V13878&textid=52839949> |
-| loesen | vorzugsstellung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V16677&textid=53496782> |
-| loesent | losung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23219588> |
-| wasserloesen | kammelung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=K00916&textid=19096501> |
-| wasserloesen | wetterung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W18814&textid=58869958> |
-| wiederloesen | lösung | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220331> |
+| Volltextfund     | im Stichwort (Lemma) | Fundstelle im Wörterbuchnetz                                         |
+|:-----------------|:---------------------|:---------------------------------------------------------------------|
+| ablösen          | zinsreichung         | <https://woerterbuchnetz.de/?sigle=DWB&lemid=Z06937&textid=63531252> |
+| ablösend         | trauung              | <https://woerterbuchnetz.de/?sigle=DWB&lemid=T09322&textid=43272532> |
+| ablösend         | winkung              | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W22633&textid=59995260> |
+| ablösens         | ablösung             | <https://woerterbuchnetz.de/?sigle=DWB&lemid=A00897&textid=65453>    |
+| auflösen         | gleichung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=G18787&textid=13147711> |
+| auflösen         | stockung             | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S48286&textid=38988164> |
+| auflösen         | strahlung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S50574&textid=39640888> |
+| auflösen         | verabredung          | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V00284&textid=49207129> |
+| auflösen         | verknüpfung          | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V02220&textid=49787095> |
+| auflösen         | verwässerung         | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V06161&textid=51135317> |
+| auflösen         | wegdrängung          | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W10937&textid=56300869> |
+| auflösen         | werdung              | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W17471&textid=58444407> |
+| aufloͤsen         | zeitabtheilung       | <https://woerterbuchnetz.de/?sigle=DWB&lemid=Z03440&textid=62533611> |
+| auflösende       | stockung             | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S48286&textid=38985790> |
+| auflösens        | auflösung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=A06631&textid=637358>   |
+| aufzulösen       | bezauberung          | <https://woerterbuchnetz.de/?sigle=DWB&lemid=B06602&textid=1686754>  |
+| aufzulösen       | stockverblasung      | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S48294&textid=38988714> |
+| aufzulösen       | verkleisterung       | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V02161&textid=49777820> |
+| auseinanderlösen | trennung             | <https://woerterbuchnetz.de/?sigle=DWB&lemid=T09785&textid=43523543> |
+| auslösen         | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220296> |
+| auslösens        | auslösung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=A08507&textid=845332>   |
+| einlösen         | wi(e)derlösung       | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W19525&textid=59167974> |
+| einlösen         | zinslosung           | <https://woerterbuchnetz.de/?sigle=DWB&lemid=Z06921&textid=63527506> |
+| erlösen          | gottesoffenbarung    | <https://woerterbuchnetz.de/?sigle=DWB&lemid=G23809&textid=14398012> |
+| erlösen          | heilung              | <https://woerterbuchnetz.de/?sigle=DWB&lemid=H05395&textid=17467813> |
+| lösen            | brandschatzung       | <https://woerterbuchnetz.de/?sigle=DWB&lemid=B10550&textid=2005160>  |
+| lösen            | erlassung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=E07965&textid=4291918>  |
+| lösen            | göttererscheinung    | <https://woerterbuchnetz.de/?sigle=DWB&lemid=G23472&textid=14286924> |
+| lösen            | grasböschung         | <https://woerterbuchnetz.de/?sigle=DWB&lemid=G26080&textid=14970744> |
+| lösen            | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23219867> |
+| lösen            | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23219884> |
+| lösen            | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220094> |
+| lösen            | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220261> |
+| lösen            | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220292> |
+| lösen            | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220410> |
+| lösen            | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220481> |
+| lösen            | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220529> |
+| lösen            | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220598> |
+| lösen            | loslösung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06869&textid=23215860> |
+| lösen            | losung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23218722> |
+| lösen            | losung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23218811> |
+| lösen            | losung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23219048> |
+| lösen            | losung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23219468> |
+| lösen            | rechnung             | <https://woerterbuchnetz.de/?sigle=DWB&lemid=R02004&textid=27717301> |
+| lösen            | schatzung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S05324&textid=29648229> |
+| lösen            | spannung             | <https://woerterbuchnetz.de/?sigle=DWB&lemid=S32700&textid=34930286> |
+| lösen            | verkettung           | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V02083&textid=49756113> |
+| lösen            | verschränkung        | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V03724&textid=50233611> |
+| lösen            | verwirrung           | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V06474&textid=51290034> |
+| lösen            | vorlosung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V13878&textid=52839949> |
+| lösen            | vorzugsstellung      | <https://woerterbuchnetz.de/?sigle=DWB&lemid=V16677&textid=53496782> |
+| lösent           | losung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06885&textid=23219588> |
+| wasserlösen      | kammelung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=K00916&textid=19096501> |
+| wasserlösen      | wetterung            | <https://woerterbuchnetz.de/?sigle=DWB&lemid=W18814&textid=58869958> |
+| wiederlösen      | lösung               | <https://woerterbuchnetz.de/?sigle=DWB&lemid=L06886&textid=23220331> |
 
-
-## Abfrage-Funktionen (PSS/API)
+## Abfrage-Funktionen der Datenschnittstelle (API)
 
 ☞ https://api.woerterbuchnetz.de/open-api/dictionaries/DWB
 ```json
@@ -378,7 +412,7 @@ ergibt beispielsweise:
 }
 ```
 
-Die folgenden Dateien sind veraltet, und werden nicht weiter gepflegt
+Die folgenden BASH-Dateien sind veraltet, und werden nicht weiter gepflegt
 - [DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh](DWB-PSS-lemmata-select_abfragen-und-ausgeben.sh)
 - [DWB-PSS_volltext_abfragen-und-ausgeben.sh](DWB-PSS_volltext_abfragen-und-ausgeben.sh)
 

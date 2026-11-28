@@ -78,24 +78,30 @@ def ermittle_altes_monatsdatum(jetzt=None):
     return monatsdaten.get(monat, f"{tag}. {monat}. {jahr}")
 
 
+# Zuordnungstabelle: Private Unicode-Zeichen (PUA / MUFI aus woerterbuchnetz)
+# zu standardkonformen kombinierenden Unicode-Zeichen (Weg 2: Mittelweg)
+PUA_KOMBINIEREND_ERSATZ = {
+    '\ue433': 'a\u0364',  # a mit übergestelltem e (aͤ)
+    '\ue438': 'o\u0364',  # o mit übergestelltem e (oͤ)
+    '\ue440': 'u\u0364',  # u mit übergestelltem e (uͤ)
+    '\ue0c4': 'A\u0364',  # A mit übergestelltem e (Aͤ)
+    '\ue0d6': 'O\u0364',  # O mit übergestelltem e (Oͤ)
+    '\ue0dc': 'U\u0364',  # U mit übergestelltem e (Uͤ)
+    '\ue560': 'u\u0366',  # u mit übergestelltem o (uͦ)
+    '\ue0ad': 'U\u0366',  # U mit übergestelltem o (Uͦ)
+    '\ue998': 's\u0305',  # s mit Kürzungsstrich / Makron (s̅)
+}
+
+
 def html_sonderzeichen_als_einzelzeichen(w):
-    """Wandelt hexadezimale HTML-Umlaut- und Sonderzeichen-Entities in echte UTF-8-Zeichen um."""
+    """Wandelt hexadezimale HTML-Umlaut- und Sonderzeichen-Entities in echte UTF-8-Zeichen um und ersetzt PUA-Zeichen durch kombinierende Unicode-Zeichen."""
     if not w:
         return ""
-    ersetzungen = [
-        (re.compile(r'&#x00e4;|&#X00E4;|&auml;|&#228;', re.IGNORECASE), 'ä'),
-        (re.compile(r'&#x00c4;|&#X00C4;|&Auml;|&#196;', re.IGNORECASE), 'Ä'),
-        (re.compile(r'&#x00f6;|&#X00F6;|&ouml;|&#246;', re.IGNORECASE), 'ö'),
-        (re.compile(r'&#x00d6;|&#X00D6;|&Ouml;|&#214;', re.IGNORECASE), 'Ö'),
-        (re.compile(r'&#x00fc;|&#X00FC;|&uuml;|&#252;', re.IGNORECASE), 'ü'),
-        (re.compile(r'&#x00dc;|&#X00DC;|&Uuml;|&#220;', re.IGNORECASE), 'Ü'),
-        (re.compile(r'&#x00fa;|&#X00FA;|&uacute;|&#250;', re.IGNORECASE), 'ú'),
-        (re.compile(r'&#x00da;|&#X00DA;|&Uacute;|&#218;', re.IGNORECASE), 'Ú'),
-    ]
-    ergebnis = str(w)
-    for muster, ersatz in ersetzungen:
-        ergebnis = muster.sub(ersatz, ergebnis)
-    return ergebnis
+    import html as _html
+    text = _html.unescape(str(w))
+    for pua_char, kombi_char in PUA_KOMBINIEREND_ERSATZ.items():
+        text = text.replace(pua_char, kombi_char)
+    return text
 
 
 def html_sonderzeichen_umlaute_ausgeschrieben(w):
@@ -104,6 +110,11 @@ def html_sonderzeichen_umlaute_ausgeschrieben(w):
         return ""
     ergebnis = html_sonderzeichen_als_einzelzeichen(w)
     ersetzungen = [
+        ('a\u0364', 'ae'), ('A\u0364', 'Ae'),
+        ('o\u0364', 'oe'), ('O\u0364', 'Oe'),
+        ('u\u0364', 'ue'), ('U\u0364', 'Ue'),
+        ('u\u0366', 'uo'), ('U\u0366', 'Uo'),
+        ('s\u0305', 's'),
         ('ä', 'ae'), ('Ä', 'Ae'),
         ('ö', 'oe'), ('Ö', 'Oe'),
         ('ü', 'ue'), ('Ü', 'Ue'),
@@ -794,8 +805,8 @@ class SuchpufferDWB1:
                 self.verbindung = None
 
 
-def hole_api_json(url, max_versuche=3, timeout=30):
-    """Ruft eine URL mit User-Agent ab und gibt das geparste JSON-Ergebnis zurück."""
+def hole_datenschnittstelle_json(url, max_versuche=3, timeout=30):
+    """Ruft die JSON-Datenquelle als Handlungsnutzer (user-agent) ab und gibt das erteilte JSON-Ergebnis zurück."""
     headers = {'User-Agent': 'Mozilla/5.0 (Volltextabfrage_DWB1)'}
     for versuch in range(1, max_versuche + 1):
         try:
@@ -810,12 +821,16 @@ def hole_api_json(url, max_versuche=3, timeout=30):
 
 
 def lade_kwic_fundstelle(wbnetzkwiclink, textid, suchpuffer=None, max_versuche=3):
-    """Lädt den KWIC-Fundstellentext aus dem Suchpuffer oder der API und formatiert ihn mit HTML-Tags."""
+    """Lädt den KWIC-Fundstellentext aus dem Suchpuffer oder der PSS (API) und formatiert ihn mit HTML-TextAusGestaltern."""
     formid = '0'
     wordid = '1'
     m = re.search(r'/kwic/([^/]+)/textid/([^/]+)/wordid/([^/]+)', wbnetzkwiclink)
     if m:
         formid, textid, wordid = m.group(1), m.group(2), m.group(3)
+    else:
+        m_open = re.search(r'/kwic/([^/]+)', wbnetzkwiclink)
+        if m_open:
+            textid = m_open.group(1)
 
     if suchpuffer and suchpuffer.aktiv:
         gepuffert = suchpuffer.hole_kwic(formid, textid, wordid)
@@ -823,20 +838,29 @@ def lade_kwic_fundstelle(wbnetzkwiclink, textid, suchpuffer=None, max_versuche=3
             return gepuffert, True
 
     try:
-        data = hole_api_json(wbnetzkwiclink, max_versuche=max_versuche, timeout=20)
+        data = hole_datenschnittstelle_json(wbnetzkwiclink, max_versuche=max_versuche, timeout=20)
     except Exception as e:
         return f"[Fehler beim Laden der Fundstelle: {e}]", False
 
+    token_liste = []
+    if isinstance(data, list):
+        token_liste = data
+    elif isinstance(data, dict):
+        token_liste = data.get('result_set', [])
+
     ergebnis_teile = []
-    for eintrag in data:
+    hervorgehoben = False
+    for eintrag in token_liste:
         w_textid = str(eintrag.get('textid', ''))
-        word = eintrag.get('word', '')
+        raw_word = eintrag.get('word', '')
+        word = html_sonderzeichen_als_einzelzeichen(raw_word)
         typeset = eintrag.get('typeset', '')
         charposition = eintrag.get('charposition', '')
         elementtype = str(eintrag.get('elementtype', ''))
 
         if w_textid == str(textid):
             wort_formatiert = f'<b class="gefunden-hervorheben" id="textid-{textid}">{word}</b>'
+            hervorgehoben = True
         elif typeset == 'italics':
             if charposition == 'super':
                 wort_formatiert = f'<i><sup>{word}</sup></i>'
@@ -857,6 +881,24 @@ def lade_kwic_fundstelle(wbnetzkwiclink, textid, suchpuffer=None, max_versuche=3
 
         ergebnis_teile.append(wort_formatiert)
 
+    # Fallback falls über /dictionaries/.../wordid/1 die textid nicht zentriert war
+    if not hervorgehoben and isinstance(data, list) and textid:
+        url_openapi = f"https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/kwic/{textid}"
+        try:
+            data_open = hole_datenschnittstelle_json(url_openapi, max_versuche=2, timeout=15)
+            if isinstance(data_open, dict) and data_open.get('result_set'):
+                ergebnis_teile = []
+                for eintrag in data_open.get('result_set', []):
+                    w_textid = str(eintrag.get('textid', ''))
+                    raw_word = eintrag.get('word', '')
+                    word = html_sonderzeichen_als_einzelzeichen(raw_word)
+                    if w_textid == str(textid):
+                        ergebnis_teile.append(f'<b class="gefunden-hervorheben" id="textid-{textid}">{word}</b>')
+                    else:
+                        ergebnis_teile.append(word)
+        except Exception:
+            pass
+
     rohtext = "".join(ergebnis_teile)
     rohtext = rohtext.replace("</i><i>", "")
     rohtext = re.sub(r'»([ ;.:]+)', r'»…\1', f"»{rohtext}«")
@@ -868,7 +910,31 @@ def lade_kwic_fundstelle(wbnetzkwiclink, textid, suchpuffer=None, max_versuche=3
     return rohtext, False
 
 
-def baue_kwic_link_map(allquery_daten):
+def urspruengliches_echtes_fundwort_auslesen(kwic_rohtext, notfall_ersatz=""):
+    """
+    Liest den ursprünglichen echten Wortfund aus dem formatierten KWIC-Text
+    (einschließlich ursprünglicher Umlaute, Groß-/Kleinschreibung) und bereinigt Rand-Satzzeichen.
+    Falls kein KWIC vorhanden ist, wird auf fallback_match zurückgegriffen.
+    """
+    if kwic_rohtext:
+        m = re.search(r'<b class="gefunden-hervorheben"[^>]*>(.*?)</b>', kwic_rohtext, re.DOTALL)
+        if m:
+            rohes_wort = m.group(1)
+            rohes_wort = re.sub(r'<[^>]+>', '', rohes_wort)
+            wort = html_sonderzeichen_als_einzelzeichen(rohes_wort)
+            wort = wort.strip()
+            wort = re.sub(r'^[^\w]+|[^\w]+$', '', wort)
+            wort = wort.strip()
+            if wort:
+                return wort
+    if notfall_ersatz:
+        fb = html_sonderzeichen_als_einzelzeichen(notfall_ersatz).strip()
+        fb = re.sub(r'^[^\w]+|[^\w]+$', '', fb)
+        return fb.strip()
+    return ""
+
+
+def baue_kwic_felder_zuordnung(allquery_daten):
     """Baut eine Zuordnungs-Tabelle auf: (formid, textid) -> kwic_url und textid -> kwic_url."""
     kwic_map = {}
     if not isinstance(allquery_daten, list):
@@ -902,8 +968,8 @@ def baue_kwic_link_map(allquery_daten):
     return kwic_map
 
 
-def parse_cli_argumente():
-    """Definiert und parst die CLI-Argumente."""
+def erteile_befehlszeilen_anweisungen():
+    """Legt anwendbare Befehlsanweisungen fest und erteilt sie zur Weiterverarbeitung."""
     parser = argparse.ArgumentParser(
         description="Volltext aus der Programm-Schnitt-Stelle (PSS/API) des Grimm-Wörterbuchs DWB abfragen und daraus strukturierte Listen-Textdokumente erstellen.",
         add_help=False
@@ -957,7 +1023,7 @@ def parse_cli_argumente():
 
 
 def main():
-    parser, args = parse_cli_argumente()
+    parser, args = erteile_befehlszeilen_anweisungen()
     farben = Farben(aktiv=not args.farb_frei)
 
     # Vorzeitige Suchpuffer-Aktionen abhandeln (ohne Pflicht-Suchbegriff)
@@ -1040,17 +1106,17 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
 
     suchpuffer = SuchpufferDWB1(db_pfad=args.suchpuffer_pfad, aktiv=not args.ohne_suchpuffer)
 
-    volltext_raw = args.volltextabfrage.strip()
-    if re.match(r'^[*?]+$', volltext_raw):
-        print(f"{farben.ORANGE}Alle Volltexte abzufragen (--Volltextabfrage '{volltext_raw}') wird nicht unterstützt (Abbruch){farben.RESET}", file=sys.stderr)
+    volltext_roh = args.volltextabfrage.strip()
+    if re.match(r'^[*?]+$', volltext_roh):
+        print(f"{farben.ORANGE}Alle Volltexte abzufragen (--Volltextabfrage '{volltext_roh}') wird nicht unterstützt (Abbruch){farben.RESET}", file=sys.stderr)
         sys.exit(1)
 
     # API Abfragebegriff formatieren
-    volltext_api = volltext_raw
+    volltext_api = volltext_roh
     volltext_quoted = urllib.parse.quote(volltext_api)
 
     # Dateivorsilben-Text
-    volltext_text = re.sub(r'[^\w\s]', '…', volltext_raw)
+    volltext_text = re.sub(r'[^\w\s]', '…', volltext_roh)
     volltext_text = re.sub(r'^…{2,}', '', volltext_text)
     volltext_text = re.sub(r'…{2,}$', '…', volltext_text)
     if not volltext_text:
@@ -1100,7 +1166,7 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
     datei_diese_wbnetzkwiclink = f"{datei_utf8_html_zwischenablage_gram}.wbnetzkwiclink.txt"
 
     if not args.stillschweigend and args.entwickeln:
-        print(f"{farben.ORANGE}ENTWICKLUNG - volltextabfrage:             {volltext_raw}{farben.RESET}", file=sys.stderr)
+        print(f"{farben.ORANGE}ENTWICKLUNG - volltextabfrage:             {volltext_roh}{farben.RESET}", file=sys.stderr)
         print(f"{farben.ORANGE}ENTWICKLUNG - stichwortabfrage:            {args.stichwortabfrage}{farben.RESET}", file=sys.stderr)
         print(f"{farben.ORANGE}ENTWICKLUNG - stichwort_regex:             {stichwort_regex}{farben.RESET}", file=sys.stderr)
         print(f"{farben.ORANGE}ENTWICKLUNG - ohne_regex:                  {ohne_regex}{farben.RESET}", file=sys.stderr)
@@ -1115,16 +1181,16 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
         print(f"{farben.GRUEN}Abfrage an api.woerterbuchnetz.de …{farben.RESET} ({url_allquery})", file=sys.stderr)
 
     try:
-        fulltext_daten = hole_api_json(url_fulltext)
+        fulltext_daten = hole_datenschnittstelle_json(url_fulltext)
     except Exception as e:
-        print(f"{farben.ROT}Fehler bei der Volltext-API-Abfrage ({url_fulltext}): {e}{farben.RESET}", file=sys.stderr)
+        print(f"{farben.ROT}Fehler Datenfehler mit der Schnittstellen-Abfrage ({url_fulltext}): {e}{farben.RESET}", file=sys.stderr)
         sys.exit(1)
 
     try:
-        allquery_daten = hole_api_json(url_allquery)
+        allquery_daten = hole_datenschnittstelle_json(url_allquery)
     except Exception as e:
         if args.entwickeln:
-            print(f"{farben.ORANGE}Hinweis: All-Query-Abfrage lieferte Fehler ({e}), fahre mit Fallback fort.{farben.RESET}", file=sys.stderr)
+            print(f"{farben.ORANGE}Hinweis: Gesamt-Abfrage lieferte Fehler ({e}), Weiterverarbeitung unter Notfall-Umständen.{farben.RESET}", file=sys.stderr)
         allquery_daten = []
 
     with open(json_speicher_datei, 'w', encoding='utf-8') as f:
@@ -1139,7 +1205,7 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
     if not args.stillschweigend:
         print(f"{farben.GRUEN}Weiterverarbeitung → JSON{farben.RESET} ({n_suchergebnisse_volltext} Volltext-Treffer)", file=sys.stderr)
 
-    kwic_map = baue_kwic_link_map(allquery_daten)
+    kwic_map = baue_kwic_felder_zuordnung(allquery_daten)
 
     # 2. Filterpipeline & Strukturierung
     verarbeitete_liste = []
@@ -1235,7 +1301,7 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
 
     # 3. KWIC-Fundstellen nachladen (NUR für gefilterte Treffer!)
     kwic_fundstellen = {}
-    muss_kwic_laden = args.HTML or args.ODT or args.Telegrammarkdown or args.einzeltabelle
+    muss_kwic_laden = args.HTML or args.ODT or args.Telegrammarkdown or args.einzeltabelle or args.wortfunde_auslesen
 
     if muss_kwic_laden and n_gefilterte_treffer > 0:
         zeitgleich_aktiv = not args.ohne_zeitgleich_suche
@@ -1243,8 +1309,8 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
 
         if not args.stillschweigend:
             puffer_status_str = f" [Suchpuffer: {farben.GRUEN}aktiv{farben.RESET}]" if suchpuffer.aktiv else f" [Suchpuffer: {farben.ORANGE}deaktiviert{farben.RESET}]"
-            modus_str = f" [Zeitgleichsuche: {farben.GRUEN}4 Tätigkeiten{farben.RESET}]" if zeitgleich_aktiv else f" [Zeitgleichsuche: {farben.ORANGE}nacheinander (1 Tätigkeit){farben.RESET}]"
-            print(f"{farben.GRUEN}Weiterverarbeitung → HTML (wbnetzkwiclink: {farben.ORANGE}{n_gefilterte_treffer} Fundstellen{farben.GRUEN} abfragen){farben.RESET}{puffer_status_str}{modus_str}", file=sys.stderr)
+            modus_str = f" [Zeitgleichsuche: {farben.GRUEN}4 läufig{farben.RESET}]" if zeitgleich_aktiv else f" [Zeitgleichsuche: {farben.ORANGE}nacheinander (1 Tätigkeit){farben.RESET}]"
+            print(f"{farben.GRUEN}Weiterverarbeitung → Fundstellen nachladen (wbnetzkwiclink: {farben.ORANGE}{n_gefilterte_treffer} Fundstellen{farben.GRUEN} abfragen){farben.RESET}{puffer_status_str}{modus_str}", file=sys.stderr)
 
         puffer_treffer_zaehler = 0
         api_abruf_zaehler = 0
@@ -1304,21 +1370,34 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
                         sys.stderr.flush()
 
         if not args.stillschweigend:
-            modus_text = f"zeitgleich mit bis zu {max_arbeiter} Tätigkeiten" if zeitgleich_aktiv else "nacheinander"
+            modus_text = f"zeitgleich mit bis zu {max_arbeiter} Arbeitsläufen" if zeitgleich_aktiv else "nacheinander"
             if suchpuffer.aktiv:
                 print(f"{farben.GRUEN}Fundstellen-Verarbeitung ({modus_text}):{farben.RESET} {puffer_treffer_zaehler} aus Suchpuffer bezogen, {api_abruf_zaehler} neu von API nachgeladen.", file=sys.stderr)
             else:
-                print(f"{farben.GRUEN}Fundstellen-Verarbeitung ({modus_text}):{farben.RESET} {api_abruf_zaehler} neu von API nachgeladen.", file=sys.stderr)
+                print(f"{farben.GRUEN}Fundstellen-Verarbeitung ({modus_text}):{farben.RESET} {api_abruf_zaehler} erneut von Datenschnittstelle (API) nachgeladen.", file=sys.stderr)
 
-    # 4. Text-Exporte
+    # 4. Text Hinweise
+    einschraenkung_stichwort = ""
+    if stichwort_text:
+        stichwort_begriffe = [b.strip() for b in re.split(r'[,;]+', stichwort_text) if b.strip()]
+        if len(stichwort_begriffe) > 1:
+            einschraenkung_stichwort = f", beschränkt auf die Stichwörtersuche „{stichwort_text}“"
+        else:
+            einschraenkung_stichwort = f", beschränkt auf Stichwortsuche „{stichwort_text}“"
+
+    if n_gefilterte_treffer == 1:
+        funde_satz_text = f"Im Grimm-Wb. fand sich 1 Beitrag oder Beleg für die Volltextabfrage „{volltext_roh}“{einschraenkung_stichwort}."
+        funde_satz_html = "Im Grimm-Wb. fand sich 1 Beitrag oder Beleg."
+    else:
+        funde_satz_text = f"Im Grimm-Wb. fanden sich {n_gefilterte_treffer} Beiträge oder Belege für die Volltextabfrage „{volltext_roh}“{einschraenkung_stichwort}."
+        funde_satz_html = f"Im Grimm-Wb. fanden sich {n_gefilterte_treffer} Beiträge oder Belege."
+
     zusatzbemerkungen_text = (
-        f"Im Grimm-Wb. fanden sich {n_gefilterte_treffer} Beiträge oder Belege für die Volltextabfrage „{volltext_raw}“. "
+        f"{funde_satz_text} "
         f"Die nachfolgende Liste ist dabei vorgeordnet nach den sprachkundlichen Angaben von Grimm, "
         f"d.h. nach Wortarten gruppiert: ohne sprachkundliche (Grammatik-)Angabe, "
-        f"Eigenschaftswörter (Adjektive) und dergleichen, Nennwörter (Substantive), Zeit- oder Tuwörter usw.."
+        f"Eigenschaften (Adjektive) und dergleichen, Nennwörter (Substantive), Zeit- oder Tuwörter usw.."
     )
-    if stichwort_text:
-        zusatzbemerkungen_text += f"\n\nEingeschränkt auf Stichwörter: „{stichwort_text}“."
     if ohne_text:
         zusatzbemerkungen_text += f"\n\nIn der Liste wurden folgende Wortverbindungen bewußt entfernt, also ohne\n„{ohne_text}“."
 
@@ -1363,25 +1442,26 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
 
         wortfunde_gruppen = {}
         for item in verarbeitete_liste:
-            match_raw = item.get('match', '').strip() or volltext_raw
-            match_str = html_sonderzeichen_als_einzelzeichen(match_raw)
-            lemma_raw = item.get('lemma', '')
-            lemma_str = html_sonderzeichen_als_einzelzeichen(lemma_raw)
-            val = item.get('wbnetzid', '')
-            tid = str(item.get('textid', ''))
-            wb_link = item.get('wbnetzlink') or (
-                f"https://woerterbuchnetz.de/?sigle=DWB&lemid={val}&textid={tid}" if val and tid else
-                f"https://woerterbuchnetz.de/?sigle=DWB&lemma={urllib.parse.quote(lemma_raw)}#{tid}" if lemma_raw and tid else
-                f"https://woerterbuchnetz.de/?sigle=DWB&lemma={urllib.parse.quote(lemma_raw)}"
+            wert_textid = str(item.get('textid', ''))
+            kwic_url = item.get('wbnetzkwiclink', '')
+            kwic_text = kwic_fundstellen.get((kwic_url, wert_textid), "")
+            match_str = urspruengliches_echtes_fundwort_auslesen(kwic_text, notfall_ersatz=item.get('match', '').strip() or volltext_roh)
+            lemma_roh = item.get('lemma', '')
+            lemma_str = html_sonderzeichen_als_einzelzeichen(lemma_roh)
+            wert_lemid = item.get('wbnetzid', '')
+            wb_verknuepfung = item.get('wbnetzlink') or (
+                f"https://woerterbuchnetz.de/?sigle=DWB&lemid={wert_lemid}&textid={wert_textid}" if wert_lemid and wert_textid else
+                f"https://woerterbuchnetz.de/?sigle=DWB&lemma={urllib.parse.quote(lemma_roh)}#{wert_textid}" if lemma_roh and wert_textid else
+                f"https://woerterbuchnetz.de/?sigle=DWB&lemma={urllib.parse.quote(lemma_roh)}"
             )
 
             if match_str not in wortfunde_gruppen:
                 wortfunde_gruppen[match_str] = []
             wortfunde_gruppen[match_str].append({
                 'lemma': lemma_str,
-                'wb_link': wb_link,
-                'val': val,
-                'tid': tid
+                'wb_verknuepfung': wb_verknuepfung,
+                'wert_lemid': wert_lemid,
+                'wert_textid': wert_textid
             })
 
         sortierte_matches = sorted(
@@ -1402,15 +1482,15 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
             # Gestaltung B: Gruppierte Stichpunktliste nach Volltextfunden
             if len(eintraege_sortiert) == 1:
                 e = eintraege_sortiert[0]
-                zeilen_b.append(f"\n*{match_str}* in [*{e['lemma']}*]({e['wb_link']})")
+                zeilen_b.append(f"\n*{match_str}* in [*{e['lemma']}*]({e['wb_verknuepfung']})")
             else:
                 zeilen_b.append(f"\n*{match_str}* ({len(eintraege_sortiert)} Fundstellen)")
                 for e in eintraege_sortiert:
-                    zeilen_b.append(f"- in [*{e['lemma']}*]({e['wb_link']})")
+                    zeilen_b.append(f"- in [*{e['lemma']}*]({e['wb_verknuepfung']})")
 
             # Gestaltung C: Schlichte Markdown-Tabelle
             for e in eintraege_sortiert:
-                zeilen_c.append(f"| {match_str} | {e['lemma']} | <{e['wb_link']}> |")
+                zeilen_c.append(f"| {match_str} | {e['lemma']} | <{e['wb_verknuepfung']}> |")
 
         inhalt_b = "\n".join(zeilen_b) if zeilen_b else "*(Keine Wortfunde ermittelt)*"
         inhalt_c = "\n".join(zeilen_c) if zeilen_c else "| *(keine)* | *(keine)* | *(keine)* |"
@@ -1427,37 +1507,41 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
             )
 
     # 5. HTML-, ODT-, Markdown-Exporte
-    if muss_kwic_laden:
+    if args.HTML or args.ODT or args.Telegrammarkdown or args.einzeltabelle:
         if not args.stillschweigend:
             print(f"{farben.GRUEN}Weiterverarbeitung → HTML{farben.RESET} ({datei_utf8_html_zwischenablage_gram})", file=sys.stderr)
 
         zusatz_html_teile = []
         if stichwort_text:
-            zusatz_html_teile.append(f"eingeschränkt auf Stichwörter „{stichwort_text}“")
+            stichwort_begriffe = [b.strip() for b in re.split(r'[,;]+', stichwort_text) if b.strip()]
+            if len(stichwort_begriffe) > 1:
+                zusatz_html_teile.append(f"beschränkt auf die Stichwörtersuche „{stichwort_text}“")
+            else:
+                zusatz_html_teile.append(f"beschränkt auf Stichwortsuche „{stichwort_text}“")
         if ohne_text:
             zusatz_html_teile.append(f"ohne „{ohne_text}“")
         zusatz_hinweis_html = f" ({', '.join(zusatz_html_teile)})" if zusatz_html_teile else ""
 
-        bearbeitungstext_html = f"Volltextabfrage nach <i>{volltext_raw}</i> im Deutschen Wörterbuch von Jacob und Wilhelm Grimm{zusatz_hinweis_html}."
+        bearbeitungstext_html = f"Volltextabfrage nach <i>{volltext_roh}</i> im Deutschen Wörterbuch von Jacob und Wilhelm Grimm{zusatz_hinweis_html}."
 
         html_zeilen = []
         for item in verarbeitete_liste:
             wort_geschlecht = item['Wortdeutung_mit_Grammatik']['wort_mit_geschlechtswort']
             gram_deutung = item['Wortdeutung_mit_Grammatik']['grammatik_deutung']
-            val = item['wbnetzid']
+            wert_lemid = item['wbnetzid']
             lab = item['lemma']
-            tid = item['textid']
+            wert_textid = item['textid']
             kwic_url = item['wbnetzkwiclink']
-            wb_link = item['wbnetzlink'] or f"https://woerterbuchnetz.de/?sigle=DWB&lemid={val}&textid={tid}"
+            wb_verknuepfung = item['wbnetzlink'] or f"https://woerterbuchnetz.de/?sigle=DWB&lemid={wert_lemid}&textid={wert_textid}"
 
-            fundstelle_html = kwic_fundstellen.get((kwic_url, tid), "")
+            fundstelle_html = kwic_fundstellen.get((kwic_url, wert_textid), "")
             spalte_fundstelle = f"<td>{fundstelle_html}</td>"
 
-            link_lemma = f'<a href="https://woerterbuchnetz.de/DWB?lemid={val}">{html_sonderzeichen_als_einzelzeichen(lab)}</a>'
-            link_beleg = f'<a href="{wb_link}">{val}/{tid}</a>'
-            link_html = f"<small>{link_lemma} ({link_beleg})</small>"
+            verknuepfung_lemma = f'<a href="https://woerterbuchnetz.de/DWB?lemid={wert_lemid}">{html_sonderzeichen_als_einzelzeichen(lab)}</a>'
+            verknuepfung_textbeleg = f'<a href="{wb_verknuepfung}">{wert_lemid}/{wert_textid}</a>'
+            html_verknuepfung = f"<small>{verknuepfung_lemma} (im Text: {verknuepfung_textbeleg})</small>"
 
-            zeile_html = f"<tr><td>{wort_geschlecht}</td>{spalte_fundstelle}<td>{gram_deutung}</td><td>{link_html}</td></tr>"
+            zeile_html = f"<tr><td>{wort_geschlecht}</td>{spalte_fundstelle}<td>{gram_deutung}</td><td>{html_verknuepfung}</td></tr>"
             html_zeilen.append(zeile_html)
 
         abkuerzungs_hinweis = ""
@@ -1494,7 +1578,7 @@ b.gefunden-hervorheben {{ background-color: #ffffaa; font-weight: bold; }}
 a.local {{ text-decoration:none; }}
 </style>
 <body style="font-family: Antykwa Torunska, serif; background: white;"><p>{bearbeitungstext_html}</p>
-<p>Im Grimm-Wb. fanden sich {n_gefilterte_treffer} Beiträge oder Belege. Diese Tabelle ist nach sprachkundlichen Begriffen <i>Grammatik (Grimm)</i> geordnet, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p>{abkuerzungs_hinweis}<p>Zur Sprachkunst oder Grammatik siehe vor allem <i style="font-variant:small-caps;">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id="Wortliste-Tabelle"><thead><tr><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Wort</th><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Textauszug (gekürzt)</th><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style="font-variant:small-caps;">Schottel&nbsp;1663</i>)</th><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Verknüpfungen</th></tr></thead><tbody>
+<p>{funde_satz_html} Diese Tabelle ist nach sprachkundlichen Begriffen <i>Grammatik (Grimm)</i> geordnet, also finden sich Tätigkeitswörter (Verben) beisammen, Eigenschaftswörter (Adjektive) beisammen, Nennwörter (Substantive), als auch Wörter ohne Angabe der Grammatik/Sprachkunst-Begriffe usw..</p>{abkuerzungs_hinweis}<p>Zur Sprachkunst oder Grammatik siehe vor allem <i style="font-variant:small-caps;">Schottel (1663)</i> das ist Justus Georg Schottels Riesenwerk über „<i>Ausführliche Arbeit Von der Teutschen HaubtSprache …</i>“; Bücher 1-2: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346534-1</a>; Bücher 3-5: <a href="https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6">https://mdz-nbn-resolving.de/urn:nbn:de:bvb:12-bsb11346535-6</a></p><table id="Wortliste-Tabelle"><thead><tr><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Wortbeitrag</th><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Textauszug (gekürzt)</th><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Grammatik (<i>Grimm</i>) ~ Sprachkunst, Sprachlehre (s. a. <i style="font-variant:small-caps;">Schottel&nbsp;1663</i>)</th><th style="vertical-align:bottom;border-top:2px solid gray;border-bottom:2px solid gray;">Verknüpfungen</th></tr></thead><tbody>
 {chr(10).join(html_zeilen)}
 </tbody><tfoot><tr><td colspan="4" style="border-top:2px solid gray;border-bottom:0 none;"></td>
 </tr></tfoot></table>{html_technischer_hinweis}
@@ -1613,10 +1697,9 @@ a.local {{ text-decoration:none; }}
             datei_utf8_html_zwischenablage_gram,
             datei_utf8_html_gram_tidy,
             datei_utf8_html_gram_tidy_log,
+            datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte,
             datei_diese_wbnetzkwiclink,
         ]
-        if not (args.HTML or args.ODT or args.Telegrammarkdown or args.einzeltabelle):
-            kurzweilige_dateien.append(datei_utf8_html_gram_tidy)
 
         for f_pfad in kurzweilige_dateien:
             if os.path.exists(f_pfad):
