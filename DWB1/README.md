@@ -123,6 +123,30 @@ Volltextabfrage_DWB1.py  --Volltextabfrage "sensib*"
     …
     usw.
 
+Wir können auch _mehrere Wörter_ gleichzeitig abfragen lassen, z.B.: `Volltextabfrage_DWB1.py  --Volltextabfrage "sensibus, sensibilis, sensificus, sensim"`, und bekommen:
+
+    aufbessern;
+    einsickern;
+    empfindeln;
+    fühlend;
+    gängeln;
+    sturm;
+    allgemach (adv.);
+    allgemachsam (adv.);
+    allgemählich (adv.);
+    allmählich (adv.);
+    alsgemach (adv.);
+    daher (adv.);
+    elementarisch;
+    empfindbar;
+    empfindlich;
+    fühlbar (adj.);
+    fühlig (adj.);
+    fühlsam (adj.);
+    gämlich;
+    gefühlig (adj.);
+    … 
+    usw.
 
 In schlichter Anweisung werden nur Textdateien erzeugt mit den Stichworten/Lemmata in denen die Volltextsuche etwas gefunden hat. Vermittels zusätzlicher Befehls-Anweisungen kann man gesonderte Ausgabeformate oder eine nachlesende Zusammenfassung (tatsächlich im Text gefundene Wortformen) erstellen lassen:
 

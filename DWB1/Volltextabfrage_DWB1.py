@@ -977,7 +977,7 @@ def erteile_befehlszeilen_anweisungen():
     parser.add_argument('-h', '--Hilfe', '--hilfe', action='store_true',
                         help='Hilfetext dieses Programms ausgeben.')
     parser.add_argument('-v', '-V', '--Volltextabfrage', '--volltextabfrage', dest='volltextabfrage', type=str, default=None,
-                        help='Pflichtfeld für die Volltextabfrage, die getätigt werden soll, z.B. „stupere“, „Haustür“ oder „*stall*“ u.ä.')
+                        help='Pflichtfeld für die Volltextabfrage, die getätigt werden soll, z.B. „stupere“, „Haustür“ oder „*stall*“ u.ä. Mehrere Volltext-Suchwörter zugleich sind möglich: „sensibus, sensibilis, sensificus“')
     parser.add_argument('-S', '--Stichwortabfrage', '--stichwortabfrage', dest='stichwortabfrage', type=str, default=None,
                         help='Zusätzliche Einschränkung der Lemmata/Stichworte (z.B. „*pferd*“, „*heili*, *heils*“).')
     parser.add_argument('-o', '--ohne', dest='ohne', type=str, default=None,
@@ -1073,6 +1073,7 @@ Zusätzlich kann man eine HTML oder ODT Datei erstellen lassen (benötigt Progra
 Verwendbare Wahlmöglichkeiten:
 -h,    --Hilfe             Hilfetext dieses Programms ausgeben.
 -v,-V  --Volltextabfrage   Pflichtfeld für die Abfrage, die getätigt werden soll, z.B. „hinun*“ oder „*glaub*“ u.ä.
+                           Mehrere Suchwörter zugleich sind möglich: „sensibus, sensibilis, sensificus“
 -S     --Stichwortabfrage  Zusätzliche Einschränkung der Stichworte/Lemmata (z.B. „*lösen*“, „*heili*, *heils*“).
 -o,    --ohne              Ohne diese Stichwörter/Lemmata – Liste einfacher regulärer Ausdrücke anwendbar
                            (z.B. --ohne "*pflicht, das *licht").
@@ -1107,20 +1108,31 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
     suchpuffer = SuchpufferDWB1(db_pfad=args.suchpuffer_pfad, aktiv=not args.ohne_suchpuffer)
 
     volltext_roh = args.volltextabfrage.strip()
-    if re.match(r'^[*?]+$', volltext_roh):
+    volltext_begriffe = [b.strip() for b in re.split(r'[,;]+', volltext_roh) if b.strip()]
+    if not volltext_begriffe:
+        print(f"{farben.ROT}Fehlender Volltext, der abgefragt werden soll (Abbruch).{farben.RESET}", file=sys.stderr)
+        sys.exit(1)
+
+    if all(re.match(r'^[*?]+$', b) for b in volltext_begriffe):
         print(f"{farben.ORANGE}Alle Volltexte abzufragen (--Volltextabfrage '{volltext_roh}') wird nicht unterstützt (Abbruch){farben.RESET}", file=sys.stderr)
         sys.exit(1)
 
-    # API Abfragebegriff formatieren
-    volltext_api = volltext_roh
-    volltext_quoted = urllib.parse.quote(volltext_api)
+    volltext_begriffe = [b for b in volltext_begriffe if not re.match(r'^[*?]+$', b)]
 
     # Dateivorsilben-Text
-    volltext_text = re.sub(r'[^\w\s]', '…', volltext_roh)
-    volltext_text = re.sub(r'^…{2,}', '', volltext_text)
-    volltext_text = re.sub(r'…{2,}$', '…', volltext_text)
-    if not volltext_text:
-        volltext_text = "Volltext"
+    def saeubere_dateiname_begriff(b):
+        t = re.sub(r'[^\w\s]', '…', b)
+        t = re.sub(r'^…{2,}', '', t)
+        t = re.sub(r'…{2,}$', '…', t)
+        return t or "Volltext"
+
+    if len(volltext_begriffe) == 1:
+        volltext_text = saeubere_dateiname_begriff(volltext_begriffe[0])
+    elif len(volltext_begriffe) == 2:
+        volltext_text = f"{saeubere_dateiname_begriff(volltext_begriffe[0])}, {saeubere_dateiname_begriff(volltext_begriffe[1])}"
+    else:
+        erster_begriff = saeubere_dateiname_begriff(volltext_begriffe[0])
+        volltext_text = f"{erster_begriff} u.a. ({len(volltext_begriffe)} Begriffe)"
 
     stichwort_text, stichwort_regex, stichwort_regex_xml = erstelle_stichwort_filter(args.stichwortabfrage)
     stichwort_filter_re = re.compile(stichwort_regex, re.IGNORECASE) if stichwort_regex else None
@@ -1129,7 +1141,11 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
     ohne_filter_re = re.compile(ohne_regex, re.IGNORECASE) if ohne_regex else None
 
     datum_heute_lang = ermittle_altes_monatsdatum()
-    titel_text = f"Volltextsuche „{volltext_text}“ aus Grimm-Wörterbuch"
+    if len(volltext_begriffe) == 1:
+        titel_text = f"Volltextsuche „{volltext_begriffe[0]}“ aus Grimm-Wörterbuch"
+    else:
+        begriffe_titel = ", ".join(f"„{b}“" for b in volltext_begriffe)
+        titel_text = f"Volltextsuche {begriffe_titel} aus Grimm-Wörterbuch"
     untertitel_text = datum_heute_lang
 
     heute_str = datetime.datetime.now().strftime('%Y%m%d')
@@ -1167,45 +1183,69 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
 
     if not args.stillschweigend and args.entwickeln:
         print(f"{farben.ORANGE}ENTWICKLUNG - volltextabfrage:             {volltext_roh}{farben.RESET}", file=sys.stderr)
+        print(f"{farben.ORANGE}ENTWICKLUNG - volltext_begriffe:           {volltext_begriffe}{farben.RESET}", file=sys.stderr)
         print(f"{farben.ORANGE}ENTWICKLUNG - stichwortabfrage:            {args.stichwortabfrage}{farben.RESET}", file=sys.stderr)
         print(f"{farben.ORANGE}ENTWICKLUNG - stichwort_regex:             {stichwort_regex}{farben.RESET}", file=sys.stderr)
         print(f"{farben.ORANGE}ENTWICKLUNG - ohne_regex:                  {ohne_regex}{farben.RESET}", file=sys.stderr)
 
-    # 1. API-Abfragen: Volltext & All-Query
-    url_fulltext = f"https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/{volltext_quoted}"
-    all_query_param = urllib.parse.quote(volltext_api.replace(' ', ';all='))
-    url_allquery = f"https://api.woerterbuchnetz.de/dictionaries/DWB/query/all={all_query_param}"
+    # 1. API-Abfragen: Volltext & All-Query (für alle Volltext-Begriffe)
+    kombinierte_rohe_treffer = []
+    gesehene_treffer_keys = set()
+    kombinierte_allquery_daten = []
+    gesamte_fulltext_daten = {'result_set': [], 'begriffe': volltext_begriffe}
 
-    if not args.stillschweigend:
-        print(f"{farben.GRUEN}Abfrage an api.woerterbuchnetz.de …{farben.RESET} ({url_fulltext})", file=sys.stderr)
-        print(f"{farben.GRUEN}Abfrage an api.woerterbuchnetz.de …{farben.RESET} ({url_allquery})", file=sys.stderr)
+    for begriff in volltext_begriffe:
+        volltext_quoted = urllib.parse.quote(begriff)
+        url_fulltext = f"https://api.woerterbuchnetz.de/open-api/dictionaries/DWB/fulltext/{volltext_quoted}"
+        all_query_param = urllib.parse.quote(begriff.replace(' ', ';all='))
+        url_allquery = f"https://api.woerterbuchnetz.de/dictionaries/DWB/query/all={all_query_param}"
 
-    try:
-        fulltext_daten = hole_datenschnittstelle_json(url_fulltext)
-    except Exception as e:
-        print(f"{farben.ROT}Fehler Datenfehler mit der Schnittstellen-Abfrage ({url_fulltext}): {e}{farben.RESET}", file=sys.stderr)
-        sys.exit(1)
+        if not args.stillschweigend:
+            print(f"{farben.GRUEN}Abfrage an api.woerterbuchnetz.de …{farben.RESET} ({url_fulltext})", file=sys.stderr)
+            print(f"{farben.GRUEN}Abfrage an api.woerterbuchnetz.de …{farben.RESET} ({url_allquery})", file=sys.stderr)
 
-    try:
-        allquery_daten = hole_datenschnittstelle_json(url_allquery)
-    except Exception as e:
-        if args.entwickeln:
-            print(f"{farben.ORANGE}Hinweis: Gesamt-Abfrage lieferte Fehler ({e}), Weiterverarbeitung unter Notfall-Umständen.{farben.RESET}", file=sys.stderr)
-        allquery_daten = []
+        try:
+            fulltext_daten = hole_datenschnittstelle_json(url_fulltext)
+        except Exception as e:
+            print(f"{farben.ROT}Fehler Datenfehler mit der Schnittstellen-Abfrage ({url_fulltext}): {e}{farben.RESET}", file=sys.stderr)
+            if len(volltext_begriffe) == 1:
+                sys.exit(1)
+            else:
+                fulltext_daten = {'result_set': []}
+
+        try:
+            allquery_daten = hole_datenschnittstelle_json(url_allquery)
+        except Exception as e:
+            if args.entwickeln:
+                print(f"{farben.ORANGE}Hinweis: Gesamt-Abfrage ({url_allquery}) lieferte Fehler ({e}), Weiterverarbeitung unter Notfall-Umständen.{farben.RESET}", file=sys.stderr)
+            allquery_daten = []
+
+        if isinstance(allquery_daten, list):
+            kombinierte_allquery_daten.extend(allquery_daten)
+
+        for item in fulltext_daten.get('result_set', []):
+            wbnetzid = item.get('wbnetzid', '')
+            textid = str(item.get('textid', ''))
+            treffer_key = (wbnetzid, textid)
+            if treffer_key not in gesehene_treffer_keys:
+                gesehene_treffer_keys.add(treffer_key)
+                kombinierte_rohe_treffer.append(item)
+
+    gesamte_fulltext_daten['result_set'] = kombinierte_rohe_treffer
 
     with open(json_speicher_datei, 'w', encoding='utf-8') as f:
-        json.dump(fulltext_daten, f, ensure_ascii=False, indent=2)
+        json.dump(gesamte_fulltext_daten, f, ensure_ascii=False, indent=2)
 
     with open(json_speicher_all_query_datei, 'w', encoding='utf-8') as f:
-        json.dump(allquery_daten, f, ensure_ascii=False, indent=2)
+        json.dump(kombinierte_allquery_daten, f, ensure_ascii=False, indent=2)
 
-    rohe_treffer = fulltext_daten.get('result_set', [])
+    rohe_treffer = kombinierte_rohe_treffer
     n_suchergebnisse_volltext = len(rohe_treffer)
 
     if not args.stillschweigend:
         print(f"{farben.GRUEN}Weiterverarbeitung → JSON{farben.RESET} ({n_suchergebnisse_volltext} Volltext-Treffer)", file=sys.stderr)
 
-    kwic_map = baue_kwic_felder_zuordnung(allquery_daten)
+    kwic_map = baue_kwic_felder_zuordnung(kombinierte_allquery_daten)
 
     # 2. Filterpipeline & Strukturierung
     verarbeitete_liste = []
@@ -1385,11 +1425,21 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
         else:
             einschraenkung_stichwort = f", beschränkt auf Stichwortsuche „{stichwort_text}“"
 
+    if len(volltext_begriffe) == 1:
+        volltext_hinweis_text = f"für die Volltextabfrage „{volltext_begriffe[0]}“"
+        html_abfrage_bezeichnung = "Volltextabfrage nach"
+        html_volltext_suchausdruck = f"<i>{volltext_begriffe[0]}</i>"
+    else:
+        begriffe_aufzaehlung = ", ".join(f"„{b}“" for b in volltext_begriffe)
+        volltext_hinweis_text = f"für die Volltextabfragen {begriffe_aufzaehlung}"
+        html_abfrage_bezeichnung = "Volltextabfragen nach"
+        html_volltext_suchausdruck = ", ".join(f"<i>{b}</i>" for b in volltext_begriffe)
+
     if n_gefilterte_treffer == 1:
-        funde_satz_text = f"Im Grimm-Wb. fand sich 1 Beitrag oder Beleg für die Volltextabfrage „{volltext_roh}“{einschraenkung_stichwort}."
+        funde_satz_text = f"Im Grimm-Wb. fand sich 1 Beitrag oder Beleg {volltext_hinweis_text}{einschraenkung_stichwort}."
         funde_satz_html = "Im Grimm-Wb. fand sich 1 Beitrag oder Beleg."
     else:
-        funde_satz_text = f"Im Grimm-Wb. fanden sich {n_gefilterte_treffer} Beiträge oder Belege für die Volltextabfrage „{volltext_roh}“{einschraenkung_stichwort}."
+        funde_satz_text = f"Im Grimm-Wb. fanden sich {n_gefilterte_treffer} Beiträge oder Belege {volltext_hinweis_text}{einschraenkung_stichwort}."
         funde_satz_html = f"Im Grimm-Wb. fanden sich {n_gefilterte_treffer} Beiträge oder Belege."
 
     zusatzbemerkungen_text = (
@@ -1522,7 +1572,7 @@ Wahlmöglichkeiten für Suchpuffer & Zeitgleichsuche:
             zusatz_html_teile.append(f"ohne „{ohne_text}“")
         zusatz_hinweis_html = f" ({', '.join(zusatz_html_teile)})" if zusatz_html_teile else ""
 
-        bearbeitungstext_html = f"Volltextabfrage nach <i>{volltext_roh}</i> im Deutschen Wörterbuch von Jacob und Wilhelm Grimm{zusatz_hinweis_html}."
+        bearbeitungstext_html = f"{html_abfrage_bezeichnung} {html_volltext_suchausdruck} im Deutschen Wörterbuch von Jacob und Wilhelm Grimm{zusatz_hinweis_html}."
 
         html_zeilen = []
         for item in verarbeitete_liste:
@@ -1695,14 +1745,13 @@ a.local {{ text-decoration:none; }}
             json_speicher_all_query_datei,
             json_speicher_datei_ueberarbeitet,
             datei_utf8_html_zwischenablage_gram,
-            datei_utf8_html_gram_tidy,
+            datei_utf8_html_gram_tidy if not args.HTML else None,
             datei_utf8_html_gram_tidy_log,
-            datei_utf8_html_gram_tidy_worttabelle_odt_einzelabschnitte,
             datei_diese_wbnetzkwiclink,
         ]
 
         for f_pfad in kurzweilige_dateien:
-            if os.path.exists(f_pfad):
+            if f_pfad and os.path.exists(f_pfad):
                 try:
                     os.remove(f_pfad)
                 except OSError:
